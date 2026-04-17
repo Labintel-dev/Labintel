@@ -47,3 +47,4 @@ LabIntel is a centralized hub for managing medical diagnostic reports and labora
 
 ---
 Built with ❤️ by the LabIntel Development Team.
+‼️This is only the interface aka frontend of project‼️
