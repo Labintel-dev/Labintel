@@ -1,7 +1,7 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Initialization will happen inside the analysis function to ensure process.env is ready
-const DEFAULT_GEMINI_MODEL = process.env.GOOGLE_GEMINI_MODEL || 'gemini-2.5-flash';
+const DEFAULT_GEMINI_MODEL = process.env.GOOGLE_GEMINI_MODEL || 'gemini-flash-latest';
 
 const SYSTEM_PROMPT = `
 You are an expert Medical OCR + AI reporting engine.
@@ -105,26 +105,39 @@ async function analyzeMedicalReport(base64Image, mimeType = 'image/jpeg', previo
   const MODELS_TO_TRY = [
     process.env.GOOGLE_GEMINI_MODEL,
     'gemini-2.5-flash',
+    'gemini-flash-latest',
     'gemini-2.0-flash',
-    'gemini-3.1-flash-preview',
-    'gemini-2.5-pro',
-    'gemini-flash-latest'
+    'gemini-2.5-pro'
   ].filter(Boolean);
+
+  const startTime = Date.now();
+  const CRITICAL_TIMEOUT = 160000; // 160s (just under frontend 180s timeout)
+
+  // Eliminate duplicates while maintaining order
+  const uniqueModels = [...new Set(MODELS_TO_TRY)];
 
   let lastError = null;
 
-  for (const modelName of MODELS_TO_TRY) {
-    const maxRetries = 1; 
+  for (const modelName of uniqueModels) {
+    // If we are getting close to the critical timeout, stop trying new models
+    if (Date.now() - startTime > CRITICAL_TIMEOUT) {
+      console.warn(`[Gemini] Critical timeout reached. Stopping further model attempts.`);
+      break;
+    }
+
+    const maxRetries = 2; 
     let retryCount = 0;
 
     while (retryCount <= maxRetries) {
+      // Check timeout inside retry loop too
+      if (Date.now() - startTime > CRITICAL_TIMEOUT) break;
+
       try {
         const apiKey = process.env.GOOGLE_GEMINI_API_KEY || '';
         
         if (!apiKey || !apiKey.startsWith('AIza')) {
-          // ... (keep mock mode logic same as before)
           console.warn('[Gemini Service] Invalid or missing API Key. Entering Mock Mode.');
-          await new Promise(r => setTimeout(r, 2000));
+          await new Promise(r => setTimeout(r, 1000));
           return {
             type: 'Lab Report',
             patientInfo: { name: 'Demo Patient', date: new Date().toLocaleDateString() },
@@ -169,22 +182,33 @@ async function analyzeMedicalReport(base64Image, mimeType = 'image/jpeg', previo
       } catch (error) {
         lastError = error;
         const msg = error.message?.toLowerCase() || '';
-        const is404 = msg.includes('404') || msg.includes('not found') || msg.includes('not supported');
-        const isBusy = msg.includes('503') || msg.includes('429') || msg.includes('demand') || msg.includes('load');
-
+        
+        // 1. Model not found or unsupported - Skip immediately
+        const is404 = msg.includes('404') || msg.includes('not found') || msg.includes('not supported') || msg.includes('not enabled');
         if (is404) {
-          console.warn(`[Gemini] Model ${modelName} unavailable. Skipping...`);
+          console.warn(`[Gemini] Model ${modelName} unavailable/not found. Skipping...`);
           break; 
         }
 
+        // 2. Quota Exceeded (429) - Switch to next model immediately
+        const isQuota = msg.includes('429') || msg.includes('quota') || msg.includes('limit');
+        if (isQuota) {
+          console.warn(`[Gemini] Model ${modelName} quota exceeded. Checking next model...`);
+          break; 
+        }
+
+        // 3. Busy / Overloaded (503) - Retry with exponential backoff
+        const isBusy = msg.includes('503') || msg.includes('overloaded') || msg.includes('demand') || msg.includes('load') || msg.includes('deadline');
         if (isBusy && retryCount < maxRetries) {
           retryCount++;
-          const waitTime = retryCount * 2000;
-          console.warn(`[Gemini] ${modelName} busy. Retrying in ${waitTime}ms...`);
+          // Exponential backoff: 2s, 4s with some jitter
+          const waitTime = Math.pow(2, retryCount) * 1000 + Math.random() * 1000;
+          console.warn(`[Gemini] ${modelName} busy (${retryCount}/${maxRetries}). Retrying in ${Math.round(waitTime)}ms...`);
           await new Promise(r => setTimeout(r, waitTime));
           continue;
         }
 
+        // Other errors (e.g. invalid base64, syntax) - Log and skip model
         console.error(`[Gemini Error - ${modelName}]:`, error.message);
         break; 
       }

@@ -13,7 +13,7 @@ dotenv.config();
 
 // Startup Diagnostic
 const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
-const defaultGeminiModel = process.env.GOOGLE_GEMINI_MODEL || 'gemini-2.5-flash';
+const defaultGeminiModel = process.env.GOOGLE_GEMINI_MODEL || 'gemini-flash-latest';
 if (apiKey) {
   const masked = apiKey.substring(0, 4) + '...' + apiKey.substring(apiKey.length - 4);
   console.log(`[Gemini] System initialized with API Key: ${masked}`);

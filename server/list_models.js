@@ -26,13 +26,13 @@ async function listModels() {
     // The most robust way to see if something is missing is to probe a few likely candidates
     const PROBE_LIST = [
         'gemini-1.5-flash',
+        'gemini-flash-latest',
+        'gemini-2.0-flash',
+        'gemini-1.5-flash-8b',
+        'gemini-2.5-flash',
+        'gemini-2.5-pro',
         'gemini-1.5-pro',
-        'gemini-pro',
-        'gemini-1.5-flash-latest',
-        'gemini-1.5-pro-latest',
-        'gemini-1.5-flash-001',
-        'gemini-1.5-pro-002',
-        'gemini-1.5-flash-8b'
+        'gemini-pro'
     ];
 
     for (const modelName of PROBE_LIST) {

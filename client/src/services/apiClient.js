@@ -6,7 +6,7 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 60000, // Increased for AI processing
+  timeout: 180000, // Increased for AI processing retries
 });
 
 // Automatically attach Supabase session token to every request

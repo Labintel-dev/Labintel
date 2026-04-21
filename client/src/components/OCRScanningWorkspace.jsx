@@ -62,8 +62,8 @@ const normalizeAnalysis = (payload = {}) => {
     },
     results: {
       ...results,
-      parameters,
-      medicines,
+      parameters: parameters || [],
+      medicines: medicines || [],
     },
     summary:
       payload.summary ||
@@ -142,8 +142,12 @@ const DemoNormalReportPanel = () => (
 
 const PrintReport = ({ result }) => {
   const parameters = result?.results?.parameters || [];
+  const medicines = result?.results?.medicines || [];
+  const isLabReport = result.type === 'Lab Report';
+  const isPrescription = result.type === 'Prescription';
+
   return (
-    <div className="bg-white text-black p-12 font-serif leading-relaxed min-h-screen">
+    <div className="bg-white text-black p-8 font-serif leading-relaxed">
       {/* 1. Branding Header */}
       <div className="flex justify-between items-start mb-8">
         <div>
@@ -156,23 +160,27 @@ const PrintReport = ({ result }) => {
       </div>
 
       {/* 2. Horizontal Line */}
-      <div className="h-1 bg-black w-full mb-10" />
+      <div className="h-0.5 bg-black w-full mb-6" />
 
-      {/* 3. Lab Layer */}
-      <div className="mb-10">
-        <h2 className="text-xl font-black uppercase tracking-widest mb-1">{result.labDetails?.name}</h2>
+      {/* 3. Entity (Lab or Clinic) Layer */}
+      <div className="mb-6">
+        <h2 className="text-xl font-black uppercase tracking-widest mb-1">{result.labDetails?.name || (isPrescription ? 'Medical Prescription' : 'Diagnostic Report')}</h2>
         <div className="flex flex-col gap-0.5">
-          <p className="text-xs text-gray-500 font-bold flex items-center gap-2 uppercase tracking-wide">
-            <MapPin size={10} /> {result.labDetails?.address}
-          </p>
-          <p className="text-xs text-gray-500 font-bold flex items-center gap-2 uppercase tracking-wide">
-            <Phone size={10} /> {result.labDetails?.contact}
-          </p>
+          {result.labDetails?.address && (
+            <p className="text-xs text-gray-500 font-bold flex items-center gap-2 uppercase tracking-wide">
+              <MapPin size={10} /> {result.labDetails.address}
+            </p>
+          )}
+          {result.labDetails?.contact && (
+            <p className="text-xs text-gray-500 font-bold flex items-center gap-2 uppercase tracking-wide">
+              <Phone size={10} /> {result.labDetails.contact}
+            </p>
+          )}
         </div>
       </div>
 
       {/* 4. Patient Layer */}
-      <div className="grid grid-cols-2 gap-10 mb-12 pb-10 border-b-2 border-dotted border-gray-200">
+      <div className="grid grid-cols-2 gap-10 mb-8 pb-6 border-b-2 border-dotted border-gray-200">
         <div className="space-y-4">
            <div>
              <p className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] mb-1.5">Full Patient Name</p>
@@ -195,74 +203,107 @@ const PrintReport = ({ result }) => {
         </div>
       </div>
 
-      {/* 5. Clinical Layer */}
-      <div className="space-y-12">
-        <div className="flex items-center gap-4 mb-6">
-          <h3 className="text-xs font-black uppercase tracking-[0.3em] bg-black text-white px-4 py-2">Clinical Biomarker Intelligence</h3>
-          <div className="flex-1 h-px bg-gray-200" />
-        </div>
-        
-        {parameters.map((p, i) => {
-          const status = normalizeStatus(p.status);
-          const isAbnormal = status === 'Abnormal';
-          
-          return (
-            <div key={i} className="space-y-6 break-inside-avoid border-b border-gray-100 pb-10 last:border-0">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h4 className="text-lg font-black tracking-tight flex items-center gap-3">
-                    {p.name}
-                    {isAbnormal && <AlertCircle size={18} className="text-black" />}
-                  </h4>
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">
-                    Observed: {p.value} {p.unit} <span className="mx-2 opacity-30">|</span> Ref: {p.range}
-                  </p>
-                </div>
-                <div className={`px-4 py-2 border-2 border-black text-xs font-black uppercase tracking-widest ${isAbnormal ? 'bg-black text-white' : 'bg-white text-black'}`}>
-                  {p.status}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <div className="space-y-5">
-                  <div className="pl-4 border-l-2 border-gray-100">
-                     <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest mb-1.5">Simplification</p>
-                     <p className="text-sm leading-relaxed text-gray-700 italic">"{p.insight}"</p>
-                  </div>
-                  <div className="pl-4 border-l-2 border-black">
-                     <p className="text-[9px] font-black uppercase text-black tracking-widest mb-1.5">Creative Solution</p>
-                     <p className="text-sm font-bold leading-relaxed">{p.creativeSolution || p.recommendation || "Maintain balanced nutrition and regular movement."}</p>
-                  </div>
-                </div>
-                <div className="space-y-5">
-                  <div className="p-5 bg-gray-50 border border-gray-100 rounded-xl">
-                     <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest mb-2">Suggestive Medicine Ref</p>
-                     <p className="text-xs font-bold leading-relaxed text-gray-600">{p.suggestedMedicine || "Educational medication groups provided upon professional consult."}</p>
-                  </div>
-                  <div className="flex items-center gap-4 group">
-                     <div className="w-10 h-10 rounded-full border border-black flex items-center justify-center shrink-0">
-                        <Stethoscope size={16} />
-                     </div>
-                     <div>
-                        <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest mb-0.5">Recommended Expert</p>
-                        <p className="text-sm font-black text-gray-800 uppercase tracking-wide">{p.suggestedSpecialist || "General Internal Medicine"}</p>
-                     </div>
-                  </div>
-                </div>
-              </div>
+      {/* 5. Clinical Content Layer */}
+      <div className="space-y-8">
+        {isLabReport && (
+          <>
+            <div className="flex items-center gap-4 mb-6">
+              <h3 className="text-xs font-black uppercase tracking-[0.3em] bg-black text-white px-4 py-2">Clinical Biomarker Intelligence</h3>
+              <div className="flex-1 h-px bg-gray-200" />
             </div>
-          );
-        })}
+            
+            {parameters.map((p, i) => {
+              const status = normalizeStatus(p.status);
+              const isAbnormal = status === 'Abnormal';
+              return (
+                <div key={i} className="space-y-4 break-inside-avoid border-b border-gray-100 pb-6 last:border-0">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="text-lg font-black tracking-tight flex items-center gap-3">
+                        {p.name}
+                        {isAbnormal && <AlertCircle size={18} className="text-black" />}
+                      </h4>
+                      <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">
+                        Observed: {p.value} {p.unit} <span className="mx-2 opacity-30">|</span> Ref: {p.range}
+                      </p>
+                    </div>
+                    <div className={`px-4 py-2 border-2 border-black text-xs font-black uppercase tracking-widest ${isAbnormal ? 'bg-black text-white' : 'bg-white text-black'}`}>
+                      {p.status}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div className="space-y-5">
+                      <div className="pl-4 border-l-2 border-gray-100">
+                         <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest mb-1.5">Simplification</p>
+                         <p className="text-sm leading-relaxed text-gray-700 italic">"{p.insight}"</p>
+                      </div>
+                      <div className="pl-4 border-l-2 border-black">
+                         <p className="text-[9px] font-black uppercase text-black tracking-widest mb-1.5">Creative Solution</p>
+                         <p className="text-sm font-bold leading-relaxed">{p.creativeSolution || "Maintain balanced nutrition and regular movement."}</p>
+                      </div>
+                    </div>
+                    <div className="space-y-5">
+                      <div className="p-5 bg-gray-50 border border-gray-100 rounded-xl">
+                         <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest mb-2">Suggestive Medicine Ref</p>
+                         <p className="text-xs font-bold leading-relaxed text-gray-600">{p.suggestedMedicine || "Educational medication groups info provided upon consult."}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </>
+        )}
+
+        {isPrescription && (
+          <>
+            <div className="flex items-center gap-4 mb-6">
+              <h3 className="text-xs font-black uppercase tracking-[0.3em] bg-black text-white px-4 py-2">Medication Intelligence Schedule</h3>
+              <div className="flex-1 h-px bg-gray-200" />
+            </div>
+            
+            <div className="border border-black rounded-xl overflow-hidden">
+               <table className="w-full text-left">
+                  <thead className="bg-gray-100 text-[10px] font-black uppercase tracking-widest">
+                    <tr>
+                      <th className="p-4 border-r border-gray-200">Medicine Name</th>
+                      <th className="p-4 border-r border-gray-200">Dosage</th>
+                      <th className="p-4 border-r border-gray-200">Schedule</th>
+                      <th className="p-4">Purpose</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 text-xs font-bold">
+                    {medicines.map((m, i) => (
+                      <tr key={i}>
+                        <td className="p-4 border-r border-gray-200">{m.name}</td>
+                        <td className="p-4 border-r border-gray-200">{m.dosage}</td>
+                        <td className="p-4 border-r border-gray-200">
+                          <div className="flex gap-1">
+                            {['Morning', 'Afternoon', 'Night'].map(time => (
+                              <span key={time} className={`px-1.5 py-0.5 rounded border ${m.frequency?.includes(time) ? 'bg-black text-white border-black' : 'text-gray-300 border-gray-200'}`}>
+                                {time[0]}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="p-4">{m.purpose}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+               </table>
+            </div>
+          </>
+        )}
       </div>
 
-      {/* Summary Recap on New Page maybe? No, let's keep it tight */}
-      <div className="mt-16 p-8 border-2 border-black rounded-3xl break-inside-avoid">
+      {/* Summary Recap */}
+      <div className="mt-10 p-6 border-2 border-black rounded-2xl break-inside-avoid">
          <p className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] mb-4">Clinical Executive Summary</p>
          <p className="text-base font-bold leading-relaxed">{result.summary}</p>
       </div>
 
       {/* Footer Disclaimer */}
-      <div className="mt-auto pt-20 pb-10 text-center">
+      <div className="mt-auto pt-16 pb-6 text-center">
         <div className="w-20 h-0.5 bg-gray-200 mx-auto mb-6" />
         <p className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-300 max-w-2xl mx-auto leading-loose">
           VALIDATED THROUGH LABINTEL CLINICAL INTELLIGENCE PROTOCOL. 
@@ -600,7 +641,16 @@ const OCRScanningWorkspace = ({ user }) => {
       setStep('results');
     } catch (err) {
       console.error('Pipeline Error:', err);
-      const errMsg = err.response?.data?.details || err.response?.data?.error || 'Intelligence pipeline failed. Please check the document clarity.';
+      let errMsg = 'Intelligence pipeline failed. Please check the document clarity.';
+      
+      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        errMsg = 'The AI is taking longer than usual due to high demand. Please try again in 30 seconds.';
+      } else if (err.response?.status === 503) {
+        errMsg = 'The AI server is currently overloaded. We are retrying, but please try again shortly.';
+      } else {
+        errMsg = err.response?.data?.details || err.response?.data?.error || errMsg;
+      }
+      
       setError(errMsg);
       setStep('upload');
     }
@@ -736,7 +786,66 @@ const OCRScanningWorkspace = ({ user }) => {
     setResult({
       ...demoReport,
       originalImage: null,
-      sourceFileName: 'Demo Generated Report',
+      sourceFileName: 'Demo Lab Report',
+    });
+    setShowComparison(false);
+    setStep('results');
+  };
+
+  const runDemoPrescription = () => {
+    setError(null);
+    setShowOptions(false);
+    setFile(null);
+    setImagePreview(null);
+
+    const demoReport = normalizeAnalysis({
+      type: 'Prescription',
+      patientInfo: {
+        name: 'Sayantan Maji',
+        age: '45',
+        gender: 'Male',
+        date: new Date().toLocaleDateString(),
+        doctor: 'Dr. S. K. Das, General Medicine',
+      },
+      results: {
+        medicines: [
+          {
+            name: 'Amoxicillin 500mg',
+            dosage: '1 Capsule',
+            frequency: ['Morning', 'Afternoon', 'Night'],
+            duration: '5 Days',
+            purpose: 'Bacterial Infection'
+          },
+          {
+            name: 'Paracetamol 650mg',
+            dosage: '1 Tablet',
+            frequency: ['Morning', 'Night'],
+            duration: '3 Days',
+            purpose: 'Fever and Pain'
+          },
+          {
+            name: 'Pantoprazole 40mg',
+            dosage: '1 Tablet',
+            frequency: ['Morning'],
+            duration: '10 Days',
+            purpose: 'Acidity (Take before food)'
+          }
+        ],
+      },
+      summary:
+        'A comprehensive prescription for treating a respiratory infection and associated fever. Ensure completion of the antibiotic course.',
+      advice: [
+        'Complete the full 5-day course of Amoxicillin even if you feel better.',
+        'Drink plenty of warm fluids.',
+        'Avoid cold drinks and direct AC exposure.'
+      ],
+      riskLevel: 'Low',
+    });
+
+    setResult({
+      ...demoReport,
+      originalImage: null,
+      sourceFileName: 'Demo Prescription',
     });
     setShowComparison(false);
     setStep('results');
@@ -1031,14 +1140,21 @@ const OCRScanningWorkspace = ({ user }) => {
               )}
             </div>
 
-            {/* Before/After Demo Slider */}
             <div className="mt-8 flex flex-col items-center gap-4">
-              <button 
-                onClick={runDemoAiReport}
-                className="text-xs font-bold text-gray-400 hover:text-[#14453d] transition-colors flex items-center gap-2"
-              >
-                <Sparkles size={14} className="opacity-50" /> Don't have a report? Try with sample data
-              </button>
+              <div className="flex gap-6">
+                <button 
+                  onClick={runDemoAiReport}
+                  className="text-xs font-bold text-gray-400 hover:text-[#14453d] transition-colors flex items-center gap-2"
+                >
+                  <Sparkles size={14} className="opacity-50" /> Try Demo Lab Report
+                </button>
+                <button 
+                  onClick={runDemoPrescription}
+                  className="text-xs font-bold text-gray-400 hover:text-[#14453d] transition-colors flex items-center gap-2"
+                >
+                  <Sparkles size={14} className="opacity-50" /> Try Demo Prescription
+                </button>
+              </div>
             </div>
           </motion.div>
         )}
@@ -1153,113 +1269,180 @@ const OCRScanningWorkspace = ({ user }) => {
                   </div>
                 </div>
               </div>
-
-              {/* Comprehensive Medical Panel */}
-              <div className="ocr-print-card bg-white rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden">
-                <div className="p-8 bg-gray-50/50 border-b border-gray-100 flex items-center justify-between">
-                   <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[#14453d]">Diagnostic Biomarker Panel</h3>
-                   <div className="flex gap-4">
-                     <span className="flex items-center gap-2 text-[10px] font-black text-emerald-600 uppercase tracking-widest">
-                       <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Normal
-                     </span>
-                     <span className="flex items-center gap-2 text-[10px] font-black text-rose-600 uppercase tracking-widest">
-                       <div className="w-1.5 h-1.5 rounded-full bg-rose-500" /> Abnormal
-                     </span>
-                   </div>
-                </div>
-                
-                <div className="overflow-x-auto ocr-print-table">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="bg-gray-50/30">
-                        <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Test Parameter</th>
-                        <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Result</th>
-                        <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Units</th>
-                        <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Ref. Range</th>
-                        <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                      {parameterList.length > 0 ? parameterList.map((p, i) => {
-                        const status = normalizeStatus(p.status);
-                        const isSelected = selectedMarkerIndex === i;
-                        return (
-                          <React.Fragment key={i}>
-                            <tr 
-                              onClick={() => setSelectedMarkerIndex(isSelected ? -1 : i)}
-                              className={`group cursor-pointer hover:bg-gray-50 transition-colors ${isSelected ? 'bg-emerald-50/30' : ''}`}
-                            >
-                              <td className="px-8 py-6">
-                                <div className="text-sm font-black text-gray-800">{p.name}</div>
-                                <div className="text-[10px] text-gray-400 font-bold uppercase mt-1 tracking-widest group-hover:text-emerald-600 transition-colors">
-                                  {isSelected ? 'Click to hide details' : 'Click for AI Insight'}
-                                </div>
-                              </td>
-                              <td className="px-8 py-6 text-center">
-                                <span className={`text-base font-black ${status === 'Abnormal' ? 'text-rose-600' : 'text-gray-900'}`}>{p.value}</span>
-                              </td>
-                              <td className="px-4 py-6 text-center text-xs font-bold text-gray-400">{p.unit}</td>
-                              <td className="px-8 py-6 text-center text-xs font-bold text-gray-400">{p.range}</td>
-                              <td className="px-8 py-6 text-right">
-                                <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border
-                                  ${status === 'Abnormal' ? 'bg-rose-50 border-rose-100 text-rose-600' : 
-                                    status === 'Borderline' ? 'bg-amber-50 border-amber-100 text-amber-600' : 
-                                    'bg-emerald-50 border-emerald-100 text-emerald-600'}`}>
-                                  {p.status}
-                                </span>
-                              </td>
-                            </tr>
-                            <tr className={`${isSelected ? 'table-row' : 'hidden print:table-row ocr-print-expanded'} bg-emerald-50/20`}>
-                              <td colSpan={5} className="px-8 pb-10 pt-4">
-                                <motion.div 
-                                  initial={{ opacity: 0, y: -10 }} 
-                                  animate={{ opacity: 1, y: 0 }}
-                                  className="grid grid-cols-1 md:grid-cols-2 gap-12"
-                                >
-                                  <div className="space-y-6">
-                                    <div>
-                                      <h4 className="text-[10px] font-black uppercase tracking-widest text-[#14453d] mb-4 opacity-50">AI Interpretation</h4>
-                                      <p className="text-sm text-gray-600 leading-relaxed font-medium">{p.insight}</p>
-                                    </div>
-                                    {p.recommendation && (
-                                      <div>
-                                        <h4 className="text-[10px] font-black uppercase tracking-widest text-[#14453d] mb-4 opacity-50">Clinical Advice</h4>
-                                        <p className="text-sm text-gray-600 leading-relaxed font-medium">{p.recommendation}</p>
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="space-y-6">
-                                    <div>
-                                      <h4 className="text-[10px] font-black uppercase tracking-widest text-[#14453d] mb-4 opacity-50">Educational Context</h4>
-                                      <div className="p-6 bg-white rounded-3xl border border-emerald-100 shadow-sm">
-                                        <p className="text-[13px] text-emerald-900 leading-relaxed font-bold italic">
-                                          "{p.education || "No medical context provided."}"
-                                        </p>
-                                      </div>
-                                    </div>
-                                    <div className="pt-2 no-print">
-                                      <RangeIndicator value={p.value} low={p.low} high={p.high} status={p.status} unit={p.unit} />
-                                    </div>
-                                  </div>
-                                </motion.div>
-                              </td>
-                            </tr>
-                          </React.Fragment>
-                        );
-                      }) : (
-                        <tr>
-                          <td colSpan={5} className="py-20 text-center">
-                            <div className="flex flex-col items-center gap-4">
-                              <Loader2 size={32} className="text-emerald-500 animate-spin opacity-30" />
-                              <p className="text-sm font-bold text-gray-400">Clinical synthesis in progress...</p>
-                            </div>
-                          </td>
+              {/* Comprehensive Medical Panel (Conditional) */}
+              {result.type === 'Lab Report' ? (
+                <div className="ocr-print-card bg-white rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden">
+                  <div className="p-8 bg-gray-50/50 border-b border-gray-100 flex items-center justify-between">
+                     <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[#14453d]">Diagnostic Biomarker Panel</h3>
+                     <div className="flex gap-4">
+                       <span className="flex items-center gap-2 text-[10px] font-black text-emerald-600 uppercase tracking-widest">
+                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Normal
+                       </span>
+                       <span className="flex items-center gap-2 text-[10px] font-black text-rose-600 uppercase tracking-widest">
+                         <div className="w-1.5 h-1.5 rounded-full bg-rose-500" /> Abnormal
+                       </span>
+                     </div>
+                  </div>
+                  
+                  <div className="overflow-x-auto ocr-print-table">
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="bg-gray-50/30">
+                          <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Test Parameter</th>
+                          <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Result</th>
+                          <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Units</th>
+                          <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Ref. Range</th>
+                          <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Status</th>
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {parameterList.length > 0 ? parameterList.map((p, i) => {
+                          const status = normalizeStatus(p.status);
+                          const isSelected = selectedMarkerIndex === i;
+                          return (
+                            <React.Fragment key={i}>
+                              <tr 
+                                onClick={() => setSelectedMarkerIndex(isSelected ? -1 : i)}
+                                className={`group cursor-pointer hover:bg-gray-50 transition-colors ${isSelected ? 'bg-emerald-50/30' : ''}`}
+                              >
+                                <td className="px-8 py-6">
+                                  <div className="text-sm font-black text-gray-800">{p.name}</div>
+                                  <div className="text-[10px] text-gray-400 font-bold uppercase mt-1 tracking-widest group-hover:text-emerald-600 transition-colors">
+                                    {isSelected ? 'Click to hide details' : 'Click for AI Insight'}
+                                  </div>
+                                </td>
+                                <td className="px-8 py-6 text-center">
+                                  <span className={`text-base font-black ${status === 'Abnormal' ? 'text-rose-600' : 'text-gray-900'}`}>{p.value}</span>
+                                </td>
+                                <td className="px-4 py-6 text-center text-xs font-bold text-gray-400">{p.unit}</td>
+                                <td className="px-8 py-6 text-center text-xs font-bold text-gray-400">{p.range}</td>
+                                <td className="px-8 py-6 text-right">
+                                  <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border
+                                    ${status === 'Abnormal' ? 'bg-rose-50 border-rose-100 text-rose-600' : 
+                                      status === 'Borderline' ? 'bg-amber-50 border-amber-100 text-amber-600' : 
+                                      'bg-emerald-50 border-emerald-100 text-emerald-600'}`}>
+                                    {p.status}
+                                  </span>
+                                </td>
+                              </tr>
+                              <tr className={`${isSelected ? 'table-row' : 'hidden print:table-row ocr-print-expanded'} bg-emerald-50/20`}>
+                                <td colSpan={5} className="px-8 pb-10 pt-4">
+                                  <motion.div 
+                                    initial={{ opacity: 0, y: -10 }} 
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="grid grid-cols-1 md:grid-cols-2 gap-12"
+                                  >
+                                    <div className="space-y-6">
+                                      <div>
+                                        <h4 className="text-[10px] font-black uppercase tracking-widest text-[#14453d] mb-4 opacity-50">AI Interpretation</h4>
+                                        <p className="text-sm text-gray-600 leading-relaxed font-medium">{p.insight}</p>
+                                      </div>
+                                      {p.recommendation && (
+                                        <div>
+                                          <h4 className="text-[10px] font-black uppercase tracking-widest text-[#14453d] mb-4 opacity-50">Clinical Advice</h4>
+                                          <p className="text-sm text-gray-600 leading-relaxed font-medium">{p.recommendation}</p>
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div className="space-y-6">
+                                      <div>
+                                        <h4 className="text-[10px] font-black uppercase tracking-widest text-[#14453d] mb-4 opacity-50">Educational Context</h4>
+                                        <div className="p-6 bg-white rounded-3xl border border-emerald-100 shadow-sm">
+                                          <p className="text-[13px] text-emerald-900 leading-relaxed font-bold italic">
+                                            "{p.education || "No medical context provided."}"
+                                          </p>
+                                        </div>
+                                      </div>
+                                      <div className="pt-2 no-print">
+                                        <RangeIndicator value={p.value} low={p.low} high={p.high} status={p.status} unit={p.unit} />
+                                      </div>
+                                    </div>
+                                  </motion.div>
+                                </td>
+                              </tr>
+                            </React.Fragment>
+                          );
+                        }) : (
+                          <tr>
+                            <td colSpan={5} className="py-20 text-center">
+                              <div className="flex flex-col items-center gap-4">
+                                <AlertCircle size={32} className="text-amber-500 opacity-50" />
+                                <p className="text-sm font-bold text-gray-400">No diagnostic biomarkers detected in this scan.</p>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
+              ) : result.type === 'Prescription' ? (
+                <div className="ocr-print-card bg-white rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden">
+                  <div className="p-8 bg-gray-50/50 border-b border-gray-100 flex items-center justify-between">
+                     <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[#14453d]">Medication Intelligence Schedule</h3>
+                     <div className="flex gap-4">
+                       <span className="flex items-center gap-2 text-[10px] font-black text-emerald-600 uppercase tracking-widest">
+                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Active Regimen
+                       </span>
+                     </div>
+                  </div>
+                  
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="bg-gray-50/30">
+                          <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Medicine Name</th>
+                          <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Dosage</th>
+                          <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Frequency</th>
+                          <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Purpose</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {result.results?.medicines?.length > 0 ? result.results.medicines.map((m, i) => (
+                          <tr key={i} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-8 py-6">
+                              <div className="text-sm font-black text-gray-800">{m.name}</div>
+                              {m.duration && <div className="text-[10px] text-gray-400 font-bold uppercase mt-1 tracking-widest">For {m.duration}</div>}
+                            </td>
+                            <td className="px-8 py-6 text-center text-sm font-bold text-gray-700">{m.dosage}</td>
+                            <td className="px-8 py-6 text-center">
+                              <div className="flex justify-center gap-1.5">
+                                {['Morning', 'Afternoon', 'Night'].map(t => (
+                                  <div key={t} className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter border
+                                    ${m.frequency?.includes(t) ? 'bg-[#14453d] text-white border-[#14453d]' : 'bg-white text-gray-300 border-gray-100'}`}>
+                                    {t.substring(0, 3)}
+                                  </div>
+                                ))}
+                              </div>
+                            </td>
+                            <td className="px-8 py-6 text-right text-xs font-bold text-gray-500 max-w-[200px] truncate">{m.purpose}</td>
+                          </tr>
+                        )) : (
+                          <tr>
+                            <td colSpan={4} className="py-20 text-center">
+                                <div className="flex flex-col items-center gap-4">
+                                  <AlertCircle size={32} className="text-amber-500 opacity-50" />
+                                  <p className="text-sm font-bold text-gray-400">No medications identified in this scan.</p>
+                                </div>
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : (
+                <div className="ocr-print-card bg-white rounded-[2.5rem] p-12 border border-gray-100 shadow-xl text-center">
+                   <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-400">
+                      <FileText size={32} />
+                   </div>
+                   <h3 className="text-lg font-black text-gray-800 mb-2">General Medical Document</h3>
+                   <p className="text-sm text-gray-500 max-w-sm mx-auto">
+                     This document doesn't contain standard lab markers or prescriptions. 
+                     Please refer to the AI Summary below for interpreted insights.
+                   </p>
+                </div>
+              )}
 
               {/* Digital Recommendations */}
               <div className="ocr-print-card bg-white rounded-[2.5rem] p-10 shadow-xl border border-gray-100">
