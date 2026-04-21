@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: labintel-api
+    env: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      # ── Set these as secrets in the Render dashboard ──────────────────
+      # SUPABASE_URL
+      # SUPABASE_SERVICE_KEY
+      # SUPABASE_ANON_KEY
+      # DATABASE_URL
+      # JWT_SECRET        (generate: openssl rand -base64 48)
+      # GEMINI_API_KEY
+      # PDF_STORAGE_BUCKET  (value: pdfs)
+      # FRONTEND_URL      (value: https://your-project.vercel.app)
