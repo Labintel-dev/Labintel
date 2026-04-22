@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 const API_URL = 'http://localhost:5000/api';
 
@@ -6,6 +6,9 @@ export function useApi(endpoint) {
   const [data, setData] = useState(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const refetch = useCallback(() => setRefreshKey((k) => k + 1), []);
 
   useEffect(() => {
     async function fetchData() {
@@ -22,9 +25,23 @@ export function useApi(endpoint) {
       }
     }
     fetchData();
-  }, [endpoint]);
+  }, [endpoint, refreshKey]);
 
-  return { data, loading, error };
+  return { data, loading, error, refetch };
+}
+
+export async function mutateApi(endpoint, method = 'POST', body = null) {
+  const options = {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+  };
+  if (body) options.body = JSON.stringify(body);
+  const res = await fetch(`${API_URL}${endpoint}`, options);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Request failed' }));
+    throw new Error(err.error || 'Request failed');
+  }
+  return res.json();
 }
 
 export function useDashboardData() {

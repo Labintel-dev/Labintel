@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, FlaskConical, Users, UserCog,
-  FileText, Activity, Settings,
+  FileText, Activity, Settings, LogOut,
 } from 'lucide-react';
 
 const navItems = [
@@ -20,7 +20,7 @@ const navItems = [
   ]},
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ onLogout }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
@@ -56,6 +56,11 @@ export default function Sidebar() {
           <h4>Rahul Agarwal</h4>
           <span>SUPER ADMIN</span>
         </div>
+        {onLogout && (
+          <button className="sidebar-logout-btn" onClick={onLogout} title="Sign Out">
+            <LogOut size={16} />
+          </button>
+        )}
       </div>
     </aside>
   );

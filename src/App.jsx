@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
@@ -7,12 +8,29 @@ import TeamMembers from './pages/TeamMembers';
 import ReportsLogs from './pages/ReportsLogs';
 import ActivityLog from './pages/ActivityLog';
 import SettingsPage from './pages/Settings';
+import LoginPage from './pages/LoginPage';
 
 export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    const auth = localStorage.getItem('labintel_auth');
+    return !!auth;
+  });
+
+  const handleLogin = () => setIsAuthenticated(true);
+
+  const handleLogout = () => {
+    localStorage.removeItem('labintel_auth');
+    setIsAuthenticated(false);
+  };
+
+  if (!isAuthenticated) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
+
   return (
     <BrowserRouter>
       <div className="app-layout">
-        <Sidebar />
+        <Sidebar onLogout={handleLogout} />
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/labs" element={<AllLabs />} />

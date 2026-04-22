@@ -1,4 +1,4 @@
-export default function LabCard({ lab }) {
+export default function LabCard({ lab, onStatusChange, onDelete, onView, onEdit }) {
   const statusClass = lab.status.toLowerCase();
 
   const getActions = () => {
@@ -6,29 +6,54 @@ export default function LabCard({ lab }) {
       case 'ACTIVE':
         return (
           <>
-            <button className="lab-action-btn view">View</button>
-            <button className="lab-action-btn edit">Edit</button>
-            <button className="lab-action-btn deactivate">Deactivate</button>
+            <button className="lab-action-btn view" onClick={() => onView?.(lab)}>View</button>
+            <button className="lab-action-btn edit" onClick={() => onEdit?.(lab)}>Edit</button>
+            <button
+              className="lab-action-btn deactivate"
+              onClick={() => onStatusChange?.(lab.id, 'INACTIVE')}
+            >
+              Deactivate
+            </button>
           </>
         );
       case 'TRIAL':
         return (
           <>
-            <button className="lab-action-btn view">View</button>
-            <button className="lab-action-btn activate">Activate</button>
-            <button className="lab-action-btn remove">Remove</button>
+            <button className="lab-action-btn view" onClick={() => onView?.(lab)}>View</button>
+            <button
+              className="lab-action-btn activate"
+              onClick={() => onStatusChange?.(lab.id, 'ACTIVE')}
+            >
+              Activate
+            </button>
+            <button
+              className="lab-action-btn remove"
+              onClick={() => onDelete?.(lab.id)}
+            >
+              Remove
+            </button>
           </>
         );
       case 'INACTIVE':
         return (
           <>
-            <button className="lab-action-btn view">View</button>
-            <button className="lab-action-btn reactivate">Re-activate</button>
-            <button className="lab-action-btn delete">Delete</button>
+            <button className="lab-action-btn view" onClick={() => onView?.(lab)}>View</button>
+            <button
+              className="lab-action-btn reactivate"
+              onClick={() => onStatusChange?.(lab.id, 'ACTIVE')}
+            >
+              Re-activate
+            </button>
+            <button
+              className="lab-action-btn delete"
+              onClick={() => onDelete?.(lab.id)}
+            >
+              Delete
+            </button>
           </>
         );
       default:
-        return <button className="lab-action-btn view">View</button>;
+        return <button className="lab-action-btn view" onClick={() => onView?.(lab)}>View</button>;
     }
   };
 
@@ -46,15 +71,15 @@ export default function LabCard({ lab }) {
       </div>
       <div className="lab-stats">
         <div className="lab-stat">
-          <div className="lab-stat-value">{lab.patients_count.toLocaleString()}</div>
+          <div className="lab-stat-value">{(lab.patients_count || 0).toLocaleString()}</div>
           <div className="lab-stat-label">Patients</div>
         </div>
         <div className="lab-stat">
-          <div className="lab-stat-value">{lab.reports_count}</div>
+          <div className="lab-stat-value">{lab.reports_count || 0}</div>
           <div className="lab-stat-label">Reports</div>
         </div>
         <div className="lab-stat">
-          <div className="lab-stat-value">{lab.live_now || 'O'}</div>
+          <div className="lab-stat-value">{lab.live_now || 0}</div>
           <div className="lab-stat-label">Live now</div>
         </div>
       </div>
