@@ -1,9 +1,8 @@
-import { Plus, UserPlus, BarChart3 } from 'lucide-react';
+import { Plus, BarChart3 } from 'lucide-react';
 import StatsCards from '../components/StatsCards';
 import LiveSessions from '../components/LiveSessions';
 import LabCard from '../components/LabCard';
 import ActivityFeed from '../components/ActivityFeed';
-import TeamTable from '../components/TeamTable';
 import { useDashboardData } from '../hooks/useApi';
 
 export default function Dashboard() {
@@ -36,7 +35,6 @@ export default function Dashboard() {
 
       <div className="action-buttons">
         <button className="action-btn primary"><Plus size={16} /> Onboard New Lab</button>
-        <button className="action-btn secondary"><UserPlus size={16} /> Invite Team Member</button>
         <button className="action-btn secondary"><BarChart3 size={16} /> Platform Metrics</button>
       </div>
 
@@ -58,7 +56,6 @@ export default function Dashboard() {
         <ActivityFeed activities={activityLogs} />
       </div>
 
-      <TeamTable members={teamMembers} />
     </div>
   );
 }

@@ -11,7 +11,6 @@ const navItems = [
     { to: '/live-users', icon: Users, label: 'Live Users' },
   ]},
   { section: 'MANAGEMENT', items: [
-    { to: '/team', icon: UserCog, label: 'Team Members' },
     { to: '/reports', icon: FileText, label: 'Reports & Logs' },
     { to: '/activity', icon: Activity, label: 'Activity Log', badge: '3', badgeRed: true },
   ]},
