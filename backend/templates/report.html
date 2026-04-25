@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lab Report — {{REPORT_ID}}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ── Reset & Base ─────────────────────────────────────────────────────── */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', Arial, Helvetica, sans-serif;
+      font-size: 11px;
+      color: #1a1a2e;
+      background: #fff;
+      line-height: 1.5;
+    }
+    .page { width: 210mm; min-height: 297mm; padding: 12mm 14mm; display: flex; flex-direction: column; }
+    
+    /* ── Header ───────────────────────────────────────────────────────────── */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid {{LAB_COLOR}};
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+    .header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .labintel-branding {
+      opacity: 0.8;
+    }
+    .lab-details {
+      margin-top: 8px;
+    }
+    .lab-name {
+      font-size: 24px; font-weight: 700; color: {{LAB_COLOR}}; letter-spacing: -0.5px;
+      line-height: 1.1;
+    }
+    .lab-contact {
+      font-size: 10px; color: #555; margin-top: 4px;
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .header-right {
+      text-align: right;
+    }
+    .lab-logo { height: 60px; object-fit: contain; }
+    .logo-placeholder {
+      width: 60px; height: 60px; background: {{LAB_COLOR}}; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; color: white;
+    }
+    
+    /* ── Patient Info ─────────────────────────────────────────────────────── */
+    .patient-info {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid #000;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+    .patient-col { width: 48%; }
+    .patient-row {
+      display: flex;
+      margin-bottom: 4px;
+      font-size: 11px;
+    }
+    .patient-label {
+      width: 80px;
+      color: #555;
+    }
+    .patient-val {
+      font-weight: 600;
+      color: #000;
+    }
+    .patient-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: #000;
+      margin-bottom: 6px;
+    }
+    
+    /* ── Barcode & Dates ──────────────────────────────────────────────────── */
+    .barcode-area {
+      text-align: right;
+    }
+    .css-barcode {
+      font-family: 'Libre Barcode 39 Text', monospace; /* Fallback if imported */
+      font-size: 24px; letter-spacing: -1px; color: #000;
+      margin-bottom: 4px;
+    }
+    .dates-grid {
+      display: grid;
+      grid-template-columns: 80px auto;
+      row-gap: 4px;
+      font-size: 10px;
+      text-align: left;
+      margin-left: auto;
+      width: max-content;
+    }
+    .date-label { color: #555; }
+    .date-val { color: #000; font-weight: 500; }
+
+    /* ── Report Title ─────────────────────────────────────────────────────── */
+    .report-title-section {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .dept-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 2px;
+    }
+    .panel-title {
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    /* ── Results Table ────────────────────────────────────────────────────── */
+    .results-table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      margin-bottom: 20px;
+    }
+    .results-table thead tr {
+      border-top: 1px solid #000;
+      border-bottom: 1px solid #000;
+    }
+    .results-table th {
+      padding: 6px 4px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .results-table td {
+      padding: 5px 4px;
+      font-size: 11.5px;
+      color: #000;
+    }
+    .results-table tbody tr { border-bottom: 1px solid #eee; }
+    .results-table tbody tr:last-child { border-bottom: 1px solid #000; }
+    
+    .col-test { width: 45%; }
+    .col-flag { width: 5%; text-align: right; padding-right: 8px; font-weight: 700; }
+    .col-val { width: 15%; font-weight: 600; }
+    .col-unit { width: 15%; color: #444; }
+    .col-ref { width: 20%; color: #444; }
+
+    .abnormal-row td.col-val { color: #d00; }
+    .flag-L { color: #d00; }
+    .flag-H { color: #d00; }
+
+    /* ── AI Insights ──────────────────────────────────────────────────────── */
+    .insights-box {
+      border: 1px dashed #aaa;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      background: #fafafa;
+    }
+    .insights-title { font-size: 11px; font-weight: 700; color: #444; text-transform: uppercase; margin-bottom: 6px; }
+    .insight-text { font-size: 10px; color: #333; line-height: 1.4; margin-bottom: 6px; }
+    .findings-list { margin: 0 0 8px 16px; font-size: 10px; color: #333; }
+    .recommendation-box {
+      font-size: 10px; color: #000; font-weight: 600;
+    }
+
+    /* ── Footer ───────────────────────────────────────────────────────────── */
+    .footer {
+      margin-top: auto;
+    }
+    .signatures {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      margin-top: 30px;
+    }
+    .sig-block {
+      text-align: center;
+      width: 150px;
+    }
+    .sig-img {
+      height: 40px; margin-bottom: 4px;
+    }
+    .sig-line {
+      width: 100%; height: 1px; background: #000; margin-bottom: 4px;
+    }
+    .sig-name { font-size: 10px; font-weight: 700; color: #000; }
+    .sig-title { font-size: 9px; color: #555; }
+
+    .page-num { text-align: center; font-size: 10px; color: #666; margin-bottom: 8px;}
+    
+    .disclaimer-box {
+      border-top: 1px solid #000;
+      padding-top: 8px;
+      text-align: center;
+    }
+    .med-legal {
+      font-size: 10px; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;
+    }
+    .work-timings { font-size: 9px; color: #555; margin-bottom: 4px; }
+    .bottom-note { font-size: 8px; color: #777; line-height: 1.3; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── Header ────────────────────────────────────────────────────────────── -->
+  <div class="header">
+    <div class="header-left">
+      <div class="labintel-branding">
+        {{LABINTEL_LOGO}}
+      </div>
+      <div class="lab-details">
+        <div class="lab-name">{{LAB_NAME}}</div>
+        <div class="lab-contact">
+          <span>📞 {{LAB_PHONE}}</span>
+          <span>✉️ lab@example.com</span>
+          <span>🌐 https://labintel.in/lab/{{LAB_SLUG}}</span>
+        </div>
+      </div>
+    </div>
+    <div class="header-right">
+      {{LAB_LOGO}}
+    </div>
+  </div>
+
+  <!-- ── Patient Info ──────────────────────────────────────────────────────── -->
+  <div class="patient-info">
+    <div class="patient-col">
+      <div class="patient-name">{{PATIENT_NAME}}</div>
+      <div class="patient-row"><div class="patient-label">Age / Sex</div><div class="patient-val">: {{PATIENT_AGE}} YRS / {{PATIENT_GENDER}}</div></div>
+      <div class="patient-row"><div class="patient-label">Referred by</div><div class="patient-val">: {{REFERRED_BY}}</div></div>
+      <div class="patient-row"><div class="patient-label">Reg. no.</div><div class="patient-val">: {{REG_NO}}</div></div>
+    </div>
+    <div class="patient-col barcode-area">
+      <div class="css-barcode">|| | ||| | ||| | ||</div>
+      <div class="dates-grid">
+        <div class="date-label">Registered on</div><div class="date-val">: {{REGISTERED_DATE}}</div>
+        <div class="date-label">Collected on</div><div class="date-val">: {{COLLECTED_DATE}}</div>
+        <div class="date-label">Reported on</div><div class="date-val">: {{REPORTED_DATE}}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Report Title ──────────────────────────────────────────────────────── -->
+  <div class="report-title-section">
+    <div class="dept-title">BIOCHEMISTRY / PATHOLOGY</div>
+    <div class="panel-title">{{PANEL_NAME}}</div>
+  </div>
+
+  <!-- ── Results Table ─────────────────────────────────────────────────────── -->
+  <table class="results-table">
+    <thead>
+      <tr>
+        <th class="col-test">TEST</th>
+        <th class="col-flag"></th>
+        <th class="col-val">VALUE</th>
+        <th class="col-unit">UNIT</th>
+        <th class="col-ref">REFERENCE</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{TEST_VALUES_TABLE}}
+    </tbody>
+  </table>
+
+  <!-- ── AI Insights ───────────────────────────────────────────────────────── -->
+  <div class="insights-box">
+    <div class="insights-title">AI Interpretive Insights</div>
+    <div class="insight-text">{{AI_SUMMARY}}</div>
+    <ul class="findings-list">
+      {{AI_FINDINGS_LIST}}
+    </ul>
+    <div class="recommendation-box">Newer treatment goals & recommendations: {{AI_RECOMMENDATION}}</div>
+    <div style="font-size: 8px; color: #888; margin-top: 4px; font-style: italic;">Insights generated by LabIntel AI (not a substitute for medical advice).</div>
+  </div>
+
+  <!-- ── Footer ────────────────────────────────────────────────────────────── -->
+  <div class="footer">
+    <div class="signatures">
+      <div class="sig-block">
+        <div class="sig-line"></div>
+        <div class="sig-name">{{TECHNICIAN_NAME}}</div>
+        <div class="sig-title">Lab Technician</div>
+      </div>
+      <div class="sig-block">
+        <div class="sig-line"></div>
+        <div class="sig-name">Dr. Pathologist</div>
+        <div class="sig-title">MBBS, MD Pathologist</div>
+      </div>
+    </div>
+
+    <!-- <div class="page-num">Page 1 of 1</div> -->
+    
+    <div class="disclaimer-box">
+      <div class="med-legal">NOT VALID FOR MEDICO LEGAL PURPOSE</div>
+      <div class="work-timings">Work timings: Monday to Sunday, 8 am to 8 pm</div>
+      <div class="bottom-note">
+        Please correlate clinically. Although the test results are checked thoroughly, in case of any unexpected test results which could be due to machine error or typing error or any other reason please contact the lab immediately for a free evaluation.
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
