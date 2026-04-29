@@ -1,0 +1,192 @@
+{
+  "text": "Patient NAME : Baby.AADRIKA MONDAL Barcode NO : 14355900\nAge/Gender : 1 Y 3 M/Female Sample Collected ON : 03/Dec/2025 04:34:54 PM\nLabNo : 012512031329 Sample Received ON : 03/Dec/2025 07:11:03 PM\nReferred BY :Dr. P MITRA Report Generated ON : 03/Dec/2025 09:01:55 PM\nCLIENT CODE :WBCL/PAY/SPR Sample STATUS : Final Approved\nRefer Lab/Hosp : Other Info :\nLab Address :AS 130, Block-H, R M Road, Kol: 157\nDEPARTMENT OF HEMATOLOGY\nTest Name Value Unit Bio Ref.Interval\nCBC\nErythrocytes\nHaemoglobin 11.5 g/dL 11-14.5\nRBC Count 4.8 10^12/L 4.0-5.2\nPCV (Packed Cell Volume) 35.0 % 30-40\nMCV (Mean Corpuscular Volume) 72.9 fl 77-87\nMCH (Mean Corpuscular Hemoglobin) 23.96 pg 24-30\nMCHC (Mean Corpuscular Hemoglobin Concentration) 32.9 g/dl 31-37\nRDW-CV 16.3 % 11.6-14.0\nLeucocytes\nWBC Count,Total 21,500 cells/µl 5000-15000\nDifferential Leucocyte Count\nNeutrophils 29 % 40-80\nLymphocytes 66 % 20-40\nMonocytes 2 % 1-9\nEosinophils 3 % 0-7\nBasophils 0 % 0-2\nAbsolute Neutrophil Count 6,235\nAbsolute Lymphocyte Count 14,190 Cells/µL 6000-9000\nAbsolute Monocyte Count 430 Cells/µL 200 - 1000\nAbsolute Eosinophil Count 645 cells/µL 100-1000\nAbsolute Basophil Count 0 Cells/µL <200\nThrombocytes\nPlatelet Count 422 10^9/L 200-490\nErythrocyte Sedimentation Rate\nESR 20 mm in 1hr ≤20\nMorphology\nRBC Morphology Microcytic And Normochromic.\nWBC Morphology Leukocytosis\nPlatelets Adequate.\nDEPARTMENT OF CLINICAL BIOCHEMISTRY\nThyroid Stimulating Hormone (TSH) 2.68 uIU/mL 1D - 13D : 1.0 - 39.0 2W - 20W : 1.7 - 9.1 21W - 20Y : 0.7 - 6.4 Adults(more than 20Y) : 0.3 - 4.5\nImmunoglobulin E (IgE) 93.2 IU/mL < 60",
+  "markers": [
+    {
+      "name": "Haemoglobin",
+      "value": "11.5",
+      "unit": "g/dL",
+      "range": "11-14.5",
+      "lineEvidence": "Haemoglobin 11.5 g/dL 11-14.5"
+    },
+    {
+      "name": "RBC Count",
+      "value": "4.8",
+      "unit": "10^12/L",
+      "range": "4.0-5.2",
+      "lineEvidence": "RBC Count 4.8 10^12/L 4.0-5.2"
+    },
+    {
+      "name": "PCV (Packed Cell Volume)",
+      "value": "35.0",
+      "unit": "%",
+      "range": "30-40",
+      "lineEvidence": "PCV (Packed Cell Volume) 35.0 % 30-40"
+    },
+    {
+      "name": "MCV (Mean Corpuscular Volume)",
+      "value": "72.9",
+      "unit": "fl",
+      "range": "77-87",
+      "lineEvidence": "MCV (Mean Corpuscular Volume) 72.9 fl 77-87"
+    },
+    {
+      "name": "MCH (Mean Corpuscular Hemoglobin)",
+      "value": "23.96",
+      "unit": "pg",
+      "range": "24-30",
+      "lineEvidence": "MCH (Mean Corpuscular Hemoglobin) 23.96 pg 24-30"
+    },
+    {
+      "name": "MCHC (Mean Corpuscular Hemoglobin Concentration)",
+      "value": "32.9",
+      "unit": "g/dl",
+      "range": "31-37",
+      "lineEvidence": "MCHC (Mean Corpuscular Hemoglobin Concentration) 32.9 g/dl 31-37"
+    },
+    {
+      "name": "RDW-CV",
+      "value": "16.3",
+      "unit": "%",
+      "range": "11.6-14.0",
+      "lineEvidence": "RDW-CV 16.3 % 11.6-14.0"
+    },
+    {
+      "name": "WBC Count,Total",
+      "value": "21,500",
+      "unit": "cells/µl",
+      "range": "5000-15000",
+      "lineEvidence": "WBC Count,Total 21,500 cells/µl 5000-15000"
+    },
+    {
+      "name": "Neutrophils",
+      "value": "29",
+      "unit": "%",
+      "range": "40-80",
+      "lineEvidence": "Neutrophils 29 % 40-80"
+    },
+    {
+      "name": "Lymphocytes",
+      "value": "66",
+      "unit": "%",
+      "range": "20-40",
+      "lineEvidence": "Lymphocytes 66 % 20-40"
+    },
+    {
+      "name": "Monocytes",
+      "value": "2",
+      "unit": "%",
+      "range": "1-9",
+      "lineEvidence": "Monocytes 2 % 1-9"
+    },
+    {
+      "name": "Eosinophils",
+      "value": "3",
+      "unit": "%",
+      "range": "0-7",
+      "lineEvidence": "Eosinophils 3 % 0-7"
+    },
+    {
+      "name": "Basophils",
+      "value": "0",
+      "unit": "%",
+      "range": "0-2",
+      "lineEvidence": "Basophils 0 % 0-2"
+    },
+    {
+      "name": "Absolute Neutrophil Count",
+      "value": "6,235",
+      "unit": "",
+      "range": "",
+      "lineEvidence": "Absolute Neutrophil Count 6,235"
+    },
+    {
+      "name": "Absolute Lymphocyte Count",
+      "value": "14,190",
+      "unit": "Cells/µL",
+      "range": "6000-9000",
+      "lineEvidence": "Absolute Lymphocyte Count 14,190 Cells/µL 6000-9000"
+    },
+    {
+      "name": "Absolute Monocyte Count",
+      "value": "430",
+      "unit": "Cells/µL",
+      "range": "200 - 1000",
+      "lineEvidence": "Absolute Monocyte Count 430 Cells/µL 200 - 1000"
+    },
+    {
+      "name": "Absolute Eosinophil Count",
+      "value": "645",
+      "unit": "cells/µL",
+      "range": "100-1000",
+      "lineEvidence": "Absolute Eosinophil Count 645 cells/µL 100-1000"
+    },
+    {
+      "name": "Absolute Basophil Count",
+      "value": "0",
+      "unit": "Cells/µL",
+      "range": "<200",
+      "lineEvidence": "Absolute Basophil Count 0 Cells/µL <200"
+    },
+    {
+      "name": "Platelet Count",
+      "value": "422",
+      "unit": "10^9/L",
+      "range": "200-490",
+      "lineEvidence": "Platelet Count 422 10^9/L 200-490"
+    },
+    {
+      "name": "ESR",
+      "value": "20",
+      "unit": "mm in 1hr",
+      "range": "≤20",
+      "lineEvidence": "ESR 20 mm in 1hr ≤20"
+    },
+    {
+      "name": "RBC Morphology",
+      "value": "Microcytic And Normochromic",
+      "unit": "",
+      "range": "",
+      "lineEvidence": "RBC Morphology Microcytic And Normochromic."
+    },
+    {
+      "name": "WBC Morphology",
+      "value": "Leukocytosis",
+      "unit": "",
+      "range": "",
+      "lineEvidence": "WBC Morphology Leukocytosis"
+    },
+    {
+      "name": "Platelets",
+      "value": "Adequate",
+      "unit": "",
+      "range": "",
+      "lineEvidence": "Platelets Adequate."
+    },
+    {
+      "name": "Thyroid Stimulating Hormone (TSH)",
+      "value": "2.68",
+      "unit": "uIU/mL",
+      "range": "Adults(more than 20Y) : 0.3 - 4.5",
+      "lineEvidence": "Thyroid Stimulating Hormone (TSH) 2.68 uIU/mL"
+    },
+    {
+      "name": "Immunoglobulin E (IgE)",
+      "value": "93.2",
+      "unit": "IU/mL",
+      "range": "< 60",
+      "lineEvidence": "Immunoglobulin E (IgE) 93.2 IU/mL < 60"
+    }
+  ],
+  "medicines": [],
+  "detectedType": "Lab Report",
+  "header": {
+    "labName": "",
+    "address": "AS 130, Block-H, R M Road, Kol: 157",
+    "contact": "",
+    "patientName": "Baby.AADRIKA MONDAL",
+    "age": "1 Y 3 M",
+    "gender": "Female",
+    "date": "03/Dec/2025",
+    "doctor": "Dr. P MITRA"
+  }
+}

@@ -1,0 +1,157 @@
+ilac-MRÁ	
+MC-6206	
+Patient NAME	: Baby.AADRIKA MONDAL	Barcode NO	: 14355900	
+Age/Gender	: 1 Y 3 M/Female	Sample Collected Of	: 03/Dec/2025 04:34:54 PM	
+LabNo	: 012512031329	Sample Received OI	: 03/Dec/2025 07:11:03 PM	
+Referred BY	:Dr. P MITRA	Report Generated ON	: 03/Dec/2025 09:01:55 PM	
+CLIENT CODE	: WBCL/PAY/SPR	Sample STATUS	
+: Final Approved	
+Refer Lab/Hosp	
+Lab Address	:AS 130, Block-H, R M Road, Kol: 157	
+DEPARTMENT OF HEMATOLOGY	
+Test Name	Value	Unit	Bio Ref.Interval	
+CBC	
+Erythrocytes	
+Haemoglobin	11.5	g/ dL	11-14.5	
+(Method:Spectrophotometry) (Sample:EDTA)	
+RBC Count	4.8	10^12/L	4.0-5.2	
+(Method:Electrical Impedance) (Sample:EDTA)	
+PCV (Packed Cell Volume)	35.0	%	30-40	
+(Method:Electrical Impedance) (Sample:EDTA)	
+MCV (Mean Corpuscular Volume)	72.9	fl	77-87	
+(Method:Calculated) (Sample:EDTA)	
+MCH (Mean Corpuscular Hemoglobin)	23.96	Pg	24-30	
+(Method:Calculated) (Sample:EDTA)	
+MCHC (Mean Corpuscular Hemoglobin	32.9	g/dI	31-37	
+Concentration)	
+(Method:Calculated) (Sample:EDTA)	
+RDW-CV	16.3	%	11.6-14.0	
+(Method:Calculated) (Sample:EDTA)	
+Leucocytes	
+WBC Count Total	21,500	cells/ul	5000-15000	
+(Method:Flow cytometry) (Sample:EDTA)	
+Differential Leucocyte Count	
+Neutrophils	29	%	40-80	
+(Method:Leishman Stain - Light Microscopy) (Sample:EDTA)	
+Lymphocytes	66	%	20-40	
+(Method:Leishman Stain - Light Microscopy) (Sample:EDTA)	
+Monocytes	2	%	1-9	
+(Method :Leishman Stain - Light Microscopy) (Sample:EDTA)	
+Eosinophils	%	0-7	
+(Method:Leishman Stain - Light Microscopy) (Sample:EDTA)	
+Basophils	0-2	
+(Method:Leishman Stain - Light Microscopy) (Sample:EDTA)	
+Absolute Neutrophil Count	6,235	
+Absolute Lymphocyte Count	14,190	Cells/uL	6000-9000	
+(Method :Leishman Stain - Light Microscopy) (Sample:EDTA)	
+Absolute Monocyte Count	430	Cells/uL	200 - 1000	
+(Method:Leishman Stain - Light Microscopy) (Sample:EDTA)	
+Absolute Eosinophil Count	645	cells/uL	100-1000	
+(Method:Leishman Stain - Light Microscopy) (Sample:EDTA)	
+singhare!	
+Dr. Debajyoti Singha Roy	
+Reg. No - WBMC 62492	
+M.B.B.S. M.D. (Pathology)	
+Consultant Pathologist	
+Approved By	Page 1 of 4	
+
+--- FUSION DATA ---
+: Baby.AADRIKA MONDAL
+: 1 Y 3 M/FemaIe
+: 012512031329
+:Dr. P MITRA
+:WBCU'PAY/SPR
+130, Block-H, R M Road, KOI: 157
+Barcode NO
+Sample Collected ON
+Sample Received ON
+Report Generated ON
+Sample STATUS
+CLIENT CODE
+Lab'Hæp
+Test
+F Mhrocytes
+Haemoglobin
+DEPARTMENT OF HEMATOLOGY
+Sp.ett•cphotametn•) EDTA
+RBC Count
+(Method: Electrical Impedance) (Sample:EDTA
+PCV (Packed cell Volume)
+Impedanæ) (Sample:
+MCV (Mean Corpuscular Volume)
+MCH (Mean Corpuscular Hemoglobin)
+MCHC (Mean Corpuscular Hemoglobin
+Concentratio n)
+(Method: Calculated)
+RDWCV
+Leucocytes
+WBC Count Total
+(Sample:EDTA )
+Differential Leucocyte Count
+N eutH•ph il s
+(Method : Stain • Light Microscopy)
+Lymp h o cytes
+Stain - Light Mirmpy]
+Mono cytes
+Stain - Light Mirmpy]
+Eosinophils
+(Methad:Leishman Stain. Light j
+Basophils
+{Method Stain • Light (Sample: EDTA)
+Absolute Neutrophil Count
+Absolute Lymphocyte Count
+Stain • Light Microscopy)
+Absolute Monocyte Count
+Stain - Light Mi=py]
+Absolute Eosinophil Count
+Stain - Light Mi=py]
+Value
+11.5
+4.8
+35.0
+729
+23.96
+32.9
+21,500
+66
+6,235
+14,190
+430
+645
+Unit
+g/dL
+IOA12/L
+fl
+g/dl
+cells/
+Cells/gL
+Cells/gL
+cell s/
+: 14355900
+: 03/Dec/2025 PM
+: 03/Dec/2025 PM
+: 03/Dec/2025 PM
+. Final Approved
+Bio
+11-14.5
+4.0-5.2
+30-40
+77-87
+24-30
+31-37
+11.6-14.0
+5000-15000
+40 80
+20-40
+1-9
+0-7
+0-2
+6000-9000
+200 - 1000
+100-1000
+Dr. Debajyoti Singha Roy
+Reg No - WEMC 62492
+ME a S. M D. (Pathology)
+Consultant Pathologist
+Approved By
+Page I Of 4

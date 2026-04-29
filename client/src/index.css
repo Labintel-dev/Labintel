@@ -1,0 +1,252 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-labintel-ink: #10261f;
+  --color-labintel-teal: #14453d;
+  --color-labintel-mint: #dcece6;
+  --color-labintel-sand: #f6f4ee;
+}
+
+:root {
+  --font-body: 'Manrope', sans-serif;
+  --font-display: 'Space Grotesk', sans-serif;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-body);
+    background:
+      radial-gradient(circle at top left, rgba(201, 231, 219, 0.9), transparent 34%),
+      linear-gradient(180deg, #f7faf8 0%, #edf3f0 100%);
+    color: var(--color-labintel-ink);
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  /* Smooth scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #c8d5d0;
+    border-radius: 99px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #8fa8a0;
+  }
+}
+
+.client-marquee-shell {
+  position: relative;
+  overflow: hidden;
+  padding: 1rem 0;
+}
+
+.client-marquee-shell::before,
+.client-marquee-shell::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 5rem;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.client-marquee-shell::before {
+  left: 0;
+  background: linear-gradient(90deg, #ffffff 10%, rgba(255, 255, 255, 0));
+}
+
+.client-marquee-shell::after {
+  right: 0;
+  background: linear-gradient(270deg, #ffffff 10%, rgba(255, 255, 255, 0));
+}
+
+.client-marquee-track {
+  display: flex;
+  width: max-content;
+  gap: 1.5rem;
+  animation: client-marquee-scroll 26s linear infinite;
+}
+
+.client-marquee-card {
+  flex: 0 0 17rem;
+  min-height: 9.5rem;
+  border-radius: 1.75rem;
+  border: 1px solid color-mix(in srgb, var(--client-accent) 45%, white);
+  background:
+    radial-gradient(circle at top center, color-mix(in srgb, var(--client-accent) 12%, white), white 65%);
+  box-shadow: 0 20px 40px rgba(17, 24, 39, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.client-marquee-logo {
+  width: 100%;
+  border-radius: 1.25rem;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  padding: 1.1rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+}
+
+.client-marquee-mark {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--client-accent) 14%, white);
+  color: var(--client-accent);
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.client-marquee-copy {
+  display: flex;
+  flex-direction: column;
+}
+
+.client-marquee-name {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  line-height: 1.1;
+  font-weight: 700;
+  color: #22323b;
+}
+
+.client-marquee-subtitle {
+  margin-top: 0.25rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+@keyframes client-marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(calc(-50% - 0.75rem));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .client-marquee-track {
+    animation: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .client-marquee-card {
+    flex-basis: 13.5rem;
+    min-height: 8.5rem;
+  }
+
+  .client-marquee-name {
+    font-size: 1.05rem;
+  }
+
+  .client-marquee-subtitle {
+    letter-spacing: 0.18em;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PRINT PORTAL SYSTEM
+   ═══════════════════════════════════════════════════════════════════════════ */
+<<<<<<< HEAD
+/* ═══════════════════════════════════════════════════════════════════════════
+   PRINT PORTAL SYSTEM - REMOVED TO PREVENT BLANK PAGE ERRORS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+=======
+#print-root {
+  display: none !important;
+}
+
+@media print {
+  body, html {
+    background: white !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  #root {
+    display: none !important;
+  }
+
+  #print-root {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Force white background and black text on everything in print root */
+  #print-root * {
+    background: white !important;
+    background-color: white !important;
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    border-color: #ddd !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Allow specific borders to remain */
+  #print-root hr, #print-root .base-border {
+    border-color: #000 !important;
+    background: #000 !important;
+  }
+
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+
+  .page-break-before {
+    page-break-before: always;
+    break-before: page;
+  }
+}
+>>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
