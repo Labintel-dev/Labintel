@@ -137,37 +137,50 @@ async function getLabBySlug(req, res) {
 async function sendOtpHandler(req, res) {
   const { phone } = req.body;
 
-  // Generate cryptographically random 6-digit OTP
-  const otp = String(Math.floor(100000 + Math.random() * 900000));
-  const hashedOtp = await bcrypt.hash(otp, 10);
-  const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
-
-  // Upsert — if phone already has a session, replace it
-  const { error } = await supabase.from('otp_sessions').upsert(
-    {
-      phone,
-      hashed_otp: hashedOtp,
-      expires_at: expiresAt.toISOString(),
-      attempts:   0,
-    },
-    { onConflict: 'phone' }
-  );
-
-  if (error) {
-    logger.error(`Failed to create OTP session for ${phone}: ${error.message}`);
-    return res.status(500).json({ error: 'Could not create OTP session. Try again.' });
-  }
-
-  // Fire-and-forget SMS
-  sendOTP(phone, otp);
-
-  logger.info(`OTP sent to ${phone}`);
-  return res.json({ message: 'OTP sent successfully. Valid for 5 minutes.' });
+  // TEST MODE: Skip actual OTP sending
+  logger.info(`OTP send requested for: ${phone} (TEST MODE - no actual SMS sent)`);
+  return res.json({ message: 'OTP request received. Use 123456 to verify.' });
 }
 
 // ─── Patient: Verify OTP ──────────────────────────────────────────────────
 async function verifyOtpHandler(req, res) {
   const { phone, otp } = req.body;
+
+  // TEST MODE: Accept 123456 as valid OTP for any phone number
+  if (otp === '123456') {
+    // Find or create patient record
+    let { data: patient } = await supabase
+      .from('patients')
+      .select('id, phone, full_name')
+      .eq('phone', phone)
+      .single();
+
+    if (!patient) {
+      const { data: newPatient, error: createError } = await supabase
+        .from('patients')
+        .insert({ phone })
+        .select()
+        .single();
+
+      if (createError) {
+        return res.status(500).json({ error: 'Failed to create patient record.' });
+      }
+      patient = newPatient;
+    }
+
+    // Sign patient JWT (30-day expiry)
+    const token = jwt.sign(
+      { patient_id: patient.id, phone: patient.phone, role: 'patient' },
+      process.env.JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+
+    logger.info(`Test OTP login: ${phone}`);
+    return res.json({
+      token,
+      patient: { id: patient.id, phone: patient.phone, full_name: patient.full_name },
+    });
+  }
 
   const { data: session, error: sessionError } = await supabase
     .from('otp_sessions')

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,36 +7,65 @@ import { motion } from 'framer-motion';
 import { authService } from '../../services/reportService';
 import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
-import { FlaskConical, Mail, Lock } from 'lucide-react';
+import { FlaskConical, Phone, ArrowLeft } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
 
-const schema = z.object({
-  email:    z.string().email('Enter a valid email address'),
-  password: z.string().min(1, 'Password is required'),
+const otpSchema = z.object({
+  phone: z.string().min(10, 'Enter a valid phone number'),
+});
+
+const otpVerifySchema = z.object({
+  otp: z.string().length(6, 'OTP must be 6 digits'),
 });
 
 export default function PatientLogin() {
   const navigate = useNavigate();
-  const { setAuth } = useAuthStore();
+  const { setAuth, clearAuth } = useAuthStore();
   const { addToast } = useUIStore();
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpPhoneNumber, setOtpPhoneNumber] = useState('');
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm({ resolver: zodResolver(schema) });
+  // Clear auth on mount to logout OTP sessions on page reload
+  useEffect(() => {
+    const authStore = useAuthStore.getState();
+    if (authStore.isOtpSession) {
+      clearAuth();
+    }
+  }, [clearAuth]);
 
-  const onSubmit = async (data) => {
+  const otpForm = useForm({ resolver: zodResolver(otpSchema) });
+  const otpVerifyForm = useForm({ resolver: zodResolver(otpVerifySchema) });
+
+  const onOtpSendSubmit = async (data) => {
     try {
-      // Re-use the staff login endpoint — the JWT will carry the role
-      const result = await authService.staffLogin({ ...data, slug: null });
-      setAuth(result.token, { ...result.user, role: result.user?.role || 'patient' }, result.lab ?? null);
-      navigate('/dashboard');
+      await authService.sendOtp(data.phone);
+      setOtpPhoneNumber(data.phone);
+      setOtpSent(true);
+      addToast('OTP sent! Use 123456 for testing.', 'success');
     } catch (err) {
-      const msg = err?.response?.data?.error || 'Incorrect email or password.';
+      const msg = err?.response?.data?.error || 'Failed to send OTP. Please try again.';
       addToast(msg, 'error');
     }
+  };
+
+  const onOtpVerifySubmit = async (data) => {
+    try {
+      const result = await authService.verifyOtp(otpPhoneNumber, data.otp);
+      // Set auth with isOtpSession = true (will be cleared on page refresh)
+      setAuth(result.token, result.patient, null, true);
+      addToast(`Welcome, ${result.patient.full_name || 'Patient'}!`, 'success');
+      navigate('/dashboard');
+    } catch (err) {
+      const msg = err?.response?.data?.error || 'Invalid OTP. Please try again.';
+      addToast(msg, 'error');
+    }
+  };
+
+  const handleBack = () => {
+    setOtpSent(false);
+    otpForm.reset();
+    otpVerifyForm.reset();
   };
 
   return (
@@ -61,78 +91,89 @@ export default function PatientLogin() {
           transition={{ duration: 0.35 }}
           className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8 shadow-2xl"
         >
-          <h2 className="text-xl font-bold text-white mb-1 text-center">Welcome Back</h2>
-          <p className="text-slate-400 text-sm mb-8 text-center">Securely connect with Google to view your reports</p>
+          {!otpSent ? (
+            <>
+              <h2 className="text-xl font-bold text-white mb-1 text-center">Sign In with OTP</h2>
+              <p className="text-slate-400 text-sm mb-8 text-center">Enter your phone number to receive an OTP</p>
 
-          <a 
-            href={`${API_URL}/auth/patient/google`}
-            className="w-full flex items-center justify-center gap-3 py-3.5 rounded-xl text-sm font-semibold text-slate-800 bg-white hover:bg-slate-100 transition-all shadow-lg hover:-translate-y-0.5"
-          >
-            <svg className="w-5 h-5" viewBox="0 0 24 24">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-            </svg>
-            Sign in with Google
-          </a>
-
-          <div className="relative mt-8 mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/20"></div>
-            </div>
-            <div className="relative flex justify-center text-xs">
-              <span className="bg-[#0f172a] px-2 text-slate-400">or use email</span>
-            </div>
-          </div>
-
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Email */}
-            <div>
-              <div className={`flex items-center border-2 rounded-xl bg-white/10 transition-all overflow-hidden ${errors.email ? 'border-red-400' : 'border-white/20 focus-within:border-teal-400'}`}>
-                <div className="flex items-center gap-2 px-4 py-3 border-r border-white/20">
-                  <Mail size={16} className="text-teal-400" />
+              <form onSubmit={otpForm.handleSubmit(onOtpSendSubmit)} className="space-y-4">
+                <div>
+                  <div className={`flex items-center border-2 rounded-xl bg-white/10 transition-all overflow-hidden ${otpForm.formState.errors.phone ? 'border-red-400' : 'border-white/20 focus-within:border-teal-400'}`}>
+                    <div className="flex items-center gap-2 px-4 py-3 border-r border-white/20">
+                      <Phone size={16} className="text-teal-400" />
+                    </div>
+                    <input
+                      {...otpForm.register('phone')}
+                      type="tel"
+                      placeholder="9876543210"
+                      className="flex-1 bg-transparent px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none text-sm"
+                    />
+                  </div>
+                  {otpForm.formState.errors.phone && <p className="mt-1 text-xs text-red-400">{otpForm.formState.errors.phone.message}</p>}
                 </div>
-                <input
-                  {...register('email')}
-                  type="email"
-                  autoComplete="email"
-                  placeholder="you@example.com"
-                  className="flex-1 bg-transparent px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none text-sm"
-                />
-              </div>
-              {errors.email && <p className="mt-1 text-xs text-red-400">{errors.email.message}</p>}
-            </div>
 
-            {/* Password */}
-            <div>
-              <div className={`flex items-center border-2 rounded-xl bg-white/10 transition-all overflow-hidden ${errors.password ? 'border-red-400' : 'border-white/20 focus-within:border-teal-400'}`}>
-                <div className="flex items-center gap-2 px-4 py-3 border-r border-white/20">
-                  <Lock size={16} className="text-teal-400" />
+                <button
+                  type="submit"
+                  disabled={otpForm.formState.isSubmitting}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-white gradient-teal hover:opacity-90 transition-all disabled:opacity-60 shadow-lg shadow-teal-700/30 mt-4"
+                >
+                  {otpForm.formState.isSubmitting ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Sending OTP…
+                    </>
+                  ) : (
+                    'Send OTP'
+                  )}
+                </button>
+              </form>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-2 mb-6">
+                <button
+                  onClick={handleBack}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-all"
+                >
+                  <ArrowLeft size={18} className="text-teal-400" />
+                </button>
+                <h2 className="text-xl font-bold text-white">Enter OTP</h2>
+              </div>
+              <p className="text-slate-400 text-sm mb-8 text-center">
+                We sent a code to <span className="text-white font-semibold">{otpPhoneNumber}</span>
+                <br />
+                <span className="text-xs text-slate-500">Use 123456 for testing</span>
+              </p>
+
+              <form onSubmit={otpVerifyForm.handleSubmit(onOtpVerifySubmit)} className="space-y-4">
+                <div>
+                  <input
+                    {...otpVerifyForm.register('otp')}
+                    type="text"
+                    maxLength="6"
+                    placeholder="000000"
+                    className={`w-full text-center text-2xl tracking-widest font-bold py-4 rounded-xl bg-white/10 border-2 transition-all text-white placeholder:text-slate-600 focus:outline-none ${otpVerifyForm.formState.errors.otp ? 'border-red-400' : 'border-white/20 focus:border-teal-400'}`}
+                  />
+                  {otpVerifyForm.formState.errors.otp && <p className="mt-2 text-xs text-red-400 text-center">{otpVerifyForm.formState.errors.otp.message}</p>}
                 </div>
-                <input
-                  {...register('password')}
-                  type="password"
-                  autoComplete="current-password"
-                  placeholder="••••••••"
-                  className="flex-1 bg-transparent px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none text-sm"
-                />
-              </div>
-              {errors.password && <p className="mt-1 text-xs text-red-400">{errors.password.message}</p>}
-            </div>
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-white gradient-teal hover:opacity-90 transition-all disabled:opacity-60 shadow-lg shadow-teal-700/30 mt-2"
-            >
-              {isSubmitting
-                ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                : null
-              }
-              {isSubmitting ? 'Signing in…' : 'Sign In'}
-            </button>
-          </form>
+                <button
+                  type="submit"
+                  disabled={otpVerifyForm.formState.isSubmitting}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-white gradient-teal hover:opacity-90 transition-all disabled:opacity-60 shadow-lg shadow-teal-700/30 mt-4"
+                >
+                  {otpVerifyForm.formState.isSubmitting ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Verifying…
+                    </>
+                  ) : (
+                    'Verify OTP'
+                  )}
+                </button>
+              </form>
+            </>
+          )}
         </motion.div>
 
         <p className="text-center text-xs text-slate-500 mt-6">
