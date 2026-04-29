@@ -6,16 +6,11 @@ import {
   Users, Microscope, Heart, FlaskConical, Pill,
   Dna, Search, Download, Upload, FileImage, FileText,
   Award, TestTube, Plus, ChevronDown, Settings, LogOut,
-<<<<<<< HEAD
   User, Phone, Calendar, Camera, X,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { supabase, uploadAvatar } from '../lib/supabase.js';
 import { upsertServerProfile } from '../lib/serverApi.js';
-=======
-} from 'lucide-react';
-import { useAuth } from '../context/AuthContext.jsx';
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
 
 /* ── Design tokens ───────────────────────────────────────────────────────── */
 const P  = '#14453d';   // primary dark teal
@@ -84,7 +79,6 @@ const LandingProfileDropdown = ({ user, onClose, onUpdateProfile, onMyReports, o
       </div>
 
       <div className="p-2">
-<<<<<<< HEAD
         <button
           type="button"
           onClick={(e) => {
@@ -94,16 +88,12 @@ const LandingProfileDropdown = ({ user, onClose, onUpdateProfile, onMyReports, o
           }}
           className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-gray-600 transition-all hover:bg-gray-50 group"
         >
-=======
-        <button onClick={onUpdateProfile} className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-gray-600 transition-all hover:bg-gray-50 group">
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100 transition-all group-hover:bg-white">
             <Settings size={16} />
           </div>
           <span className="text-sm font-semibold">Update Profile</span>
         </button>
 
-<<<<<<< HEAD
         <button
           type="button"
           onClick={(e) => {
@@ -113,9 +103,6 @@ const LandingProfileDropdown = ({ user, onClose, onUpdateProfile, onMyReports, o
           }}
           className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-gray-600 transition-all hover:bg-gray-50 group"
         >
-=======
-        <button onClick={onMyReports} className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-gray-600 transition-all hover:bg-gray-50 group">
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#e8f5f0] text-[#14453d] transition-all group-hover:bg-white">
             <FileText size={16} />
           </div>
@@ -124,7 +111,6 @@ const LandingProfileDropdown = ({ user, onClose, onUpdateProfile, onMyReports, o
 
         <div className="mx-2 my-2 h-px bg-gray-50" />
 
-<<<<<<< HEAD
         <button
           type="button"
           onClick={(e) => {
@@ -134,9 +120,6 @@ const LandingProfileDropdown = ({ user, onClose, onUpdateProfile, onMyReports, o
           }}
           className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-rose-500 transition-all hover:bg-rose-50 group"
         >
-=======
-        <button onClick={onLogout} className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-rose-500 transition-all hover:bg-rose-50 group">
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-50 transition-all group-hover:bg-white">
             <LogOut size={16} />
           </div>
@@ -147,7 +130,6 @@ const LandingProfileDropdown = ({ user, onClose, onUpdateProfile, onMyReports, o
   );
 };
 
-<<<<<<< HEAD
 const LandingProfileUpdateModal = ({ user, onClose, onUpdated }) => {
   const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.phone || '');
@@ -315,15 +297,12 @@ const LandingProfileUpdateModal = ({ user, onClose, onUpdated }) => {
   );
 };
 
-=======
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
 /* ── Navbar (shared with RoleSelectPage) ─────────────────────────────────── */
 export const Navbar = ({ onLoginClick }) => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const [activeSection, setActiveSection] = useState("");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-<<<<<<< HEAD
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [profileDraft, setProfileDraft] = useState(null);
 
@@ -334,8 +313,6 @@ export const Navbar = ({ onLoginClick }) => {
         avatar: String(profileDraft?.name || user.name || 'U').charAt(0).toUpperCase(),
       }
     : null;
-=======
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
 
   useEffect(() => {
     const handleScroll = () => {
@@ -365,20 +342,12 @@ export const Navbar = ({ onLoginClick }) => {
 
   const handleUpdateProfile = () => {
     setIsProfileOpen(false);
-<<<<<<< HEAD
     setIsUpdateModalOpen(true);
-=======
-    navigate('/patient?profile=update');
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
   };
 
   const handleMyReports = () => {
     setIsProfileOpen(false);
-<<<<<<< HEAD
     navigate('/patient?tab=reports');
-=======
-    navigate('/patient');
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
   };
 
   const handleLogout = async () => {
@@ -388,16 +357,10 @@ export const Navbar = ({ onLoginClick }) => {
   };
 
   return (
-<<<<<<< HEAD
     <>
       <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100"
            style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-=======
-    <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100"
-         style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
         {/* Logo */}
         <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate('/')}>
           <img src="/logo.jpg" alt="LabIntel Logo" className="w-9 h-9 rounded-xl object-contain" />
@@ -430,39 +393,23 @@ export const Navbar = ({ onLoginClick }) => {
 
         {/* Right side */}
         <div className="flex items-center gap-5">
-<<<<<<< HEAD
           {currentUser ? (
-=======
-          {user ? (
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
             <div className="relative">
               <button
                 onClick={() => setIsProfileOpen((open) => !open)}
                 className="flex items-center gap-3 rounded-full border border-gray-200 bg-white px-2.5 py-1.5 transition-all hover:border-[#14453d]/20 hover:bg-gray-50"
               >
                 <div className="h-10 w-10 overflow-hidden rounded-full border border-gray-100 bg-gray-100">
-<<<<<<< HEAD
                   {currentUser.avatar_url ? (
                     <img src={currentUser.avatar_url} alt={currentUser.name} className="h-full w-full object-cover" />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-sm font-bold text-white" style={{ background: P }}>
                       {currentUser.avatar}
-=======
-                  {user.avatar_url ? (
-                    <img src={user.avatar_url} alt={user.name} className="h-full w-full object-cover" />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-sm font-bold text-white" style={{ background: P }}>
-                      {user.avatar}
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
                     </div>
                   )}
                 </div>
                 <div className="hidden md:flex flex-col items-start">
-<<<<<<< HEAD
                   <span className="max-w-[140px] truncate text-sm font-bold text-gray-800">{currentUser.name}</span>
-=======
-                  <span className="max-w-[140px] truncate text-sm font-bold text-gray-800">{user.name}</span>
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
                   <span className="text-[10px] font-medium uppercase tracking-wide text-gray-400">Patient</span>
                 </div>
                 <ChevronDown size={16} className={`text-gray-400 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
@@ -471,11 +418,7 @@ export const Navbar = ({ onLoginClick }) => {
               <AnimatePresence>
                 {isProfileOpen && (
                   <LandingProfileDropdown
-<<<<<<< HEAD
                     user={currentUser}
-=======
-                    user={user}
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
                     onClose={() => setIsProfileOpen(false)}
                     onUpdateProfile={handleUpdateProfile}
                     onMyReports={handleMyReports}
@@ -496,7 +439,6 @@ export const Navbar = ({ onLoginClick }) => {
             </motion.button>
           )}
         </div>
-<<<<<<< HEAD
         </div>
       </nav>
 
@@ -522,10 +464,6 @@ export const Navbar = ({ onLoginClick }) => {
         )}
       </AnimatePresence>
     </>
-=======
-      </div>
-    </nav>
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
   );
 };
 

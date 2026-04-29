@@ -1,14 +1,5 @@
-<<<<<<< HEAD
 /* Legacy #root styles removed to allow full-screen dashboard */
 
-=======
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
 
 .logo {
   height: 6em;

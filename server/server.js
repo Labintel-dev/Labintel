@@ -2,7 +2,6 @@ const path = require('path');
 const dotenv = require('dotenv');
 const express = require('express');
 const cors = require('cors');
-<<<<<<< HEAD
 const { createClient } = require('@supabase/supabase-js');
 const { sendEmail, sendWelcomeEmail, sendReportReadyEmail } = require('./utils/emailService');
 const {
@@ -30,29 +29,6 @@ if (ocrKey) {
   console.log('[OCR] Space Engine Active (Engine 2 + Table Mode)');
 } else {
   console.warn('[OCR Warning] No OCR_SPACE_API_KEY found in .env. Document reading will fail.');
-=======
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-const { createClient } = require('@supabase/supabase-js');
-const { sendEmail, sendWelcomeEmail, sendReportReadyEmail } = require('./utils/emailService');
-const { analyzeMedicalReport, chatAboutReport } = require('./utils/geminiService');
-
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
-dotenv.config({ path: path.resolve(__dirname, '../client/.env.local') });
-dotenv.config();
-
-// Startup Diagnostic
-const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
-const defaultGeminiModel = process.env.GOOGLE_GEMINI_MODEL || 'gemini-flash-latest';
-if (apiKey) {
-  const masked = apiKey.substring(0, 4) + '...' + apiKey.substring(apiKey.length - 4);
-  console.log(`[Gemini] System initialized with API Key: ${masked}`);
-  console.log(`[Gemini] Default model: ${defaultGeminiModel}`);
-  if (!apiKey.startsWith('AIza')) {
-    console.error('[Gemini Warning] API Key format looks invalid. It should start with "AIza".');
-  }
-} else {
-  console.error('[Gemini Error] No API Key found in environment variables!');
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
 }
 
 const app = express();
@@ -63,10 +39,7 @@ const supabaseUrl =
   process.env.VITE_SUPABASE_URL ||
   process.env.NEXT_PUBLIC_SUPABASE_URL ||
   '';
-<<<<<<< HEAD
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || '';
-=======
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
 const supabaseAnonKey =
   process.env.SUPABASE_ANON_KEY ||
   process.env.VITE_SUPABASE_ANON_KEY ||
@@ -74,7 +47,6 @@ const supabaseAnonKey =
   '';
 const hasSupabaseConfig = Boolean(supabaseUrl && supabaseAnonKey);
 const allowedRoles = new Set(['patient', 'staff', 'admin', 'doctor']);
-<<<<<<< HEAD
 const allowedAnalysisSpeeds = new Set(['fast', 'balanced', 'thorough']);
 const PROFILE_TABLES = ['patients', 'patient'];
 
@@ -186,28 +158,16 @@ function buildApiFallbackAnalysis(reason = 'quota', retryAfterSec = null) {
     },
   };
 }
-=======
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
 
 if (!hasSupabaseConfig) {
   console.warn('Supabase env values are missing. API endpoints that require DB will return setup errors.');
 }
 
-<<<<<<< HEAD
 const serverDbKey = supabaseServiceKey || supabaseAnonKey;
 const serverSupabase = hasSupabaseConfig ? createClient(supabaseUrl, serverDbKey) : null;
 
 if (hasSupabaseConfig && !supabaseServiceKey) {
   console.warn('SUPABASE_SERVICE_KEY is missing; backend reads may be limited by RLS policies.');
-=======
-const serverSupabase = hasSupabaseConfig ? createClient(supabaseUrl, supabaseAnonKey) : null;
-
-function getGeminiModel() {
-  const key = process.env.GOOGLE_GEMINI_API_KEY || '';
-  if (!key || !key.startsWith('AIza')) return null;
-  const genAI = new GoogleGenerativeAI(key);
-  return genAI.getGenerativeModel({ model: defaultGeminiModel });
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
 }
 
 app.use(
@@ -276,7 +236,6 @@ app.get('/health', async (req, res) => {
   }
 
   try {
-<<<<<<< HEAD
     let connected = false;
     let lastError = null;
     for (const table of PROFILE_TABLES) {
@@ -293,10 +252,6 @@ app.get('/health', async (req, res) => {
     }
     if (!connected && lastError) throw lastError;
 
-=======
-    const { error } = await serverSupabase.from('patient').select('id', { head: true, count: 'exact' }).limit(1);
-    if (error) throw error;
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
     res.json({
       status: 'ok',
       port,
@@ -316,7 +271,6 @@ app.get('/health', async (req, res) => {
 
 app.get('/api/auth/profile', requireAuth, async (req, res) => {
   try {
-<<<<<<< HEAD
     let profile = null;
     let lastError = null;
 
@@ -339,15 +293,6 @@ app.get('/api/auth/profile', requireAuth, async (req, res) => {
     }
 
     res.json(profile || null);
-=======
-    const { data, error } = await req.supabase
-      .from('patient')
-      .select('*')
-      .eq('id', req.authUser.id)
-      .maybeSingle();
-    if (error) throw error;
-    res.json(data || null);
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -357,7 +302,6 @@ app.put('/api/auth/profile', requireAuth, async (req, res) => {
   try {
     const roleCandidate = String(req.body?.role || '').toLowerCase();
     const role = allowedRoles.has(roleCandidate) ? roleCandidate : 'patient';
-<<<<<<< HEAD
     const fullName = String(req.body?.full_name || req.body?.name || '').trim();
     const phone = String(req.body?.phone || '').trim();
     const dob = String(req.body?.dob || req.body?.date_of_birth || '').trim();
@@ -412,40 +356,6 @@ app.put('/api/auth/profile', requireAuth, async (req, res) => {
     if (!writeSucceeded) {
       throw lastError || new Error('No compatible profile table found (expected "patients" or "patient").');
     }
-=======
-    const payload = {
-      id: req.authUser.id,
-      role,
-      full_name: String(req.body?.full_name || req.body?.name || '').trim(),
-      phone: String(req.body?.phone || '').trim(),
-      dob: String(req.body?.dob || '').trim(),
-      avatar_url: req.body?.avatar_url || null,
-    };
-
-    let { data, error } = await req.supabase
-      .from('patient')
-      .upsert(payload, { onConflict: 'id' })
-      .select()
-      .single();
-
-    // Fallback: If avatar_url column doesn't exist yet, retry without it
-    if (error && (error.code === '42703' || error.message?.includes('avatar_url'))) {
-      console.warn('⚠️ avatar_url column missing from DB. Retrying without it...');
-      const savedPayload = { ...payload };
-      delete savedPayload.avatar_url;
-      
-      const retry = await req.supabase
-        .from('patient')
-        .upsert(savedPayload, { onConflict: 'id' })
-        .select()
-        .single();
-        
-      data = retry.data;
-      error = retry.error;
-    }
-
-    if (error) throw error;
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
 
     // --- NEW: Automate Welcome Email ---
     if (role === 'patient') {
@@ -470,7 +380,6 @@ app.put('/api/auth/profile', requireAuth, async (req, res) => {
 
 app.get('/api/reports', requireAuth, async (req, res) => {
   try {
-<<<<<<< HEAD
     const role = String(req.authUser?.user_metadata?.role || 'patient').toLowerCase();
     const isPatient = role === 'patient';
     const requestedPatientId = String(req.query.patient_id || '').trim();
@@ -486,12 +395,6 @@ app.get('/api/reports', requireAuth, async (req, res) => {
       query = query.eq('patient_id', requestedPatientId);
     }
 
-=======
-    let query = req.supabase.from('reports').select('*').order('created_at', { ascending: false });
-    if (req.query.patient_id) {
-      query = query.eq('patient_id', req.query.patient_id);
-    }
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
     if (req.query.status) {
       query = query.eq('status', req.query.status);
     }
@@ -539,7 +442,6 @@ app.patch('/api/reports/:id/status', requireAuth, async (req, res) => {
     if (status.toLowerCase() === 'ready' || status.toLowerCase() === 'completed') {
       console.log(`Report status updated to ${status}. Triggering notification for patient...`);
       try {
-<<<<<<< HEAD
         let patientName = 'Patient';
         let patientEmail = '';
 
@@ -567,31 +469,11 @@ app.patch('/api/reports/:id/status', requireAuth, async (req, res) => {
           const info = await sendReportReadyEmail({
             name: patientName,
             email: patientEmail,
-=======
-        // Fetch patient details to get their name/email
-        const { data: patient, error: patientError } = await req.supabase
-          .from('patient')
-          .select('full_name, email')
-          .eq('id', updatedReport.patient_id)
-          .maybeSingle();
-
-        if (patientError) {
-          console.error('❌ Could not fetch patient data for notification:', patientError.message);
-        } else if (patient?.email) {
-          console.log(`Sending report-ready email to ${patient.email}...`);
-          const info = await sendReportReadyEmail({
-            name: patient.full_name || 'Patient',
-            email: patient.email,
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
             reportId: updatedReport.id
           });
           console.log(`✅ Notification email sent: ${info.messageId}`);
         } else {
-<<<<<<< HEAD
           console.warn('⚠️ No email available in profile table for this patient, skipping notification.');
-=======
-          console.warn('⚠️ No email found for patient, skipping notification.');
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
         }
       } catch (emailErr) {
         console.error('❌ Failed to send automated notification email:', emailErr.message);
@@ -610,7 +492,6 @@ app.patch('/api/reports/:id/status', requireAuth, async (req, res) => {
 
 app.post('/api/analyze-report', requireAuth, async (req, res) => {
   try {
-<<<<<<< HEAD
     const { image, mimeType, patientId, analysisSpeed } = req.body;
     console.log(`[AI] Request: Patient=${patientId}, Speed=${analysisSpeed}, Mime=${mimeType}`);
 
@@ -619,12 +500,6 @@ app.post('/api/analyze-report', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Image data is required' });
     }
     const { speedMode, sizeBytes } = resolveAdaptiveAnalysisSpeed(analysisSpeed, mimeType, image);
-=======
-    const { image, mimeType, patientId } = req.body;
-    if (!image) {
-      return res.status(400).json({ error: 'Image data is required' });
-    }
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
 
     // Strip base64 prefix if present (e.g., "data:image/jpeg;base64,")
 
@@ -647,20 +522,14 @@ app.post('/api/analyze-report', requireAuth, async (req, res) => {
     // Clean the base64 string
     const cleanImage = image.includes('base64,') ? image.split('base64,')[1] : image;
 
-<<<<<<< HEAD
     console.log('[API] Starting analysis for patient:', patientId, 'speed:', speedMode, 'sizeBytes:', sizeBytes);
     const analysis = await analyzeMedicalReport(cleanImage, mimeType || 'image/jpeg', previousData, {
       speedMode,
     });
-=======
-    console.log('[API] Starting analysis for patient:', patientId);
-    const analysis = await analyzeMedicalReport(cleanImage, mimeType || 'image/jpeg', previousData);
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
     console.log('[API] Analysis successful');
     res.json(analysis);
   } catch (error) {
     console.error('[Analyze API Error]:', error);
-<<<<<<< HEAD
 
     const rawMsg = String(error?.message || '');
     const msg = rawMsg.toLowerCase();
@@ -718,21 +587,10 @@ app.post('/api/analyze-report', requireAuth, async (req, res) => {
       error: errorText, 
       code, 
       suggestion: `Details: ${error.message}`
-=======
-    
-    // Check for specific 503/high-demand error
-    const isHighDemand = error.message?.includes('503') || error.message?.includes('high demand') || error.message?.includes('overloaded');
-    
-    res.status(isHighDemand ? 503 : 500).json({ 
-      error: isHighDemand ? 'AI is currently under heavy load.' : 'AI analysis failed.', 
-      details: error.message,
-      suggestion: isHighDemand ? 'The AI is currently processing many requests. Please wait a few seconds and try again.' : 'Please try again with a clearer image or check your API configuration.'
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
     });
   }
 });
 
-<<<<<<< HEAD
 /**
  * POST /api/chat-report
  * Interactive chat about a specific medical report.
@@ -751,8 +609,6 @@ app.post('/api/chat-report', requireAuth, async (req, res) => {
   }
 });
 
-=======
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
 // ── OCR & AI PIPELINE ────────────────────────────────────────────────────────
 
 /**
@@ -761,7 +617,6 @@ app.post('/api/chat-report', requireAuth, async (req, res) => {
  */
 app.post('/api/scan-ocr', requireAuth, async (req, res) => {
   try {
-<<<<<<< HEAD
     const { image, mimeType, analysisSpeed } = req.body;
     if (!image) return res.status(400).json({ error: 'Image data is required' });
     const { speedMode } = resolveAdaptiveAnalysisSpeed(analysisSpeed, mimeType, image);
@@ -776,24 +631,6 @@ app.post('/api/scan-ocr', requireAuth, async (req, res) => {
       header: ocr.header || {},
       lines: Array.isArray(ocr.lines) ? ocr.lines : [],
     });
-=======
-    const { image, mimeType } = req.body;
-    if (!image) return res.status(400).json({ error: 'Image data is required' });
-
-    const cleanImage = image.includes('base64,') ? image.split('base64,')[1] : image;
-    const model = getGeminiModel();
-    if (!model) {
-      return res.status(500).json({ error: 'Gemini API key is missing or invalid on server.' });
-    }
-    
-    const result = await model.generateContent([
-      "Extract all text from this medical document exactly as it appears. Return only the raw text.",
-      { inlineData: { data: cleanImage, mimeType: mimeType || 'image/jpeg' } }
-    ]);
-    
-    const text = result.response.text();
-    res.json({ text });
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
   } catch (error) {
     console.error('[OCR Scan Error]:', error.message);
     res.status(500).json({ error: 'OCR extraction failed.' });
@@ -807,43 +644,11 @@ app.post('/api/scan-ocr', requireAuth, async (req, res) => {
  */
 app.post('/api/generate-ai-report', requireAuth, async (req, res) => {
   try {
-<<<<<<< HEAD
     const { text, analysisSpeed } = req.body;
     if (!text) return res.status(400).json({ error: 'Text content is required' });
     const speedMode = resolveAnalysisSpeed(analysisSpeed);
     const analysis = await analyzeMedicalText(text, null, { speedMode });
     res.json(analysis);
-=======
-    const { text } = req.body;
-    if (!text) return res.status(400).json({ error: 'Text content is required' });
-    const model = getGeminiModel();
-    if (!model) {
-      return res.status(500).json({ error: 'Gemini API key is missing or invalid on server.' });
-    }
-
-    // For "top-notch" results, we recommend using the image-based /api/analyze-report
-    // but we support text-based conversion here by wrapping it in a simple prompt
-    const result = await model.generateContent(`
-      Transform this medical text into our standard structured JSON:
-      "${text}"
-      
-      JSON STRUCTURE:
-      {
-        "type": "Lab Report | Prescription | Other",
-        "results": { ... },
-        "summary": "...",
-        "advice": ["...", "..."],
-        "riskLevel": "Low | Medium | High"
-      }
-    `);
-    
-    const responseText = result.response.text();
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      return res.status(500).json({ error: 'AI returned invalid JSON format.' });
-    }
-    res.json(JSON.parse(jsonMatch[0]));
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
   } catch (error) {
     console.error('[AI Generation Error]:', error.message);
     res.status(500).json({ error: 'AI transformation failed.' });
@@ -921,7 +726,6 @@ app.post('/api/email/report-ready', requireAuth, async (req, res) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-<<<<<<< HEAD
 const server = app.listen(port, () => {
   console.log(`LabIntel Server: http://localhost:${port}`);
 }).on('error', (err) => {
@@ -933,8 +737,4 @@ const server = app.listen(port, () => {
   } else {
     console.error('[Server Error]', err);
   }
-=======
-app.listen(port, () => {
-  console.log(`LabIntel Server: http://localhost:${port}`);
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
 });

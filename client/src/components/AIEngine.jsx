@@ -5,11 +5,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import apiClient from '../services/apiClient';
-<<<<<<< HEAD
 import { chooseAnalysisSpeed } from '../lib/analysisSpeed';
 import { isAiCapacityError, buildAiCapacityFallbackPayload } from '../lib/normalization';
-=======
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
 
 const P = '#14453d';
 
@@ -72,28 +69,19 @@ const AIEngine = ({ onAnalysisComplete, onClose, patientId }) => {
         const dataUrl = event.target.result;
         setImage(dataUrl);
         setMimeType(file.type);
-<<<<<<< HEAD
         analyze(dataUrl, file.type, { fileSizeBytes: file.size, fileName: file.name });
-=======
-        analyze(dataUrl, file.type);
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
       };
       reader.readAsDataURL(file);
     }
   };
 
-<<<<<<< HEAD
   const analyze = async (base64Data, type, meta = {}) => {
-=======
-  const analyze = async (base64Data, type) => {
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
     setStep('analyzing');
     setError(null);
     try {
       const response = await apiClient.post('/analyze-report', { 
         image: base64Data,
         mimeType: type,
-<<<<<<< HEAD
         patientId: patientId,
         analysisSpeed: chooseAnalysisSpeed({
           mimeType: type,
@@ -123,13 +111,6 @@ const AIEngine = ({ onAnalysisComplete, onClose, patientId }) => {
         msg = err.response.data.error;
       }
       setError(msg);
-=======
-        patientId: patientId 
-      });
-      onAnalysisComplete(response.data);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Analysis failed. Please try a clearer image.');
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
       setStep('select');
     }
   };

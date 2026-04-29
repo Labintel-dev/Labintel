@@ -188,65 +188,7 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    PRINT PORTAL SYSTEM
    ═══════════════════════════════════════════════════════════════════════════ */
-<<<<<<< HEAD
 /* ═══════════════════════════════════════════════════════════════════════════
    PRINT PORTAL SYSTEM - REMOVED TO PREVENT BLANK PAGE ERRORS
    ═══════════════════════════════════════════════════════════════════════════ */
 
-=======
-#print-root {
-  display: none !important;
-}
-
-@media print {
-  body, html {
-    background: white !important;
-    height: auto !important;
-    min-height: 0 !important;
-    overflow: visible !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-  #root {
-    display: none !important;
-  }
-
-  #print-root {
-    display: block !important;
-    width: 100% !important;
-    height: auto !important;
-    overflow: visible !important;
-    background: white !important;
-    color: black !important;
-  }
-
-  /* Force white background and black text on everything in print root */
-  #print-root * {
-    background: white !important;
-    background-color: white !important;
-    color: black !important;
-    box-shadow: none !important;
-    text-shadow: none !important;
-    border-color: #ddd !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  /* Allow specific borders to remain */
-  #print-root hr, #print-root .base-border {
-    border-color: #000 !important;
-    background: #000 !important;
-  }
-
-  @page {
-    size: A4;
-    margin: 10mm;
-  }
-
-  .page-break-before {
-    page-break-before: always;
-    break-before: page;
-  }
-}
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64

@@ -1,24 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-<<<<<<< HEAD
 import { useLocation, useNavigate }       from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import jsPDF from 'jspdf';
-=======
-import { useNavigate }       from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
 import {
   Beaker, LogOut, Bell, User, FileText,
   Upload, Download, X,
   ShieldCheck, Users, TrendingUp, CheckCircle,
   Search, Activity, Clock, AlertCircle, Plus,
   Stethoscope, Sparkles, Camera, ChevronRight, FolderOpen, ArrowLeft,
-<<<<<<< HEAD
   Mail, Settings, Phone, Calendar, Loader2, MessageSquare,
   LayoutDashboard, FileUp
-=======
-  Mail, Settings, Phone, Calendar
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
 } from 'lucide-react';
 import { 
   supabase, getReports as getSupabaseReports, 
@@ -34,24 +25,18 @@ import OCRScanningWorkspace from '../components/OCRScanningWorkspace';
 import {
   getUser, clearUser, getReports, saveReports, USERS,
 } from '../data/mockData';
-<<<<<<< HEAD
 import { normalizeAnalysis, isAiCapacityError, buildAiCapacityFallbackPayload } from '../lib/normalization';
 import { chooseAnalysisSpeed } from '../lib/analysisSpeed';
-=======
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
 
 /* ═══════════════════════════════════════════════════════════════════════════
    CONSTANTS
 ═══════════════════════════════════════════════════════════════════════════ */
 const PRIMARY = '#14453d';
-<<<<<<< HEAD
 const processingSteps = [
   "Securely reading report file...",
   "Extracting clinical biomarkers...",
   "AI synthesis & risk assessment..."
 ];
-=======
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
 
 /* ═══════════════════════════════════════════════════════════════════════════
    SHARED UI PRIMITIVES
@@ -107,112 +92,6 @@ const SearchBar = ({ value, onChange, placeholder = 'Search…' }) => (
 );
 
 /* ═══════════════════════════════════════════════════════════════════════════
-<<<<<<< HEAD
-=======
-   REPORT DETAIL MODAL
-═══════════════════════════════════════════════════════════════════════════ */
-const ReportModal = ({ report, onClose }) => (
-  <AnimatePresence>
-    {report && (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-50 flex items-center justify-center p-4"
-                  style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }}
-                  onClick={onClose}>
-        <motion.div initial={{ opacity: 0, scale: 0.9, y: 24 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.9, y: 24 }}
-                    transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-                    onClick={e => e.stopPropagation()}
-                    className="bg-white rounded-2xl shadow-2xl w-full max-w-lg
-                               max-h-[90vh] overflow-hidden flex flex-col"
-                    style={{ boxShadow: '0 32px 80px rgba(20,69,61,0.18)' }}>
-
-          {/* Header */}
-          <div className="p-6 border-b border-gray-100 flex items-start justify-between">
-            <div className="flex items-center gap-3.5">
-              <div className="w-11 h-11 bg-[#e8f5f0] rounded-2xl flex items-center justify-center shrink-0">
-                <FileText size={20} className="text-[#14453d]" />
-              </div>
-              <div>
-                <h2 className="text-base font-bold text-gray-800 leading-tight">
-                  {report.testName}
-                </h2>
-                <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  <span className="text-xs text-gray-500">{report.patientName}</span>
-                  <span className="text-gray-300">·</span>
-                  <span className="text-xs text-gray-400">{report.date}</span>
-                  <Badge status={report.status} />
-                </div>
-              </div>
-            </div>
-            <button onClick={onClose}
-                    className="text-gray-400 hover:text-gray-700 transition-colors p-1">
-              <X size={18} />
-            </button>
-          </div>
-
-          {/* Results */}
-          <div className="flex-1 overflow-auto p-6">
-            {report.results.length > 0 ? (
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-100">
-                    {['Parameter', 'Value', 'Reference Range', 'Flag'].map(h => (
-                      <th key={h} className="text-left text-[10px] text-gray-400 font-bold
-                                             uppercase tracking-wide pb-2.5 pr-4 last:pr-0 last:text-right">
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {report.results.map((r, i) => (
-                    <tr key={i} className="border-b border-gray-50 last:border-0">
-                      <td className="py-3 pr-4 text-sm font-medium text-gray-700">{r.name}</td>
-                      <td className="py-3 pr-4 text-sm font-bold text-gray-800">
-                        {r.value} <span className="text-xs font-normal text-gray-400">{r.unit}</span>
-                      </td>
-                      <td className="py-3 pr-4 text-xs text-gray-400">{r.range}</td>
-                      <td className="py-3 text-right">
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full
-                          ${r.flag === 'Normal' ? 'bg-emerald-100 text-emerald-700' :
-                            r.flag === 'Low'    ? 'bg-amber-100   text-amber-700'   :
-                                                  'bg-rose-100    text-rose-700'}`}>
-                          {r.flag}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <Clock size={32} className="text-gray-300 mb-3" />
-                <p className="text-sm font-semibold text-gray-500">Results not yet available</p>
-                <p className="text-xs text-gray-400 mt-1">
-                  This report is currently being processed.
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Footer */}
-          <div className="p-5 border-t border-gray-100 flex items-center justify-between">
-            <div className="text-xs text-gray-400">
-              <span className="font-semibold text-gray-600">{report.category}</span>
-              &nbsp;· Uploaded by {report.uploadedBy}
-            </div>
-            <TealBtn onClick={() => window.print()} size="sm">
-              <Download size={12} /> Download PDF
-            </TealBtn>
-          </div>
-        </motion.div>
-      </motion.div>
-    )}
-  </AnimatePresence>
-);
-
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
 /* ═══════════════════════════════════════════════════════════════════════════
    SIDEBAR + HEADER + SHELL
 ═══════════════════════════════════════════════════════════════════════════ */
@@ -272,7 +151,6 @@ const Sidebar = ({ navItems, activeIdx, setActiveIdx, user, onLogout }) => (
                  active={activeIdx === i} onClick={() => setActiveIdx(i)} />
       ))}
     </nav>
-<<<<<<< HEAD
   </div>
 );
 
@@ -316,9 +194,6 @@ const TopBar = ({ showSearch, search, setSearch, user, onProfileClick, onBackHom
         </div>
       </button>
     </div>
-=======
-    {/* Sidebar bottom section removed - user info and logout are now in the top-right profile dropdown */}
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
   </div>
 );
 
@@ -364,7 +239,6 @@ const ProfileDropdown = ({ user, onClose, onUpdateClick, onMyReportsClick, onLog
 
       {/* Menu Options */}
       <div className="p-2">
-<<<<<<< HEAD
         <button
           type="button"
           onClick={(e) => {
@@ -374,9 +248,6 @@ const ProfileDropdown = ({ user, onClose, onUpdateClick, onMyReportsClick, onLog
           }}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-600 transition-all group"
         >
-=======
-        <button onClick={onUpdateClick} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-600 transition-all group">
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
           <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center group-hover:bg-white transition-all">
             <Settings size={16} />
           </div>
@@ -384,7 +255,6 @@ const ProfileDropdown = ({ user, onClose, onUpdateClick, onMyReportsClick, onLog
           <ChevronRight size={14} className="ml-auto text-gray-300" />
         </button>
 
-<<<<<<< HEAD
         <button
           type="button"
           onClick={(e) => {
@@ -394,9 +264,6 @@ const ProfileDropdown = ({ user, onClose, onUpdateClick, onMyReportsClick, onLog
           }}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-600 transition-all group"
         >
-=======
-        <button onClick={onMyReportsClick} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-600 transition-all group">
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
           <div className="w-8 h-8 rounded-lg bg-[#e8f5f0] text-[#14453d] flex items-center justify-center group-hover:bg-white transition-all">
             <FolderOpen size={16} />
           </div>
@@ -406,7 +273,6 @@ const ProfileDropdown = ({ user, onClose, onUpdateClick, onMyReportsClick, onLog
 
         <div className="h-px bg-gray-50 my-2 mx-2" />
 
-<<<<<<< HEAD
         <button
           type="button"
           onClick={(e) => {
@@ -416,9 +282,6 @@ const ProfileDropdown = ({ user, onClose, onUpdateClick, onMyReportsClick, onLog
           }}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-rose-50 text-rose-500 transition-all group"
         >
-=======
-        <button onClick={onLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-rose-50 text-rose-500 transition-all group">
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
           <div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center group-hover:bg-white transition-all">
             <LogOut size={16} />
           </div>
@@ -429,11 +292,7 @@ const ProfileDropdown = ({ user, onClose, onUpdateClick, onMyReportsClick, onLog
   );
 };
 
-<<<<<<< HEAD
 const ProfileUpdateModal = ({ user, onClose, onUpdated, isSolo = false }) => {
-=======
-const ProfileUpdateModal = ({ user, onClose, onUpdated }) => {
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
   const [name, setName] = useState(user.name);
   const [phone, setPhone] = useState(user.phone || '');
   const [dob, setDob] = useState(user.dob || '');
@@ -487,11 +346,7 @@ const ProfileUpdateModal = ({ user, onClose, onUpdated }) => {
   };
 
   return (
-<<<<<<< HEAD
     <div className={`fixed inset-0 z-[200] flex items-center justify-center p-4 ${isSolo ? 'bg-white/95' : 'bg-black/40 backdrop-blur-[2px]'}`}>
-=======
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/40 backdrop-blur-[2px]">
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -587,7 +442,6 @@ const ProfileUpdateModal = ({ user, onClose, onUpdated }) => {
   );
 };
 
-<<<<<<< HEAD
 
 
 /** Modal to view basic report details before AI analysis */
@@ -671,50 +525,6 @@ const ReportModal = ({ report, onClose }) => {
     </AnimatePresence>
   );
 };
-=======
-const TopBar = ({ showSearch, search, setSearch, user, onProfileClick, onBackHome }) => (
-  <div className="h-14 bg-white border-b border-gray-100 flex items-center px-5 gap-4 shrink-0 no-print">
-    <button
-      onClick={onBackHome}
-      className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-bold uppercase tracking-wide text-gray-600 transition-all hover:border-[#14453d]/20 hover:bg-[#f2f7f5] hover:text-[#14453d]"
-    >
-      <ArrowLeft size={14} />
-      Back
-    </button>
-    {showSearch
-      ? <SearchBar value={search} onChange={setSearch} placeholder="Search reports, patients…" />
-      : <div className="text-xs font-bold uppercase tracking-[0.24em] text-gray-400">Dashboard</div>
-    }
-    <div className="ml-auto flex items-center gap-4">
-      <button className="relative p-2 rounded-xl hover:bg-gray-50 text-gray-400 transition-all">
-        <Bell size={17} />
-        <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-rose-500" />
-      </button>
-
-      <div className="h-6 w-px bg-gray-200 mx-1" />
-
-      <button
-        onClick={onProfileClick}
-        className="flex items-center gap-2 group p-0.5 rounded-full hover:bg-gray-50 transition-all relative"
-      >
-        <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-transparent group-hover:border-[#14453d]/20 transition-all shrink-0">
-          {user.avatar_url ? (
-            <img src={user.avatar_url} alt={user.name} className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-white text-[10px] font-bold" style={{ background: PRIMARY }}>
-              {user.avatar}
-            </div>
-          )}
-        </div>
-        <div className="hidden md:flex flex-col items-start pr-2">
-           <span className="text-xs font-bold text-gray-700 leading-none">{user.name}</span>
-           <span className="text-[9px] text-gray-400 font-medium mt-0.5 capitalize">{user.role}</span>
-        </div>
-      </button>
-    </div>
-  </div>
-);
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
 
 /** Master layout shell used by all 3 portals */
 const Shell = ({ navItems, showSearch = false, renderContent }) => {
@@ -723,7 +533,6 @@ const Shell = ({ navItems, showSearch = false, renderContent }) => {
   const [search,    setSearch]    = useState('');
   const [showAiEngine, setShowAiEngine] = useState(false);
   const [aiAnalysis,   setAiAnalysis]   = useState(null);
-<<<<<<< HEAD
   const [isUserLoading, setIsUserLoading] = useState(true);
   
   const [isProfileModalSolo, setIsProfileModalSolo] = useState(false);
@@ -734,12 +543,6 @@ const Shell = ({ navItems, showSearch = false, renderContent }) => {
   const [processingReport, setProcessingReport] = useState(null);
   const [processingSubStep, setProcessingSubStep] = useState(0);
   const previousActiveIdxRef = useRef(0);
-=======
-  
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
-  const [toasts, setToasts] = useState([]);
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
   
   const addToast = (message, type = 'success') => {
     const id = Date.now();
@@ -750,7 +553,6 @@ const Shell = ({ navItems, showSearch = false, renderContent }) => {
   };
   
   const navigate = useNavigate();
-<<<<<<< HEAD
   const location = useLocation();
 
   const processingSteps = [
@@ -769,10 +571,6 @@ const Shell = ({ navItems, showSearch = false, renderContent }) => {
 
   const fetchFullProfile = async () => {
     setIsUserLoading(true);
-=======
-
-  const fetchFullProfile = async () => {
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
     try {
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (!authUser) {
@@ -780,10 +578,6 @@ const Shell = ({ navItems, showSearch = false, renderContent }) => {
         return;
       }
       
-<<<<<<< HEAD
-=======
-      // Fetch custom profile data from server/database
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
       const profile = await getProfile(authUser.id);
       
       setUserState({
@@ -798,17 +592,13 @@ const Shell = ({ navItems, showSearch = false, renderContent }) => {
       });
     } catch (err) {
       console.error('Failed to fetch profile:', err);
-<<<<<<< HEAD
     } finally {
       setIsUserLoading(false);
-=======
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
     }
   };
 
   useEffect(() => {
     fetchFullProfile();
-<<<<<<< HEAD
   }, [navigate]);
 
   useEffect(() => {
@@ -874,56 +664,23 @@ const Shell = ({ navItems, showSearch = false, renderContent }) => {
       </div>
     );
   }
-=======
-    // Check if we just logged in
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('login') === 'success') {
-      addToast('Welcome back to your portal!', 'success');
-      // Clean URL
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-    if (params.get('profile') === 'update') {
-      setIsUpdateModalOpen(true);
-      params.delete('profile');
-      const nextQuery = params.toString();
-      const nextUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ''}`;
-      window.history.replaceState({}, document.title, nextUrl);
-    }
-  }, [navigate]);
-
-  if (!user) return null;
-
-  const onLogout = async () => {
-    addToast('Logging out safely...', 'info');
-    setTimeout(async () => {
-      await supabase.auth.signOut();
-      navigate('/');
-    }, 800);
-  };
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
 
   return (
     <div className="dashboard-shell-outer min-h-screen" style={{ background: '#f5f7f6' }}>
       <style>{`
         @media print {
-<<<<<<< HEAD
           html, body {
             height: auto !important;
             overflow: visible !important;
             margin: 0 !important;
             padding: 0 !important;
           }
-=======
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
           .dashboard-shell-outer {
             min-height: 0 !important;
             display: block !important;
             padding: 0 !important;
             background: white !important;
-<<<<<<< HEAD
             position: static !important;
-=======
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
           }
           .dashboard-shell {
             display: block !important;
@@ -933,26 +690,19 @@ const Shell = ({ navItems, showSearch = false, renderContent }) => {
             border-radius: 0 !important;
             box-shadow: none !important;
             background: white !important;
-<<<<<<< HEAD
             position: static !important;
-=======
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
           }
           .dashboard-main {
             display: block !important;
             overflow: visible !important;
             height: auto !important;
-<<<<<<< HEAD
             position: static !important;
-=======
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
           }
           .dashboard-scroll {
             overflow: visible !important;
             height: auto !important;
             padding: 0 !important;
             background: white !important;
-<<<<<<< HEAD
             position: static !important;
             display: block !important;
           }
@@ -968,8 +718,6 @@ const Shell = ({ navItems, showSearch = false, renderContent }) => {
             transform: none !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
-=======
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
           }
         }
       `}</style>
@@ -977,16 +725,11 @@ const Shell = ({ navItems, showSearch = false, renderContent }) => {
         initial={{ opacity: 0, y: 20, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-<<<<<<< HEAD
         className="dashboard-shell relative z-10 flex min-h-screen w-full overflow-hidden bg-white print:overflow-visible print:h-auto"
-=======
-        className="dashboard-shell relative z-10 flex min-h-screen w-full overflow-hidden bg-white"
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
         style={{
           boxShadow: 'none',
         }}
       >
-<<<<<<< HEAD
         {!isProfileModalSolo && (
           <Sidebar navItems={navItems} activeIdx={activeIdx}
                    setActiveIdx={(i) => { setActiveIdx(i); setSearch(''); setShowAiEngine(false); setAiAnalysis(null); }}
@@ -1033,32 +776,6 @@ const Shell = ({ navItems, showSearch = false, renderContent }) => {
                   onLogout={onLogout}
                 />
               </>
-=======
-        <Sidebar navItems={navItems} activeIdx={activeIdx}
-                 setActiveIdx={(i) => { setActiveIdx(i); setSearch(''); setShowAiEngine(false); setAiAnalysis(null); }}
-                 user={user}
-                 onLogout={onLogout} />
-
-        <div className="dashboard-main flex-1 flex flex-col overflow-hidden relative">
-          <TopBar 
-            showSearch={showSearch} 
-            search={search} 
-            setSearch={setSearch} 
-            user={user}
-            onProfileClick={() => setIsProfileOpen(!isProfileOpen)}
-            onBackHome={() => navigate('/')}
-          />
-
-          <AnimatePresence>
-            {isProfileOpen && (
-              <ProfileDropdown 
-                user={user} 
-                onClose={() => setIsProfileOpen(false)}
-                onUpdateClick={() => { setIsProfileOpen(false); setIsUpdateModalOpen(true); }}
-                onMyReportsClick={() => { setIsProfileOpen(false); navigate('/patient'); }}
-                onLogout={onLogout}
-              />
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
             )}
           </AnimatePresence>
 
@@ -1066,7 +783,6 @@ const Shell = ({ navItems, showSearch = false, renderContent }) => {
             {isUpdateModalOpen && (
               <ProfileUpdateModal 
                 user={user} 
-<<<<<<< HEAD
                 isSolo={isProfileModalSolo}
                 onClose={() => {
                   setIsUpdateModalOpen(false);
@@ -1080,9 +796,6 @@ const Shell = ({ navItems, showSearch = false, renderContent }) => {
                     setActiveIdx(previousActiveIdxRef.current >= 0 ? previousActiveIdxRef.current : 0);
                   }
                 }} 
-=======
-                onClose={() => setIsUpdateModalOpen(false)} 
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
                 onUpdated={() => {
                   fetchFullProfile();
                   addToast('Profile updated successfully!');
@@ -1101,7 +814,6 @@ const Shell = ({ navItems, showSearch = false, renderContent }) => {
               />
             ))}
           </AnimatePresence>
-<<<<<<< HEAD
           <div className="dashboard-scroll flex-1 overflow-auto p-6 print:overflow-visible print:h-auto" style={{ background: '#f8faf9' }}>
             {isProfileModalSolo ? null : showAiEngine ? (
               <AIEngine 
@@ -1109,14 +821,6 @@ const Shell = ({ navItems, showSearch = false, renderContent }) => {
                 onAnalysisComplete={async (data) => {
                   const normalized = normalizeAnalysis(data);
                   setAiAnalysis(normalized);
-=======
-          <div className="dashboard-scroll flex-1 overflow-auto p-6" style={{ background: '#f8faf9' }}>
-            {showAiEngine ? (
-              <AIEngine 
-                patientId={user.id}
-                onAnalysisComplete={async (data) => {
-                  setAiAnalysis(data);
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
                   setShowAiEngine(false);
                   
                   if (user.role === 'patient') {
@@ -1145,22 +849,15 @@ const Shell = ({ navItems, showSearch = false, renderContent }) => {
                 }}
                 onClose={() => setShowAiEngine(false)}
               />
-<<<<<<< HEAD
             ) : processingReport ? (
               <ProcessingScreen steps={processingSteps} subStep={processingSubStep} />
-=======
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
             ) : aiAnalysis ? (
               <MedicalReportView 
                 data={aiAnalysis} 
                 onBack={() => setAiAnalysis(null)} 
               />
             ) : (
-<<<<<<< HEAD
               renderContent(activeIdx, user, search, { setProcessingReport, setProcessingSubStep, setAiAnalysis })
-=======
-              renderContent(activeIdx, user, search)
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
             )}
           </div>
         </div>
@@ -1193,7 +890,6 @@ const ReportCard = ({ report, onView, index }) => (
       </div>
     </div>
     <Badge status={report.status} />
-<<<<<<< HEAD
     <TealBtn
       size="sm"
       onClick={() => {
@@ -1236,15 +932,11 @@ const ReportCard = ({ report, onView, index }) => (
       }}
       disabled={report.status !== 'Ready'}
     >
-=======
-    <TealBtn size="sm" onClick={() => onView(report)} disabled={report.status !== 'Ready'}>
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
       <Download size={12} /> View
     </TealBtn>
   </motion.div>
 );
 
-<<<<<<< HEAD
 const ProcessingScreen = ({ steps, subStep }) => (
   <motion.div 
     initial={{ opacity: 0 }}
@@ -1477,23 +1169,10 @@ const PatientReports = ({ user, setProcessingReport, setProcessingSubStep, setAi
       try {
         if (!isRetry) setLoading(true);
         setError('');
-=======
-/** Patient: My Reports tab */
-const PatientReports = ({ user }) => {
-  const [reports, setReports] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('All');
-  const [activeReport, setActiveReport] = useState(null);
-
-  useEffect(() => {
-    async function fetchReports() {
-      try {
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
         const data = await getSupabaseReports(user.id);
         setReports(data || []);
       } catch (err) {
         console.error('Failed to fetch reports:', err);
-<<<<<<< HEAD
         setError(err?.message || 'Unable to load reports right now.');
         if (!isRetry) {
           retryTimer = setTimeout(() => fetchReports(true), 1200);
@@ -1506,20 +1185,12 @@ const PatientReports = ({ user }) => {
     return () => {
       if (retryTimer) clearTimeout(retryTimer);
     };
-=======
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchReports();
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
   }, [user.id]);
 
   const tabs = ['All', 'Ready', 'Pending', 'Processing'];
   const visible = filter === 'All' ? reports : reports.filter(r => r.status === filter);
 
   const stats = {
-<<<<<<< HEAD
     total:      reports?.length || 0,
     ready:      reports?.filter(r => r.status === 'Ready').length || 0,
     pending:    reports?.filter(r => r.status === 'Pending').length || 0,
@@ -1550,16 +1221,6 @@ const PatientReports = ({ user }) => {
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-=======
-    total:      reports.length,
-    ready:      reports.filter(r => r.status === 'Ready').length,
-    pending:    reports.filter(r => r.status === 'Pending').length,
-    processing: reports.filter(r => r.status === 'Processing').length,
-  };
-
-  return (
-    <>
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
       <ReportModal report={activeReport} onClose={() => setActiveReport(null)} />
 
       {/* Greeting */}
@@ -1603,7 +1264,6 @@ const PatientReports = ({ user }) => {
 
       {/* Report list */}
       <div className="space-y-2.5">
-<<<<<<< HEAD
         {error && (
           <div className="bg-rose-50 border border-rose-200 text-rose-700 rounded-xl px-3 py-2 text-xs font-semibold">
             {error}
@@ -1621,11 +1281,6 @@ const PatientReports = ({ user }) => {
                 onView={setActiveReport}
                 index={i}
               />
-=======
-        {visible.length > 0
-          ? visible.map((r, i) => (
-              <ReportCard key={r.id} report={r} onView={setActiveReport} index={i} />
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
             ))
           : (
             <div className="flex flex-col items-center justify-center py-16 text-center bg-white
@@ -1635,11 +1290,7 @@ const PatientReports = ({ user }) => {
             </div>
           )}
       </div>
-<<<<<<< HEAD
     </div>
-=======
-    </>
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
   );
 };
 
@@ -1706,7 +1357,6 @@ export const PatientPortal = () => (
   <Shell
     navItems={[
       { icon: FileText,   label: 'My Reports' },
-<<<<<<< HEAD
       { icon: Search,     label: 'Search' },
       { icon: Sparkles,   label: 'OCR Scan' },
       { icon: Activity,   label: 'Timeline' },
@@ -1722,17 +1372,6 @@ export const PatientPortal = () => (
       if (tabIdx === 4) return <TrendsView user={user} />;
       if (tabIdx === 5) return <div className="p-10 text-center font-bold text-gray-400">AI Assistant coming soon...</div>;
       return <PatientReports user={user} setProcessingReport={setProcessingReport} setProcessingSubStep={setProcessingSubStep} setAiAnalysis={setAiAnalysis} />;
-=======
-      { icon: Activity,   label: 'Timeline'   },
-      { icon: TrendingUp, label: 'Trends'     },
-      { icon: Sparkles,   label: 'OCR Scanning' },
-    ]}
-    renderContent={(tabIdx, user) => {
-      if (tabIdx === 0) return <PatientReports user={user} />;
-      if (tabIdx === 1) return <PatientTimeline user={user} />;
-      if (tabIdx === 2) return <TrendsView user={user} />;
-      return <OCRScanningWorkspace user={user} />;
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
     }}
   />
 );
@@ -2029,7 +1668,6 @@ const LabAllReports = ({ user, search }) => {
 export const LabPortal = () => (
   <Shell
     navItems={[
-<<<<<<< HEAD
       { icon: LayoutDashboard, label: 'Stats' },
       { icon: FileUp,          label: 'Upload' },
       { icon: Users,           label: 'Patients' },
@@ -2045,17 +1683,6 @@ export const LabPortal = () => (
       if (tabIdx === 3) return <div className="p-10 text-center font-bold text-gray-400">Lab Configuration coming soon...</div>;
       if (tabIdx === 4) return <OCRScanningWorkspace user={user} />;
       return <LabAllReports user={user} search={search} />;
-=======
-      { icon: Upload,     label: 'Upload'      },
-      { icon: FileText,   label: 'All Reports' },
-      { icon: Sparkles,   label: 'OCR Scanning' },
-    ]}
-    showSearch
-    renderContent={(tabIdx, user, search) => {
-      if (tabIdx === 0) return <LabUpload user={user} />;
-      if (tabIdx === 1) return <LabAllReports user={user} search={search} />;
-      return <OCRScanningWorkspace user={user} />;
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
     }}
   />
 );
@@ -2261,11 +1888,7 @@ export const AdminPortal = () => (
       { icon: Sparkles,    label: 'OCR Scanning' },
     ]}
     showSearch
-<<<<<<< HEAD
     renderContent={(tabIdx, user, search, processing) => {
-=======
-    renderContent={(tabIdx, user, search) => {
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
       if (tabIdx === 0) return <AdminOverview />;
       if (tabIdx === 1) return <AdminUsers search={search} />;
       if (tabIdx === 2) return <AdminReports search={search} />;

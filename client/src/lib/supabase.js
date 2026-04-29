@@ -26,7 +26,6 @@ console.warn('Supabase fallback - set env vars for production');
 }
 
 export const supabase = createClient(resolvedSupabaseUrl, resolvedSupabaseAnonKey);
-<<<<<<< HEAD
 const PROFILE_TABLES = ['patients', 'patient'];
 
 async function getAccessTokenWithWait(timeoutMs = 4000) {
@@ -81,8 +80,6 @@ function deriveReportTitle(row) {
   }
   return row?.test_panels?.name || row?.panel_id || 'Lab Report';
 }
-=======
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
 
 // Mock options for Dashboards (used by Dashboards.jsx)
 export const TEST_OPTIONS = [
@@ -155,7 +152,6 @@ export async function signOut() {
 // Profiles (patient table)
 export async function getProfile(userId) {
   ensureSupabaseConfigured();
-<<<<<<< HEAD
   for (const table of PROFILE_TABLES) {
     const { data, error } = await supabase
       .from(table)
@@ -166,20 +162,10 @@ export async function getProfile(userId) {
     if (!isMissingTableError(error)) throw error;
   }
   return null;
-=======
-  const { data, error } = await supabase
-    .from('patient')
-    .select('*')
-    .eq('id', userId)
-    .maybeSingle()
-  if (error) throw error
-  return data || null
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
 }
 
 export async function upsertProfile(userId, profileData) {
   ensureSupabaseConfigured();
-<<<<<<< HEAD
   const normalizedDob = String(profileData?.dob ?? profileData?.date_of_birth ?? '').trim();
   const payloadByTable = {
     patients: {
@@ -210,15 +196,6 @@ export async function upsertProfile(userId, profileData) {
   }
 
   throw new Error('No compatible profile table found (expected "patients" or "patient").');
-=======
-  const { data, error } = await supabase
-    .from('patient')
-    .upsert({ id: userId, ...profileData }, { onConflict: 'id' })
-    .select()
-    .single()
-  if (error) throw error
-  return data
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
 }
 
 // Avatar upload
@@ -244,7 +221,6 @@ export async function uploadAvatar(userId, file) {
 // Reports
 export async function getReports(patientId) {
   ensureSupabaseConfigured();
-<<<<<<< HEAD
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3002';
 
   const token = await getAccessTokenWithWait();
@@ -295,19 +271,6 @@ export async function getReports(patientId) {
       raw: row,
     };
   })
-=======
-  let query = supabase
-    .from('reports')
-    .select('*')
-
-  if (patientId) {
-    query = query.eq('patient_id', patientId)
-  }
-
-  const { data, error } = await query.order('created_at', { ascending: false })
-  if (error) throw error
-  return data || []
->>>>>>> 11356bc61b67774ed4c47097bbbbc1ae30e89a64
 }
 
 export async function createReport(reportData) {
