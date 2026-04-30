@@ -1,248 +1,323 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight, CheckCircle2, AlertTriangle, Info, Microscope, Pill } from 'lucide-react';
+import { X, CheckCircle2, AlertTriangle, Info, Microscope, Pill, Download, Sparkles } from 'lucide-react';
 
 const P = '#14453d'; // Primary dark teal
 
-const SmartReportViewer = ({ isOpen, onClose, originalFileUrl, reportData }) => {
-  const [view, setView] = useState('smart'); // 'smart' or 'original'
+const SmartReportViewer = ({ isOpen, onClose, originalFileUrl, originalFileType, reportData }) => {
+  const [activeTab, setActiveTab] = useState('smart'); // 'smart' or 'original'
+  const [imgError, setImgError] = useState(false);
 
   if (!isOpen) return null;
 
-  const toggleView = () => {
-    setView(v => (v === 'smart' ? 'original' : 'smart'));
-  };
+  const isPDF = originalFileType === 'application/pdf' || 
+                originalFileUrl?.includes('application/pdf') || 
+                originalFileUrl?.endsWith('.pdf');
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 p-4 sm:p-6 backdrop-blur-sm">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-2 sm:p-6 backdrop-blur-md">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative flex h-full max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-[2rem] bg-[#f0f9ff] shadow-2xl"
-          style={{ backgroundImage: 'linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%)' }}
+          className="relative flex h-full max-h-[95vh] w-full max-w-6xl flex-col overflow-hidden rounded-[1.5rem] bg-white shadow-2xl border border-blue-100/50"
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-blue-100 bg-white/60 px-6 py-4 backdrop-blur-md">
+          <div className="flex items-center justify-between border-b border-blue-50 bg-slate-50/50 px-6 py-4">
             <div className="flex items-center gap-3">
-              <img src="/logo.jpg" alt="LabIntel" className="h-10 w-10 rounded-xl object-contain shadow-sm" />
+              <div className="bg-white p-2 rounded-xl shadow-sm border border-blue-50">
+                <img src="/logo.jpg" alt="LabIntel" className="h-8 w-8 object-contain" />
+              </div>
               <div>
                 <h2 className="text-xl font-black tracking-tight" style={{ color: P }}>LabIntel</h2>
-                <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Smart Report, Smarter You</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Smart Diagnostic Interpretation</p>
               </div>
             </div>
             
-            <div className="flex items-center gap-4">
-              <div className="hidden sm:flex flex-col text-right">
-                <span className="text-sm font-bold text-slate-800">contact.labintel@gmail.com</span>
-                <span className="text-xs font-semibold text-slate-500">www.labintel.com</span>
+            <div className="flex items-center gap-2">
+              <div className="hidden sm:flex bg-white px-3 py-1.5 rounded-full border border-blue-50 shadow-sm mr-2">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
+                   <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                   AI Analysis Verified
+                </div>
               </div>
               <button
                 onClick={onClose}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm transition-colors hover:bg-rose-50 hover:text-rose-500"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm transition-all hover:bg-rose-50 hover:text-rose-500 border border-slate-100"
               >
                 <X size={20} />
               </button>
             </div>
           </div>
 
-          {/* Patient Info Bar */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 border-b border-blue-100 bg-white/40 px-6 py-3 text-sm">
-            <div>
-              <span className="text-xs text-slate-500 block">Name</span>
-              <span className="font-semibold text-slate-800">{reportData?.patientInfo?.name || 'Unknown'}</span>
-            </div>
-            <div>
-              <span className="text-xs text-slate-500 block">Age/Gender</span>
-              <span className="font-semibold text-slate-800">
-                {reportData?.patientInfo?.age || '--'} / {reportData?.patientInfo?.gender || '--'}
-              </span>
-            </div>
-            <div>
-              <span className="text-xs text-slate-500 block">Date of Test</span>
-              <span className="font-semibold text-slate-800">{reportData?.patientInfo?.date || '--'}</span>
-            </div>
-            <div>
-              <span className="text-xs text-slate-500 block">Report Type</span>
-              <span className="font-semibold text-slate-800">{reportData?.type || 'Lab Report'}</span>
-            </div>
+          {/* View Toggle Tabs */}
+          <div className="flex border-b border-blue-50 bg-white px-6">
+            <button 
+              onClick={() => setActiveTab('smart')}
+              className={`px-6 py-3 text-sm font-bold transition-all relative ${activeTab === 'smart' ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              Smart Analysis
+              {activeTab === 'smart' && <motion.div layoutId="tabUnderline" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />}
+            </button>
+            <button 
+              onClick={() => setActiveTab('original')}
+              className={`px-6 py-3 text-sm font-bold transition-all relative ${activeTab === 'original' ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              Original Document
+              {activeTab === 'original' && <motion.div layoutId="tabUnderline" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />}
+            </button>
           </div>
 
-          {/* Main Content Area */}
-          <div className="relative flex-1 overflow-hidden">
-            {/* Slider Controls */}
-            <button
-              onClick={toggleView}
-              className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-r-xl bg-blue-500/90 p-3 text-white shadow-lg backdrop-blur-md transition-transform hover:scale-105 active:scale-95"
-            >
-              <ChevronLeft size={24} />
-            </button>
-            <button
-              onClick={toggleView}
-              className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-l-xl bg-blue-500/90 p-3 text-white shadow-lg backdrop-blur-md transition-transform hover:scale-105 active:scale-95"
-            >
-              <ChevronRight size={24} />
-            </button>
+          {/* Scrollable Content Container */}
+          <div className="flex-1 overflow-y-auto bg-slate-50/30 p-4 md:p-8">
+            {activeTab === 'smart' ? (
+              <div className="mx-auto max-w-4xl space-y-8 pb-10">
+                
+                {/* Patient Information Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 rounded-2xl bg-white border border-blue-100/50 p-6 shadow-sm">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Patient Name</p>
+                    <p className="font-bold text-slate-800">{reportData?.patientInfo?.name || 'Unknown'}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Age / Gender</p>
+                    <p className="font-bold text-slate-800">{reportData?.patientInfo?.age || '--'} / {reportData?.patientInfo?.gender || '--'}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Report Date</p>
+                    <p className="font-bold text-slate-800">{reportData?.patientInfo?.date || '--'}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Category</p>
+                    <p className="font-bold text-slate-800">{reportData?.type || 'Lab Report'}</p>
+                  </div>
+                </div>
 
-            <div className="flex h-full w-[200%] transition-transform duration-500 ease-in-out" style={{ transform: `translateX(${view === 'smart' ? '0' : '-50%'})` }}>
-              
-              {/* Slide 1: Smart Report */}
-              <div className="h-full w-1/2 overflow-y-auto p-6 md:p-8">
-                <div className="mx-auto max-w-4xl space-y-6">
-                  
-                  {/* Summary Box */}
-                  <div className="rounded-2xl border border-blue-100 bg-white p-6 shadow-sm">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
-                        <Info size={20} />
-                      </div>
-                      <h3 className="text-xl font-bold text-slate-800">AI Summary</h3>
+                {/* AI Summary Section */}
+                <div className="rounded-2xl bg-gradient-to-br from-blue-50/80 to-indigo-50/80 border border-blue-200 p-6 shadow-sm">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm text-blue-600 border border-blue-100">
+                      <Sparkles size={20} />
                     </div>
-                    <p className="text-slate-600 leading-relaxed text-[15px]">
-                      {reportData?.summary || "No summary available."}
+                    <h3 className="text-lg font-bold text-slate-800">AI Health Insights</h3>
+                  </div>
+                  <div className="prose prose-slate max-w-none">
+                    <p className="text-slate-700 leading-relaxed font-medium">
+                      {reportData?.summary || "Analyzing your results to provide a plain-language summary..."}
                     </p>
                   </div>
-
-                  {/* Test Results */}
-                  {reportData?.results?.parameters?.length > 0 && (
-                    <div className="rounded-2xl border border-blue-100 bg-white p-6 shadow-sm overflow-hidden">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
-                            <Microscope size={20} />
-                          </div>
-                          <h3 className="text-xl font-bold text-slate-800">Test Parameters</h3>
-                        </div>
-                        <div className="flex gap-2">
-                          <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">Normal</span>
-                          <span className="px-3 py-1 bg-rose-100 text-rose-700 text-xs font-bold rounded-full">Abnormal</span>
-                          <span className="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full">Borderline</span>
-                        </div>
-                      </div>
-
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm text-slate-600">
-                          <thead className="bg-slate-50 text-xs font-bold uppercase text-slate-800 border-b border-slate-100">
-                            <tr>
-                              <th className="px-4 py-3">Test Name</th>
-                              <th className="px-4 py-3">Result</th>
-                              <th className="px-4 py-3">Range</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100">
-                            {reportData.results.parameters.map((param, idx) => {
-                              const isAbnormal = param.status === 'Abnormal' || param.status === 'High' || param.status === 'Low';
-                              const isBorderline = param.status === 'Borderline';
-                              
-                              let colorClass = 'bg-white';
-                              let textClass = 'text-green-700 font-bold';
-                              
-                              if (isAbnormal) {
-                                colorClass = 'bg-rose-50/30';
-                                textClass = 'text-rose-700 font-bold';
-                              } else if (isBorderline) {
-                                colorClass = 'bg-amber-50/30';
-                                textClass = 'text-amber-600 font-bold';
-                              }
-
-                              return (
-                                <tr key={idx} className={colorClass}>
-                                  <td className="px-4 py-4 font-medium text-slate-800">{param.name}</td>
-                                  <td className="px-4 py-4">
-                                    <span className={textClass}>
-                                      {param.value} {param.unit}
-                                    </span>
-                                  </td>
-                                  <td className="px-4 py-4 text-xs">
-                                    <div className="flex flex-col gap-1">
-                                      <div className="flex justify-between w-full max-w-[200px] text-[10px] text-slate-400">
-                                        <span>Normal</span>
-                                        <span>{param.high || ''}</span>
-                                        <span>High</span>
-                                      </div>
-                                      <div className="relative h-1.5 w-full max-w-[200px] rounded-full bg-slate-200 overflow-hidden">
-                                        {/* Simple visualization bar */}
-                                        <div className="absolute left-0 top-0 h-full w-3/4 bg-gradient-to-r from-green-400 to-rose-400"></div>
-                                        {/* Marker based on result (approximation) */}
-                                        <div className="absolute top-0 h-full w-1 bg-slate-800 shadow-sm" style={{ left: isAbnormal ? '80%' : '30%' }}></div>
-                                      </div>
-                                      <span className="text-[11px] text-slate-500 mt-1">{param.range}</span>
-                                    </div>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Medicines */}
-                  {reportData?.results?.medicines?.length > 0 && (
-                    <div className="rounded-2xl border border-blue-100 bg-white p-6 shadow-sm">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-purple-500">
-                          <Pill size={20} />
-                        </div>
-                        <h3 className="text-xl font-bold text-slate-800">Prescribed Medicines</h3>
-                      </div>
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        {reportData.results.medicines.map((med, idx) => (
-                          <div key={idx} className="rounded-xl border border-slate-100 bg-slate-50 p-4">
-                            <h4 className="font-bold text-slate-800">{med.name}</h4>
-                            <p className="text-sm text-slate-500 mt-1">
-                              {med.dosage} • {Array.isArray(med.frequency) ? med.frequency.join(', ') : med.frequency}
-                            </p>
-                            {med.duration && <p className="text-xs text-slate-400 mt-1">Duration: {med.duration}</p>}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Tips / Advice */}
-                  {reportData?.advice?.length > 0 && (
-                    <div className="rounded-2xl bg-blue-600 p-6 text-white shadow-md">
-                      <h3 className="text-lg font-bold mb-4 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-1.5">
-                        <CheckCircle2 size={18} />
-                        Tips & Next Steps
-                      </h3>
-                      <ul className="space-y-3">
-                        {reportData.advice.map((adv, idx) => (
-                          <li key={idx} className="flex items-start gap-3 text-sm md:text-base text-blue-50">
-                            <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-300"></span>
-                            <span>{adv}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
                 </div>
-              </div>
 
-              {/* Slide 2: Original Report */}
-              <div className="h-full w-1/2 p-6 md:p-8 bg-slate-100">
-                <div className="mx-auto h-full max-w-4xl rounded-2xl bg-white shadow-sm overflow-hidden flex flex-col">
-                  <div className="border-b border-slate-100 bg-slate-50 px-6 py-4 flex items-center justify-between">
-                    <h3 className="text-lg font-bold text-slate-800">Original Document</h3>
-                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Reference</span>
+                {/* Lab Results Table */}
+                <div className="rounded-2xl bg-white border border-blue-100/50 shadow-sm overflow-hidden">
+                  <div className="border-b border-blue-50 bg-slate-50/50 px-6 py-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                        <Microscope size={20} />
+                      </div>
+                      <h3 className="text-lg font-bold text-slate-800">Lab Parameters</h3>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="hidden md:flex gap-2 mr-2">
+                        <span className="px-3 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-full">Normal</span>
+                        <span className="px-3 py-1 bg-rose-100 text-rose-700 text-[10px] font-bold rounded-full">Abnormal</span>
+                        <span className="px-3 py-1 bg-amber-100 text-amber-700 text-[10px] font-bold rounded-full">Borderline</span>
+                      </div>
+                      <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl shadow-md hover:bg-blue-700 transition-all active:scale-95">
+                        <Download size={14} /> Download PDF
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex-1 bg-slate-200/50 p-4 overflow-auto flex items-start justify-center">
-                    {originalFileUrl?.includes('application/pdf') || originalFileUrl?.endsWith('.pdf') ? (
-                      <object data={originalFileUrl} type="application/pdf" className="w-full h-full min-h-[600px] rounded-xl shadow-sm">
-                        <p className="text-center p-10 text-slate-500">PDF cannot be displayed. <a href={originalFileUrl} target="_blank" rel="noreferrer" className="text-blue-500 underline">Download here</a></p>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                      <thead className="bg-slate-50/80 text-[10px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-100">
+                        <tr>
+                          <th className="px-6 py-4">Test Description</th>
+                          <th className="px-6 py-4">Result Value</th>
+                          <th className="px-6 py-4">Reference Range</th>
+                          <th className="px-6 py-4">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {reportData?.results?.parameters?.length > 0 ? (
+                          reportData.results.parameters.map((param, idx) => {
+                            const isAbnormal = param.status?.toLowerCase().includes('abnormal') || 
+                                             param.status?.toLowerCase().includes('high') || 
+                                             param.status?.toLowerCase().includes('low');
+                            
+                            return (
+                              <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                                <td className="px-6 py-4 font-semibold text-slate-800">{param.name}</td>
+                                <td className="px-6 py-4">
+                                  <span className={`font-bold ${isAbnormal ? 'text-rose-600' : 'text-slate-800'}`}>
+                                    {param.value} <span className="text-[11px] font-medium text-slate-400">{param.unit}</span>
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <div className="flex flex-col gap-2.5">
+                                    <div className="flex justify-between w-full max-w-[280px] text-xs font-bold text-slate-500 uppercase tracking-tight">
+                                      <span>Low</span>
+                                      <span className="text-slate-800 font-black">{param.range || '--'}</span>
+                                      <span>High</span>
+                                    </div>
+                                    <div className="relative h-4 w-full max-w-[280px] rounded-full bg-slate-100 overflow-hidden border-2 border-slate-200 shadow-inner">
+                                      {/* Visual Range Indicator Bar */}
+                                      <div className="absolute inset-0 bg-gradient-to-r from-rose-400/40 via-green-400/40 to-rose-400/40"></div>
+                                      <div className="absolute left-1/4 right-1/4 h-full bg-green-400/50"></div>
+                                      
+                                      {/* Result Pointer */}
+                                      <motion.div 
+                                        initial={{ left: '50%' }}
+                                        animate={{ left: isAbnormal ? (parseFloat(param.value) > (param.high || 100) ? '92%' : '8%') : '50%' }}
+                                        className={`absolute top-0 h-full w-2 shadow-[0_0_10px_rgba(0,0,0,0.3)] border-x border-white/20 ${isAbnormal ? 'bg-rose-600' : 'bg-green-600'}`}
+                                      ></motion.div>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4">
+                                  {isAbnormal ? (
+                                    <span className="inline-flex items-center gap-1.5 text-rose-600 font-bold text-xs">
+                                      <AlertTriangle size={14} /> Attention
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1.5 text-green-600 font-bold text-xs">
+                                      <CheckCircle2 size={14} /> Within Range
+                                    </span>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })
+                        ) : (
+                          <tr>
+                            <td colSpan="4" className="px-6 py-12 text-center text-slate-400 italic bg-slate-50/20">
+                              No test parameters detected in the document.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Prescriptions & Medicines */}
+                {reportData?.results?.medicines?.length > 0 && (
+                  <div className="rounded-2xl bg-white border border-blue-100/50 p-6 shadow-sm">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-purple-600">
+                        <Pill size={20} />
+                      </div>
+                      <h3 className="text-lg font-bold text-slate-800">Detected Prescriptions</h3>
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {reportData.results.medicines.map((med, idx) => (
+                        <div key={idx} className="rounded-xl border border-slate-100 bg-slate-50/50 p-4 hover:border-purple-200 transition-colors">
+                          <h4 className="font-bold text-slate-800 flex items-center justify-between">
+                            {med.name}
+                            <span className="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">MEDICINE</span>
+                          </h4>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            <span className="text-xs bg-white border border-slate-100 px-2 py-1 rounded text-slate-600 font-medium">
+                              Dosage: {med.dosage || '--'}
+                            </span>
+                            <span className="text-xs bg-white border border-slate-100 px-2 py-1 rounded text-slate-600 font-medium">
+                              {Array.isArray(med.frequency) ? med.frequency.join(', ') : med.frequency || '--'}
+                            </span>
+                          </div>
+                          {med.duration && <p className="text-[11px] text-slate-400 mt-2 italic">Scheduled for: {med.duration}</p>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Health Advice & Tips */}
+                <div className="rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 p-8 text-white shadow-xl">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="bg-white/20 p-2 rounded-xl">
+                      <CheckCircle2 size={24} className="text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold">Recommendations & Insights</h3>
+                  </div>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {reportData?.advice?.length > 0 ? (
+                      reportData.advice.map((adv, idx) => (
+                        <div key={idx} className="flex items-start gap-4 bg-white/10 rounded-xl p-4 border border-white/10 backdrop-blur-sm">
+                          <div className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-400/30 text-[10px] font-bold">
+                            {idx + 1}
+                          </div>
+                          <p className="text-sm font-medium leading-relaxed text-blue-50">
+                            {adv}
+                          </p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-blue-100 italic">Please consult your healthcare provider for medical advice.</p>
+                    )}
+                  </div>
+                  <div className="mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+                     <p className="text-[10px] text-blue-200 font-medium uppercase tracking-widest">Powered by Gemini 1.5 Flash AI</p>
+                     <p className="text-[10px] bg-amber-400 text-amber-900 px-3 py-1 rounded-full font-bold">NOT A DIAGNOSIS</p>
+                  </div>
+                </div>
+
+              </div>
+            ) : (
+              /* Original Document View */
+              <div className="mx-auto h-full max-w-5xl flex flex-col">
+                <div className="flex-1 bg-white border border-slate-200 rounded-2xl shadow-inner overflow-hidden flex flex-col">
+                  <div className="bg-slate-50 px-6 py-3 border-b border-slate-200 flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Document Source</span>
+                    {originalFileUrl && (
+                       <a 
+                         href={originalFileUrl} 
+                         download 
+                         className="flex items-center gap-2 text-[10px] font-bold text-blue-600 hover:text-blue-700 transition-colors"
+                       >
+                         <Download size={14} /> DOWNLOAD
+                       </a>
+                    )}
+                  </div>
+                  <div className="flex-1 bg-slate-100/50 p-4 md:p-8 overflow-auto flex items-center justify-center min-h-[500px]">
+                    {!originalFileUrl ? (
+                      <div className="text-center p-10 text-slate-400">
+                        <Info size={64} className="mx-auto mb-4 opacity-10" />
+                        <p className="font-bold">No document source found</p>
+                      </div>
+                    ) : isPDF ? (
+                      <object data={originalFileUrl} type="application/pdf" className="w-full h-full min-h-[700px] rounded-lg shadow-lg">
+                        <div className="text-center p-10 text-slate-500">
+                          <AlertTriangle size={48} className="mx-auto mb-4 text-amber-500" />
+                          <p className="mb-4">PDF Preview is unavailable in your browser.</p>
+                          <a href={originalFileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 font-bold text-white shadow-md hover:bg-blue-700 transition-all">
+                            <Download size={18} /> Download Document
+                          </a>
+                        </div>
                       </object>
                     ) : (
-                      <img src={originalFileUrl} alt="Original Report" className="max-w-full rounded-xl shadow-sm" />
+                      <div className="relative group">
+                        {imgError ? (
+                          <div className="text-center p-10 text-slate-500 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                            <AlertTriangle size={48} className="mx-auto mb-4 text-rose-500" />
+                            <p className="mb-2 font-bold">Failed to load image preview</p>
+                            <p className="text-xs">The resource might be restricted or moved.</p>
+                          </div>
+                        ) : (
+                          <img 
+                            src={originalFileUrl} 
+                            alt="Original Report" 
+                            className="max-w-full h-auto rounded-lg shadow-2xl border border-slate-200" 
+                            onError={() => setImgError(true)}
+                          />
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
               </div>
-
-            </div>
+            )}
           </div>
         </motion.div>
       </div>

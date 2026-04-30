@@ -115,6 +115,7 @@ export const Navbar = ({ onLoginClick }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [reportData, setReportData] = useState(null);
   const [originalFileUrl, setOriginalFileUrl] = useState(null);
+  const [originalFileType, setOriginalFileType] = useState(null);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [scanningLogs, setScanningLogs] = useState([]);
 
@@ -204,6 +205,7 @@ export const Navbar = ({ onLoginClick }) => {
     
     const fileUrl = URL.createObjectURL(file);
     setOriginalFileUrl(fileUrl);
+    setOriginalFileType(file.type);
     
     const reader = new FileReader();
     reader.onloadend = async () => {
@@ -458,6 +460,7 @@ export const Navbar = ({ onLoginClick }) => {
         isOpen={isViewerOpen} 
         onClose={() => setIsViewerOpen(false)} 
         originalFileUrl={originalFileUrl} 
+        originalFileType={originalFileType}
         reportData={reportData} 
       />
     </>
