@@ -156,7 +156,7 @@ export const Navbar = ({ onLoginClick }) => {
 
   useEffect(() => {
     const handleScroll = () => {
-      const sections = ['partners', 'services', 'book', 'contact'];
+      const sections = ['partners', 'services', 'contact'];
       let current = "";
       for (const section of sections) {
         const el = document.getElementById(section);
@@ -330,7 +330,7 @@ export const Navbar = ({ onLoginClick }) => {
                   className="flex items-center gap-2 text-[#14453d] text-sm font-semibold px-5 py-2 rounded-full border border-[#14453d] transition-all bg-white hover:bg-[#f8faf9]"
                 >
                   {isUploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-                  {isUploading ? 'Analyzing...' : 'Get Your Report'}
+                  {isUploading ? 'Analyzing...' : 'Upload Your Report'}
                 </motion.button>
                 
                 <AnimatePresence>
@@ -650,13 +650,14 @@ const LandingPage = () => {
                 <motion.button
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.97 }}
-                  onClick={() => document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' })}
+                  onClick={() => document.getElementById('partners')?.scrollIntoView({ behavior: 'smooth' })}
                   className="flex items-center gap-2 text-white font-semibold text-sm
                              px-6 py-3 rounded-full transition-all"
                   style={{ background: P }}
                 >
                   Book a Test <ArrowRight size={15} />
                 </motion.button>
+
                 <motion.button
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.97 }}
@@ -1139,89 +1140,6 @@ const LandingPage = () => {
         </div>
       </section>
 
-
-      {/* ── DOWNLOAD REPORTS ───────────────────────────────────────────── */}
-      {/* ── BOOK A TEST ────────────────────────────────────────────────── */}
-      <section id="book" className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-6">
-          <FadeUp className="max-w-4xl mx-auto">
-            <h2
-              className="text-3xl md:text-4xl font-extrabold text-gray-800 mb-3 text-center"
-              style={{ fontFamily: 'var(--font-display)' }}
-            >
-              Upload Your Report
-            </h2>
-            <p className="text-gray-500 text-base text-center mb-10 max-w-2xl mx-auto leading-8">
-              Submit your lab report securely for fast review. Upload a clear photo or a PDF and let LabIntel turn complex findings into easier-to-understand insights.
-            </p>
-
-            <div
-              className="bg-white rounded-[2rem] border border-gray-200 p-6 md:p-8"
-              style={{ boxShadow: '0 18px 45px rgba(20,69,61,0.08)' }}
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
-                <label className="group cursor-pointer">
-                  <input type="file" accept="image/*" className="sr-only" />
-                  <div className="h-full rounded-2xl border border-[#cfe0db] bg-[#f8fbfa] p-6 transition-all group-hover:border-[#14453d] group-hover:bg-white">
-                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4" style={{ background: '#e8f5f0', color: P }}>
-                      <FileImage size={22} />
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-800 mb-2" style={{ fontFamily: 'var(--font-display)' }}>
-                      Upload Photo
-                    </h3>
-                    <p className="text-sm text-gray-500 leading-7 mb-5">
-                      Add a clear photo from your phone or camera. Best for printed reports, prescriptions, or lab snapshots.
-                    </p>
-                    <div className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: P }}>
-                      <Upload size={16} />
-                      Choose image
-                    </div>
-                  </div>
-                </label>
-
-                <label className="group cursor-pointer">
-                  <input type="file" accept="application/pdf" className="sr-only" />
-                  <div className="h-full rounded-2xl border border-[#cfe0db] bg-[#f8fbfa] p-6 transition-all group-hover:border-[#14453d] group-hover:bg-white">
-                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4" style={{ background: '#e8f5f0', color: P }}>
-                      <FileText size={22} />
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-800 mb-2" style={{ fontFamily: 'var(--font-display)' }}>
-                      Upload PDF
-                    </h3>
-                    <p className="text-sm text-gray-500 leading-7 mb-5">
-                      Send your digital report in PDF format for cleaner parsing, faster review, and better readability.
-                    </p>
-                    <div className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: P }}>
-                      <Upload size={16} />
-                      Choose PDF
-                    </div>
-                  </div>
-                </label>
-              </div>
-
-              <div className="rounded-2xl border border-[#d7e5e0] bg-[#fbfcfc] p-5 md:p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2 text-sm font-semibold mb-2" style={{ color: P }}>
-                    <ShieldCheck size={16} />
-                    Secure report handling
-                  </div>
-                  <p className="text-sm text-gray-500 leading-7">
-                    Supported formats: JPG, PNG, HEIC, and PDF. Make sure text is readable and all pages are visible before uploading.
-                  </p>
-                </div>
-                <motion.button
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                  className="text-white font-semibold text-sm px-6 py-3.5 rounded-xl transition-all whitespace-nowrap"
-                  style={{ background: P }}
-                >
-                  Start Upload
-                </motion.button>
-              </div>
-            </div>
-          </FadeUp>
-        </div>
-      </section>
 
 
 
