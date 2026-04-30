@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lab Report - {{REPORT_ID}}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue: {{PRIMARY_COLOR}};
+      --blue-soft: #d9e6fb;
+      --blue-deep: #072c69;
+      --blue-ink: #163d7a;
+      --yellow: #f2c94c;
+      --yellow-soft: #fff6da;
+      --text: #111827;
+      --muted: #5b6470;
+      --line: #cfd6df;
+      --line-dark: #b8c2ce;
+      --light: #f8fafc;
+      --alert: #1c4f95;
+      --warn: #87621b;
+    }
+
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
+    html, body {
+      width: 210mm;
+      min-height: 297mm;
+      height: auto;
+      background: #fff;
+      color: var(--text);
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    body {
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 18mm 11mm 20mm;
+      position: relative;
+      background: #fff;
+      overflow: visible;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .page-template-top,
+    .page-template-bottom {
+      position: fixed;
+      left: 11mm;
+      right: 11mm;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .page-template-top {
+      top: 6mm;
+    }
+
+    .page-template-bottom {
+      bottom: 6mm;
+    }
+
+    .watermark {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .watermark span {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 44mm;
+      font-weight: 700;
+      letter-spacing: 1mm;
+      color: rgba(156, 163, 175, 0.15);
+      transform: rotate(-45deg);
+      user-select: none;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: calc(297mm - 38mm);
+    }
+
+    .page-template-header {
+      display: flex;
+      align-items: stretch;
+      height: 8mm;
+    }
+
+    .page-template-header .strip-blue-soft {
+      flex: 1 1 auto;
+    }
+
+    .page-template-header .strip-chevron {
+      width: 56px;
+      margin: 0 6px;
+    }
+
+    .page-template-header .strip-blue {
+      width: 136px;
+      justify-content: center;
+      padding-right: 0;
+    }
+
+    .header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10mm;
+      align-items: start;
+    }
+
+    .brand {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .brand-mark {
+      width: 74px;
+      height: 74px;
+      border-radius: 16px;
+      background: #fff;
+      border: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      overflow: hidden;
+      padding: 4px;
+    }
+
+    .brand-mark img,
+    .brand-mark svg {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .brand-copy h1 {
+      font-size: 28px;
+      line-height: 1;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      margin-top: 2px;
+    }
+
+    .brand-copy h1 .accent {
+      color: var(--blue);
+    }
+
+    .tagline {
+      margin-top: 7px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      color: var(--blue-deep);
+    }
+
+    .tagline .icon {
+      display: inline-flex;
+      vertical-align: middle;
+      margin-right: 7px;
+    }
+
+    .contact-line,
+    .address-line {
+      margin-top: 7px;
+      color: #272f39;
+      font-size: 9px;
+    }
+
+    .contact-line {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .header-right {
+      display: grid;
+      grid-template-columns: 38mm;
+      align-items: start;
+    }
+
+    .barcode-box {
+      text-align: center;
+    }
+
+    .barcode-box svg {
+      width: 100%;
+      display: block;
+      background: #fff;
+    }
+
+    .code-label {
+      margin-top: 3px;
+      font-size: 8px;
+      color: var(--muted);
+      letter-spacing: 0.2px;
+    }
+
+    .header-strip {
+      display: flex;
+      align-items: stretch;
+      margin-top: 10px;
+      margin-bottom: 0;
+      height: 12px;
+    }
+
+    .strip-blue-soft {
+      flex: 1 1 auto;
+      background: var(--blue-soft);
+      clip-path: polygon(0 0, 100% 0, calc(100% - 11px) 100%, 0 100%);
+    }
+
+    .strip-chevron {
+      width: 76px;
+      background:
+        repeating-linear-gradient(
+          60deg,
+          #2d2d2d 0 8px,
+          #2d2d2d 8px 12px,
+          transparent 12px 18px
+        );
+      margin: 0 7px;
+    }
+
+    .strip-blue {
+      width: 110px;
+      background: var(--blue);
+      color: #fff;
+      font-size: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 10px;
+      font-weight: 700;
+      letter-spacing: 0.25px;
+    }
+
+    .header-info-block {
+      border: 1px solid var(--line-dark);
+      background: #fff;
+      border-radius: 0;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .patient-grid {
+      display: grid;
+      grid-template-columns: 1.35fr 1.05fr 1.2fr;
+      background: #fff;
+    }
+
+    .patient-col {
+      min-height: 90px;
+      padding: 10px 12px;
+      border-right: 1px solid var(--line);
+    }
+
+    .patient-col:last-child {
+      border-right: none;
+    }
+
+    .patient-name {
+      font-size: 19px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .meta-line {
+      font-size: 10px;
+      margin-bottom: 4px;
+    }
+
+    .meta-line strong {
+      font-weight: 700;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 12px;
+      row-gap: 4px;
+    }
+
+    .sample-heading {
+      font-size: 10px;
+      font-weight: 800;
+      margin-bottom: 6px;
+      color: var(--blue-deep);
+      text-transform: uppercase;
+      letter-spacing: 0.2px;
+    }
+
+    .sample-address {
+      font-size: 9px;
+      color: #313943;
+      line-height: 1.45;
+      min-height: 28px;
+    }
+
+    .ref-line {
+      margin-top: 8px;
+      font-size: 9px;
+    }
+
+    .timing-line {
+      display: flex;
+      gap: 6px;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 7px;
+      font-size: 9px;
+      white-space: nowrap;
+    }
+
+    .timing-line strong {
+      min-width: 64px;
+      font-weight: 700;
+      flex: 0 0 auto;
+    }
+
+    .timing-line span {
+      flex: 1 1 auto;
+      text-align: right;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: clip;
+    }
+
+    .report-title {
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .report-title h2 {
+      font-size: 18px;
+      line-height: 1.15;
+      font-weight: 800;
+      color: var(--blue-deep);
+    }
+
+    .title-rule {
+      height: 1px;
+      background: var(--line-dark);
+      margin-top: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .results-table {
+      margin-top: 8px;
+      border: 1px solid var(--line-dark);
+    }
+
+    .results-table thead {
+      display: table-header-group;
+    }
+
+    .results-table tr {
+      break-inside: avoid-page;
+      page-break-inside: avoid;
+    }
+
+    .results-table th,
+    .results-table td {
+      border: 1px solid var(--line);
+      padding: 6px 8px;
+      vertical-align: top;
+      font-size: 10px;
+    }
+
+    .results-table th {
+      font-size: 10px;
+      font-weight: 700;
+      text-align: left;
+      background: #edf4ff;
+      color: var(--blue-deep);
+    }
+
+    .results-table td.result-cell,
+    .results-table td.ref-cell,
+    .results-table td.unit-cell {
+      text-align: left;
+    }
+
+    .investigation-name {
+      display: block;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .section-tag {
+      display: inline-block;
+      margin-bottom: 4px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(217, 230, 251, 0.58);
+      color: var(--blue-deep);
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    .subnote {
+      display: block;
+      font-size: 8px;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+
+    .result-value {
+      font-weight: 700;
+    }
+
+    .flag-low,
+    .flag-high,
+    .flag-critical_low,
+    .flag-critical_high {
+      color: var(--alert);
+      font-weight: 800;
+      background: rgba(238, 245, 255, 0.4);
+    }
+
+    .flag-borderline {
+      color: var(--warn);
+      font-weight: 800;
+      background: rgba(255, 246, 218, 0.42);
+    }
+
+    .row-borderline td {
+      background: rgba(255, 250, 240, 0.48);
+    }
+
+    .flag-label {
+      margin-left: 10px;
+      font-weight: 700;
+      color: inherit;
+    }
+
+    .instrument,
+    .interpretation {
+      margin-top: 12px;
+      font-size: 10px;
+    }
+
+    .instrument em {
+      font-style: italic;
+      color: var(--muted);
+    }
+
+    .footer-block {
+      margin-top: auto;
+      border-top: 1px solid var(--line-dark);
+      padding-top: 10px;
+      padding-bottom: 4mm;
+      break-inside: avoid-page;
+      page-break-inside: avoid;
+    }
+
+    .end-report {
+      text-align: center;
+      font-size: 10px;
+      margin-bottom: 18px;
+      letter-spacing: 0.3px;
+      color: var(--blue-deep);
+    }
+
+    .signatures {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30mm;
+      align-items: end;
+    }
+
+    .sign-box {
+      min-height: 62px;
+    }
+
+    .sign-line {
+      height: 1px;
+      background: var(--line-dark);
+      margin-bottom: 8px;
+    }
+
+    .sign-role {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--blue-deep);
+    }
+
+    .sign-name {
+      font-size: 9px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .footer-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 8.5px;
+      color: var(--muted);
+      margin-top: 12px;
+    }
+
+    .bottom-strip {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: 1fr;
+      align-items: stretch;
+      height: 34px;
+    }
+
+    .bottom-left {
+      background: var(--blue-deep);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bottom-chevron {
+      display: none;
+    }
+
+    .bottom-badge {
+      background: var(--blue-deep);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      width: 100%;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      text-transform: uppercase;
+    }
+
+    .bottom-contact {
+      display: none;
+    }
+
+    .page-template-footer {
+      display: grid;
+      grid-template-columns: 1fr;
+      align-items: stretch;
+      height: 10mm;
+    }
+
+    .page-template-footer .bottom-badge {
+      font-size: 11px;
+      letter-spacing: 0.4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="page-template-top" aria-hidden="true">
+      <div class="page-template-header">
+        <div class="strip-blue-soft"></div>
+        <div class="strip-chevron"></div>
+        <div class="strip-blue">{{LAB_WEBSITE}}</div>
+      </div>
+    </div>
+
+    <div class="page-template-bottom" aria-hidden="true">
+      <div class="page-template-footer">
+        <div class="bottom-badge">Lab Diagnostic Report</div>
+      </div>
+    </div>
+
+    <div class="watermark"><span>LABINTEL</span></div>
+
+    <div class="content">
+      <div class="header">
+        <div>
+          <div class="brand">
+            <div class="brand-mark">{{LAB_ICON}}</div>
+            <div class="brand-copy">
+              <h1>{{LAB_NAME_HTML}}</h1>
+              <div class="tagline"><span class="icon">{{TAGLINE_ICON}}</span>Accurate | Caring | Instant</div>
+              <div class="contact-line">
+                <span>{{LAB_PHONE}}</span>
+                <span>{{LAB_EMAIL}}</span>
+              </div>
+              <div class="address-line">{{LAB_ADDRESS}}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <div class="barcode-box">
+            {{BARCODE_SVG}}
+            <div class="code-label">{{BARCODE_TEXT}}</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="header-info-block">
+        <div class="patient-grid">
+          <div class="patient-col">
+            <div class="patient-name">{{PATIENT_NAME}}</div>
+            <div class="meta-grid">
+              <div class="meta-line"><strong>Age :</strong> {{PATIENT_AGE}}</div>
+              <div class="meta-line"><strong>Sex :</strong> {{PATIENT_GENDER}}</div>
+              <div class="meta-line"><strong>PID :</strong> {{REG_NO}}</div>
+              <div class="meta-line"><strong>Ref. Dr. :</strong> {{REFERRED_BY}}</div>
+            </div>
+          </div>
+
+          <div class="patient-col">
+            <div class="sample-heading">Lab Diagnostic Report</div>
+            <div class="sample-address">{{SAMPLE_COLLECTION_AT}}</div>
+          </div>
+
+          <div class="patient-col">
+            <div class="timing-line"><strong>Registered:</strong> <span>{{REGISTERED_DATE}}</span></div>
+            <div class="timing-line"><strong>Collected:</strong> <span>{{COLLECTED_DATE}}</span></div>
+            <div class="timing-line"><strong>Reported:</strong> <span>{{REPORTED_DATE}}</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="report-title">
+        <h2>{{PANEL_NAME}}</h2>
+        <div class="title-rule"></div>
+      </div>
+
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th style="width: 43%;">Investigation</th>
+            <th style="width: 22%;">Result</th>
+            <th style="width: 23%;">Reference Value</th>
+            <th style="width: 12%;">Unit</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{TEST_VALUES_TABLE}}
+        </tbody>
+      </table>
+
+      <div class="instrument"><strong>Instrument:</strong> <em>{{INSTRUMENT_NAME}}</em></div>
+      <div class="interpretation"><strong>Interpretation:</strong> {{INTERPRETATION}}</div>
+
+      <div class="footer-block">
+        <div class="end-report">*****End of Report*****</div>
+
+        <div class="signatures">
+          <div class="sign-box">
+            <div class="sign-line"></div>
+            <div class="sign-role">Lab Technician</div>
+            <div class="sign-name">{{TECHNICIAN_NAME}}</div>
+          </div>
+          <div class="sign-box">
+            <div class="sign-line"></div>
+            <div class="sign-role">Pathologist</div>
+            <div class="sign-name">{{PATHOLOGIST_NAME}}</div>
+          </div>
+        </div>
+
+        <div class="footer-meta">
+          <span>Generated on: {{GENERATED_AT}}</span>
+          <span>Generated PDF report</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
