@@ -11,15 +11,21 @@ import {
 const PIE_COLORS = ['#0d9488', '#0891b2', '#7c3aed', '#db2777', '#d97706', '#059669', '#9333ea'];
 
 export default function Analytics() {
-  const { data: kpi,    isLoading: kpiLoad }  = useQuery({ queryKey: ['analytics-dashboard'], queryFn: analyticsService.getDashboard, staleTime: 60000 });
-  const { data: vol,    isLoading: volLoad }  = useQuery({ queryKey: ['analytics-volume'],    queryFn: analyticsService.getVolume,    staleTime: 60000 });
-  const { data: panels, isLoading: panLoad }  = useQuery({ queryKey: ['analytics-panels'],    queryFn: analyticsService.getPanels,    staleTime: 60000 });
-  const { data: turn,   isLoading: turnLoad } = useQuery({ queryKey: ['analytics-turnaround'],queryFn: analyticsService.getTurnaround, staleTime: 60000 });
+  const { data: kpi,    isLoading: kpiLoad, error: kpiError }  = useQuery({ queryKey: ['analytics-dashboard'], queryFn: analyticsService.getDashboard, staleTime: 60000 });
+  const { data: vol,    isLoading: volLoad, error: volError }  = useQuery({ queryKey: ['analytics-volume'],    queryFn: analyticsService.getVolume,    staleTime: 60000 });
+  const { data: panels, isLoading: panLoad, error: panError }  = useQuery({ queryKey: ['analytics-panels'],    queryFn: analyticsService.getPanels,    staleTime: 60000 });
+  const { data: turn,   isLoading: turnLoad, error: turnError } = useQuery({ queryKey: ['analytics-turnaround'],queryFn: analyticsService.getTurnaround, staleTime: 60000 });
 
   const kpiData    = kpi?.data;
-  const volData    = vol?.data  || [];
-  const panelData  = panels?.data || [];
+  const volData    = Array.isArray(vol?.data) ? vol.data : [];
+  const panelData  = Array.isArray(panels?.data) ? panels.data : [];
   const turnData   = turn?.data;
+  const hasError = kpiError || volError || panError || turnError;
+  const formatChartDate = (value) => {
+    if (!value) return '';
+    const text = String(value);
+    return text.length >= 10 ? text.slice(5, 10) : text;
+  };
 
   return (
     <LabLayout>
@@ -29,6 +35,12 @@ export default function Analytics() {
           <h1 className="text-2xl font-bold text-slate-800">Analytics</h1>
           <p className="text-sm text-slate-500">Lab performance over the last 30 days</p>
         </div>
+
+        {hasError && (
+          <Card className="p-4 border-red-100 bg-red-50 text-sm text-red-700">
+            Analytics data could not be loaded right now. Please refresh or try again after a moment.
+          </Card>
+        )}
 
         {/* KPIs */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -47,7 +59,7 @@ export default function Analytics() {
                 <BarChart data={volData.slice(-30)} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                   <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#94a3b8' }}
-                    tickFormatter={(v) => v.slice(5)} interval={4} />
+                    tickFormatter={formatChartDate} interval={4} />
                   <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} allowDecimals={false} />
                   <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
                   <Bar dataKey="count" fill="#0d9488" radius={[4, 4, 0, 0]} />
@@ -59,7 +71,9 @@ export default function Analytics() {
           {/* Panel donut */}
           <Card className="p-5">
             <h2 className="font-semibold text-slate-800 mb-4">Panel Mix</h2>
-            {panLoad ? <Skeleton className="h-52" /> : (
+            {panLoad ? <Skeleton className="h-52" /> : panelData.length === 0 ? (
+              <div className="h-52 flex items-center justify-center text-sm text-slate-400">No panel data yet</div>
+            ) : (
               <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
                   <Pie data={panelData} dataKey="count" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={2}>

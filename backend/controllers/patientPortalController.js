@@ -1,27 +1,61 @@
 'use strict';
 const supabase = require('../db/supabase');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const { sendOTP } = require('../services/sms');
+const logger = require('../logger');
 
-// ─── Cross-lab reports (all released reports for this patient) ─────────────
-// This is the core patient portal query from section 8.4 of the backend doc.
+async function getPatientLabMap(patient_id) {
+  const { data, error } = await supabase
+    .from('lab_patients')
+    .select('id, lab_id, lab_patient_code')
+    .eq('patient_id', patient_id);
+
+  if (error) throw error;
+
+  const map = new Map();
+  for (const row of data || []) {
+    map.set(row.lab_id, {
+      id: row.id,
+      lab_patient_code: row.lab_patient_code,
+    });
+  }
+  return map;
+}
+
 async function getMyReports(req, res) {
   const patient_id = req.user.patient_id;
 
-  const { data, error } = await supabase
-    .from('reports')
-    .select(`
-      id, reported_at, status, pdf_url, share_token, created_at,
-      labs!reports_lab_id_fkey ( name, logo_url, primary_color ),
-      test_panels ( name, short_code )
-    `)
-    .eq('patient_id', patient_id)
-    .eq('status', 'released')
-    .order('reported_at', { ascending: false });
+  try {
+    const labMap = await getPatientLabMap(patient_id);
+    const labIds = [...labMap.keys()];
+    if (labIds.length === 0) return res.json({ data: [] });
 
-  if (error) return res.status(500).json({ error: error.message });
-  return res.json({ data });
+    const { data, error } = await supabase
+      .from('reports')
+      .select(`
+        id, lab_id, reported_at, status, pdf_url, share_token, created_at,
+        labs!reports_lab_id_fkey ( name, logo_url, primary_color ),
+        test_panels ( name, short_code )
+      `)
+      .eq('patient_id', patient_id)
+      .eq('status', 'released')
+      .in('lab_id', labIds)
+      .order('reported_at', { ascending: false });
+
+    if (error) return res.status(500).json({ error: error.message });
+
+    const reports = (data || []).map((report) => ({
+      ...report,
+      lab_patient: labMap.get(report.lab_id) || null,
+    }));
+
+    return res.json({ data: reports });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
 }
 
-// ─── Single report — verify patient ownership ──────────────────────────────
 async function getMyReport(req, res) {
   const patient_id = req.user.patient_id;
   const report_id  = req.params.id;
@@ -29,8 +63,9 @@ async function getMyReport(req, res) {
   const { data: report, error } = await supabase
     .from('reports')
     .select(`
-      id, reported_at, status, pdf_url, share_token,
+      id, lab_id, collected_at, reported_at, status, pdf_url, share_token,
       labs!reports_lab_id_fkey ( name, logo_url, primary_color, address, phone ),
+      patients ( id, full_name, date_of_birth, gender ),
       test_panels ( name, short_code ),
       test_values (
         id, value, flag,
@@ -47,7 +82,19 @@ async function getMyReport(req, res) {
     return res.status(404).json({ error: 'Report not found.' });
   }
 
-  // Sort test values
+  const { data: labPatient } = await supabase
+    .from('lab_patients')
+    .select('id, lab_patient_code')
+    .eq('lab_id', report.lab_id)
+    .eq('patient_id', patient_id)
+    .maybeSingle();
+
+  if (!labPatient) {
+    return res.status(404).json({ error: 'Report not found.' });
+  }
+
+  report.lab_patient = labPatient;
+
   if (report.test_values) {
     report.test_values.sort((a, b) =>
       (a.test_parameters?.sort_order || 0) - (b.test_parameters?.sort_order || 0)
@@ -57,24 +104,31 @@ async function getMyReport(req, res) {
   return res.json({ data: report });
 }
 
-// ─── Biomarker trends across ALL labs ────────────────────────────────────
 async function getMyTrends(req, res) {
   const patient_id = req.user.patient_id;
+
+  let labIds;
+  try {
+    labIds = [...(await getPatientLabMap(patient_id)).keys()];
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+  if (labIds.length === 0) return res.json({ data: [] });
 
   const { data: values, error } = await supabase
     .from('test_values')
     .select(`
       value, flag,
       test_parameters ( id, name, unit, ref_min_male, ref_max_male, ref_min_female, ref_max_female ),
-      reports!inner ( collected_at, status, patient_id )
+      reports!inner ( collected_at, status, patient_id, lab_id )
     `)
     .eq('reports.patient_id', patient_id)
     .eq('reports.status', 'released')
+    .in('reports.lab_id', labIds)
     .order('reports.collected_at', { ascending: true });
 
   if (error) return res.status(500).json({ error: error.message });
 
-  // Group by parameter for time-series charts
   const grouped = {};
   for (const v of values || []) {
     const paramId = v.test_parameters?.id;
@@ -96,7 +150,6 @@ async function getMyTrends(req, res) {
   return res.json({ data: Object.values(grouped) });
 }
 
-// ─── Get own patient profile ───────────────────────────────────────────────
 async function getMyProfile(req, res) {
   const patient_id = req.user.patient_id;
 
@@ -110,7 +163,6 @@ async function getMyProfile(req, res) {
   return res.json({ data });
 }
 
-// ─── Update own patient profile ───────────────────────────────────────────
 async function updateMyProfile(req, res) {
   const patient_id = req.user.patient_id;
   const { full_name, date_of_birth, gender } = req.body;
@@ -126,10 +178,120 @@ async function updateMyProfile(req, res) {
   return res.json({ data });
 }
 
+// ─── Patient: Send Link Phone OTP ──────────────────────────────────────────
+async function sendLinkPhoneOtp(req, res) {
+  const { phone } = req.body;
+  if (!phone) return res.status(400).json({ error: 'Phone number is required.' });
+
+  const otp = String(Math.floor(100000 + Math.random() * 900000));
+  const hashedOtp = await bcrypt.hash(otp, 10);
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+  const { error } = await supabase.from('otp_sessions').upsert(
+    { phone, hashed_otp: hashedOtp, expires_at: expiresAt.toISOString(), attempts: 0 },
+    { onConflict: 'phone' }
+  );
+
+  if (error) {
+    logger.error(`Failed to create link OTP session for ${phone}: ${error.message}`);
+    return res.status(500).json({ error: 'Could not create OTP session. Try again.' });
+  }
+
+  sendOTP(phone, otp);
+  logger.info(`Link OTP sent to ${phone}`);
+  return res.json({ message: 'OTP sent successfully.' });
+}
+
+// ─── Patient: Verify Link Phone OTP ────────────────────────────────────────
+async function verifyLinkPhoneOtp(req, res) {
+  const current_patient_id = req.user.patient_id;
+  const current_email = req.user.email; // From JWT
+  const { phone, otp } = req.body;
+
+  if (!phone || !otp) return res.status(400).json({ error: 'Phone and OTP are required.' });
+
+  const { data: session, error: sessionError } = await supabase
+    .from('otp_sessions')
+    .select('*')
+    .eq('phone', phone)
+    .single();
+
+  if (sessionError || !session) return res.status(404).json({ error: 'No OTP session found. Please request a new OTP.' });
+  if (new Date() > new Date(session.expires_at)) {
+    await supabase.from('otp_sessions').delete().eq('phone', phone);
+    return res.status(410).json({ error: 'OTP has expired.' });
+  }
+  if (session.attempts >= 3) {
+    await supabase.from('otp_sessions').delete().eq('phone', phone);
+    return res.status(429).json({ error: 'Too many incorrect attempts.' });
+  }
+
+  const isValid = await bcrypt.compare(otp, session.hashed_otp);
+  if (!isValid) {
+    await supabase.from('otp_sessions').update({ attempts: session.attempts + 1 }).eq('phone', phone);
+    return res.status(401).json({ error: 'Incorrect OTP.' });
+  }
+
+  await supabase.from('otp_sessions').delete().eq('phone', phone);
+
+  const { data: targetPatient } = await supabase
+    .from('patients')
+    .select('id, email, phone, full_name')
+    .eq('phone', phone)
+    .single();
+
+  let finalPatient;
+
+  if (targetPatient) {
+    if (targetPatient.email && targetPatient.email !== current_email) {
+      return res.status(409).json({ error: 'This phone number is already linked to another email account.' });
+    }
+    
+    const { data: updatedTarget } = await supabase
+      .from('patients')
+      .update({ email: current_email })
+      .eq('id', targetPatient.id)
+      .select()
+      .single();
+    
+    finalPatient = updatedTarget;
+
+    if (current_patient_id !== targetPatient.id) {
+       await supabase.from('patients').delete().eq('id', current_patient_id);
+    }
+  } else {
+    const { data: updatedCurrent, error: updateErr } = await supabase
+      .from('patients')
+      .update({ phone })
+      .eq('id', current_patient_id)
+      .select()
+      .single();
+      
+    if (updateErr) {
+      return res.status(500).json({ error: 'Failed to link phone number.' });
+    }
+    finalPatient = updatedCurrent;
+  }
+
+  const token = jwt.sign(
+    { patient_id: finalPatient.id, phone: finalPatient.phone, email: finalPatient.email, role: 'patient' },
+    process.env.JWT_SECRET,
+    { expiresIn: '30d' }
+  );
+
+  return res.json({
+    message: 'Phone number linked successfully!',
+    token,
+    patient: { id: finalPatient.id, email: finalPatient.email, phone: finalPatient.phone, full_name: finalPatient.full_name },
+  });
+}
+
 module.exports = {
   getMyReports,
   getMyReport,
   getMyTrends,
   getMyProfile,
   updateMyProfile,
+  sendLinkPhoneOtp,
+  verifyLinkPhoneOtp,
 };

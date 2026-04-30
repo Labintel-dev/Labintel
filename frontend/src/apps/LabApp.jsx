@@ -11,6 +11,10 @@ import ReportDetail from '../pages/lab/ReportDetail';
 import Analytics from '../pages/lab/Analytics';
 import Alerts from '../pages/lab/Alerts';
 import Settings from '../pages/lab/Settings';
+import StaffManagement from '../pages/lab/StaffManagement';
+import TestPanels from '../pages/lab/TestPanels';
+import LabSettings from '../pages/lab/LabSettings';
+import StaffTracking from '../pages/lab/StaffTracking';
 
 const ADMIN = ['administrator', 'manager'];
 const ALL   = ['administrator', 'manager', 'receptionist', 'technician'];
@@ -43,6 +47,20 @@ export default function LabApp({ slug }) {
         <RequireAuth><RequireRole roles={ADMIN}><Alerts /></RequireRole></RequireAuth>
       } />
       <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
+
+      {/* Manager-only pages */}
+      <Route path="/staff" element={
+        <RequireAuth><RequireRole roles={ADMIN}><StaffManagement /></RequireRole></RequireAuth>
+      } />
+      <Route path="/staff-tracking" element={
+        <RequireAuth><RequireRole roles={ADMIN}><StaffTracking /></RequireRole></RequireAuth>
+      } />
+      <Route path="/test-panels" element={
+        <RequireAuth><RequireRole roles={ADMIN}><TestPanels /></RequireRole></RequireAuth>
+      } />
+      <Route path="/lab-settings" element={
+        <RequireAuth><RequireRole roles={ADMIN}><LabSettings /></RequireRole></RequireAuth>
+      } />
 
       {/* Release report — redirect to reports filtered by in_review */}
       <Route path="/release" element={

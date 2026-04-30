@@ -39,8 +39,14 @@ export default function GoogleCallback() {
         // Exchange Supabase token for LabIntel custom JWT
         const { token, patient } = await authService.verifyGoogle(accessToken);
         setAuth(token, patient, null, null); // user=patient, lab=null, slug=null
-        addToast(`Welcome back, ${patient.full_name || 'Patient'}!`, 'success');
-        navigate('/dashboard');
+        
+        if (!patient.phone) {
+          addToast('Please link your phone number to view your lab reports.', 'warning');
+          navigate('/link-phone');
+        } else {
+          addToast(`Welcome back, ${patient.full_name || 'Patient'}!`, 'success');
+          navigate('/dashboard');
+        }
       } catch (err) {
         addToast(err?.response?.data?.error || 'Authentication failed. Please try again.', 'error');
         navigate('/login');

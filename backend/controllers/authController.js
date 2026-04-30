@@ -143,9 +143,10 @@ async function getLabBySlug(req, res) {
 // ─── Patient: Send OTP ────────────────────────────────────────────────────
 async function sendOtpHandler(req, res) {
   const { phone } = req.body;
+  const isDev = process.env.NODE_ENV !== 'production';
 
-  // Generate cryptographically random 6-digit OTP
-  const otp = String(Math.floor(100000 + Math.random() * 900000));
+  // In dev mode, always use fixed OTP '123456' — no SMS sent
+  const otp = isDev ? '123456' : String(Math.floor(100000 + Math.random() * 900000));
   const hashedOtp = await bcrypt.hash(otp, 10);
   const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
@@ -165,11 +166,21 @@ async function sendOtpHandler(req, res) {
     return res.status(500).json({ error: 'Could not create OTP session. Try again.' });
   }
 
-  // Fire-and-forget SMS
-  sendOTP(phone, otp);
+  if (isDev) {
+    // DEV MODE: Log OTP to console instead of sending SMS
+    logger.info(`[DEV OTP] Phone: ${phone} → OTP: ${otp}`);
+    console.log(`\n  🔑 DEV OTP for ${phone}: ${otp}\n`);
+  } else {
+    // Production: send real SMS
+    sendOTP(phone, otp);
+    logger.info(`OTP sent to ${phone}`);
+  }
 
-  logger.info(`OTP sent to ${phone}`);
-  return res.json({ message: 'OTP sent successfully. Valid for 5 minutes.' });
+  return res.json({
+    message: isDev
+      ? 'OTP sent! (Dev mode: use 123456)'
+      : 'OTP sent successfully. Valid for 5 minutes.',
+  });
 }
 
 // ─── Patient: Verify OTP ──────────────────────────────────────────────────
@@ -322,6 +333,92 @@ async function verifyGooglePatient(req, res) {
   });
 }
 
+// ─── Patient: Self-registration ────────────────────────────────────────────
+async function registerPatient(req, res) {
+  const { phone, full_name, date_of_birth, gender } = req.body;
+
+  if (!phone || !full_name) {
+    return res.status(400).json({ error: 'Phone and full_name are required.' });
+  }
+
+  try {
+    // Check if patient already exists
+    let { data: existingPatient } = await supabase
+      .from('patients')
+      .select('id')
+      .eq('phone', phone)
+      .single();
+
+    if (existingPatient) {
+      return res.status(409).json({
+        error: 'Patient with this phone number already registered.',
+        data: { patient: existingPatient },
+      });
+    }
+
+    // Create new patient record
+    const { data: newPatient, error: createError } = await supabase
+      .from('patients')
+      .insert({
+        phone,
+        full_name,
+        date_of_birth: date_of_birth || null,
+        gender: gender || null,
+      })
+      .select()
+      .single();
+
+    if (createError) {
+      logger.error(`Failed to create patient: ${createError.message}`);
+      return res.status(500).json({ error: 'Failed to create patient record.' });
+    }
+
+    logger.info(`Patient self-registered: ${phone}`);
+    return res.status(201).json({
+      message: 'Registration successful. You can now log in with OTP or Google.',
+      data: { patient: newPatient },
+    });
+  } catch (err) {
+    logger.error(`Patient registration error: ${err.message}`);
+    return res.status(500).json({ error: 'Registration failed. Please try again.' });
+  }
+}
+
+// ─── Patient: Profile Sync ────────────────────────────────────────────────
+async function getProfile(req, res) {
+  const patient_id = req.user.patient_id;
+  const { data, error } = await supabase.from('patients').select('*').eq('id', patient_id).maybeSingle();
+  if (error) return res.status(500).json({ error: error.message });
+  return res.json({ data });
+}
+
+async function upsertProfile(req, res) {
+  const patient_id = req.user.patient_id;
+  const { full_name, phone, dob, email } = req.body;
+  
+  // Use data from JWT if not in body
+  const finalPhone = phone || req.user.phone;
+  const finalEmail = email || req.user.email;
+
+  const { data, error } = await supabase
+    .from('patients')
+    .upsert({
+      id: patient_id,
+      full_name,
+      phone: finalPhone,
+      date_of_birth: dob || null,
+      email: finalEmail
+    }, { onConflict: 'id' })
+    .select()
+    .single();
+
+  if (error) {
+    logger.error(`upsertProfile error: ${error.message}`);
+    return res.status(500).json({ error: 'Failed to update profile.' });
+  }
+  return res.json({ data });
+}
+
 module.exports = {
   staffLogin,
   staffLogout,
@@ -331,4 +428,7 @@ module.exports = {
   verifyOtpHandler,
   googleRedirect,
   verifyGooglePatient,
+  registerPatient,
+  getProfile,
+  upsertProfile,
 };

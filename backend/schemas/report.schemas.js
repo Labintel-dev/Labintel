@@ -19,6 +19,17 @@ const updateStatusSchema = z.object({
   }),
 });
 
+const analyzeReportSchema = z.object({
+  image: z
+    .string({ required_error: 'image is required', invalid_type_error: 'image must be a base64 string' })
+    .min(100, 'image payload is too small')
+    .max(10 * 1024 * 1024, 'image payload is too large'),
+  mimeType: z
+    .enum(['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'application/pdf'])
+    .default('image/jpeg'),
+  patientId: z.string().uuid('patientId must be a valid UUID').optional(),
+});
+
 const createParameterSchema = z.object({
   name:           z.string().min(1).max(200),
   unit:           z.string().max(50).optional(),
@@ -67,6 +78,7 @@ const updateStaffSchema = z.object({
 module.exports = {
   createReportSchema,
   updateStatusSchema,
+  analyzeReportSchema,
   createPanelSchema,
   updatePanelSchema,
   updateLabSchema,

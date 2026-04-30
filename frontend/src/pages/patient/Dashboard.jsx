@@ -11,6 +11,7 @@ import { AlertTriangle, Search, ChevronDown, ChevronRight, FileText, X } from 'l
 function ReportCard({ report }) {
   const lab = report.labs || {};
   const panel = report.test_panels || {};
+  const patientCode = report.lab_patient?.lab_patient_code;
   const accentColor = lab.primary_color || '#0d9488';
   return (
     <Link to={`/reports/${report.id}`} className="block">
@@ -22,7 +23,10 @@ function ReportCard({ report }) {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-slate-800 truncate">{panel.name || 'Lab Report'}</p>
-          <p className="text-xs text-slate-500">{formatDate(report.reported_at)}</p>
+          <p className="text-xs text-slate-500">
+            {formatDate(report.reported_at)}
+            {patientCode ? ` · Patient No. ${patientCode}` : ''}
+          </p>
         </div>
         <div className="shrink-0 flex items-center gap-2">
           <Badge variant="success">Released</Badge>
