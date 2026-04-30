@@ -2,6 +2,27 @@
 const supabase = require('../db/supabase');
 const logger   = require('../logger');
 
+async function generateLabPatientCode(lab_id) {
+  const { data: lab } = await supabase
+    .from('labs')
+    .select('slug')
+    .eq('id', lab_id)
+    .single();
+
+  const prefix = (lab?.slug || 'LAB')
+    .replace(/[^a-z0-9]/gi, '')
+    .slice(0, 3)
+    .toUpperCase()
+    .padEnd(3, 'X');
+
+  const { count } = await supabase
+    .from('lab_patients')
+    .select('id', { count: 'exact', head: true })
+    .eq('lab_id', lab_id);
+
+  return `${prefix}-${String((count || 0) + 1).padStart(4, '0')}`;
+}
+
 // ─── List patients at this lab ─────────────────────────────────────────────
 async function listPatients(req, res) {
   const lab_id = req.user.lab_id;
@@ -37,6 +58,7 @@ async function listPatients(req, res) {
 async function createPatient(req, res) {
   const lab_id = req.user.lab_id;
   const { phone, full_name, date_of_birth, gender, lab_patient_code, referred_by } = req.body;
+  const patientCode = lab_patient_code?.trim() || await generateLabPatientCode(lab_id);
 
   // ── Step 1: Check if patient exists globally ──────────────────────────────
   let { data: existingPatient } = await supabase
@@ -83,7 +105,7 @@ async function createPatient(req, res) {
   // ── Step 3: Register patient at this lab ──────────────────────────────────
   const { data: labPatient, error: lpError } = await supabase
     .from('lab_patients')
-    .insert({ lab_id, patient_id, lab_patient_code, referred_by })
+    .insert({ lab_id, patient_id, lab_patient_code: patientCode, referred_by })
     .select()
     .single();
 

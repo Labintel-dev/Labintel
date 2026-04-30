@@ -255,7 +255,7 @@ export default function LabDashboard() {
           <div className="px-5 py-3 border-t border-slate-100">
             <p className="flex items-center gap-2 text-[12px] text-slate-400">
               <Info size={14} className="shrink-0 text-slate-400" />
-              You can create reports and mark them as 'In review'. Only an administrator can release reports to patients.
+              You can create reports and mark them as 'In review'. Only a manager or administrator can release reports to patients.
             </p>
           </div>
         )}

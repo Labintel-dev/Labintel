@@ -46,6 +46,7 @@ export default function PatientReportView() {
   const patient = report?.patients;
   const lab = report?.labs;
   const panel = report?.test_panels;
+  const patientCode = report?.lab_patient?.lab_patient_code;
   const insight = report?.report_insights;
   const accentColor = lab?.primary_color || '#0d9488';
   const isFemale = patient?.gender === 'female';
@@ -103,6 +104,7 @@ export default function PatientReportView() {
                 <h1 className="text-xl font-bold text-slate-800">{panel?.name}</h1>
                 <p className="text-sm text-slate-500">{lab?.name}</p>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-xs text-slate-500">
+                  {patientCode && <span>Patient No. {patientCode}</span>}
                   <span>🧪 Collected: {formatDate(report.collected_at)}</span>
                   <span>📋 Reported: {formatDate(report.reported_at)}</span>
                 </div>
