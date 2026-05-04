@@ -12,25 +12,26 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "@supabase/supabase-js": "^2.39.0",
-    "puppeteer": "^21.7.0",
-    "node-cron": "^3.0.3",
-    "zod": "^3.22.4",
-    "winston": "^3.11.0",
-    "dotenv": "^16.4.1",
-    "cors": "^2.8.5",
-    "helmet": "^7.1.0",
-    "express-rate-limit": "^7.1.5",
     "@google/generative-ai": "^0.2.1",
+    "@supabase/supabase-js": "^2.39.0",
+    "axios": "^1.6.5",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "groq-sdk": "^1.1.2",
+    "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
-    "bcrypt": "^5.1.1",
-    "axios": "^1.6.5"
+    "node-cron": "^4.2.1",
+    "puppeteer": "^24.42.0",
+    "winston": "^3.11.0",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "nodemon": "^3.0.3",
-    "vitest": "^1.2.2",
+    "pg": "^8.11.3",
     "supertest": "^6.3.4",
-    "pg": "^8.11.3"
+    "vitest": "^4.1.5"
   }
 }

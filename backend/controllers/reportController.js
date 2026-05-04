@@ -1,7 +1,7 @@
 'use strict';
 const supabase = require('../db/supabase');
 const { computeFlag }            = require('../services/flagService');
-const { generateInsight }        = require('../services/gemini');
+const aiService = require('../services/aiService');
 const { generateAndUploadPDF }   = require('../services/pdf');
 const { getSignedUrl }           = require('../services/storage');
 const { sendReportReady }        = require('../services/sms');
@@ -155,7 +155,7 @@ async function createReport(req, res) {
         };
       });
 
-      const insight = await generateInsight(
+      const insight = await aiService.generateInsight(
         { age, gender: patient.gender || 'unknown' },
         panel,
         insightInput
@@ -166,7 +166,7 @@ async function createReport(req, res) {
         summary:        insight.summary,
         findings:       insight.findings,
         recommendation: insight.recommendation,
-        model_used:     'gemini-1.5-flash',
+        model_used:     'llama-3.3-70b',
       }, { onConflict: 'report_id' });
 
       logger.info(`AI insight saved for report ${report.id}`);
@@ -175,8 +175,7 @@ async function createReport(req, res) {
     }
   })();
 
-  // ── Async: Generate PDF ────────────────────────────────────────────────────
-  setTimeout(() => generateAndUploadPDF(report.id), 3000); // wait 3s for insight to save
+  // Async: Generate PDF is removed from here. PDF will be generated upon release.
 }
 
 // ─── Get single report (full data) ────────────────────────────────────────
@@ -240,9 +239,9 @@ async function updateStatus(req, res) {
     });
   }
 
-  // Receptionists (and managers/administrators) can release reports.
-  if (newStatus === 'released' && !['administrator', 'manager', 'receptionist'].includes(req.user.role)) {
-    return res.status(403).json({ error: 'Only administrators, managers, and receptionists can release reports.' });
+  // Only managers and administrators can release reports.
+  if (newStatus === 'released' && !['administrator', 'manager'].includes(req.user.role)) {
+    return res.status(403).json({ error: 'Only a manager or administrator can release reports.' });
   }
 
   const update = { status: newStatus };
@@ -261,10 +260,21 @@ async function updateStatus(req, res) {
 
   res.json({ data: updated });
 
-  // ── Async: Send SMS on release ─────────────────────────────────────────────
+  // ── Async: Generate PDF & Send SMS on release ─────────────────────────────
   if (newStatus === 'released') {
     (async () => {
       try {
+        // 1. Generate the final PDF synchronously
+        await generateAndUploadPDF(report_id);
+
+        // 2. Fetch the fresh PDF URL
+        const { data: freshReport } = await supabase
+          .from('reports')
+          .select('pdf_url')
+          .eq('id', report_id)
+          .single();
+
+        // 3. Send the SMS/WhatsApp
         const { data: patient } = await supabase
           .from('patients')
           .select('full_name, phone')
@@ -283,13 +293,8 @@ async function updateStatus(req, res) {
             patient.phone,
             patient.full_name?.split(' ')[0] || 'Patient',
             lab?.name || 'Lab',
-            updated.pdf_url || portalUrl
+            freshReport?.pdf_url || portalUrl
           );
-        }
-
-        // Regenerate PDF with fresh reported_at if needed
-        if (!updated.pdf_url) {
-          generateAndUploadPDF(report_id);
         }
       } catch (err) {
         logger.error(`Post-release tasks failed for report ${report_id}: ${err.message}`);

@@ -46,6 +46,7 @@ export default function PatientReportView() {
   const patient = report?.patients;
   const lab = report?.labs;
   const panel = report?.test_panels;
+  const patientCode = report?.lab_patient?.lab_patient_code;
   const insight = report?.report_insights;
   const accentColor = lab?.primary_color || '#0d9488';
   const isFemale = patient?.gender === 'female';
@@ -103,6 +104,7 @@ export default function PatientReportView() {
                 <h1 className="text-xl font-bold text-slate-800">{panel?.name}</h1>
                 <p className="text-sm text-slate-500">{lab?.name}</p>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-xs text-slate-500">
+                  {patientCode && <span>Patient No. {patientCode}</span>}
                   <span>🧪 Collected: {formatDate(report.collected_at)}</span>
                   <span>📋 Reported: {formatDate(report.reported_at)}</span>
                 </div>
@@ -169,7 +171,7 @@ export default function PatientReportView() {
             <div className="flex items-center gap-2 mb-3">
               <Brain size={18} className="text-teal-600" />
               <h2 className="text-sm font-bold text-teal-800 uppercase tracking-wide">AI Health Summary</h2>
-              <span className="text-xs text-teal-500 ml-auto">Gemini 1.5 Flash · Not a medical diagnosis</span>
+              <span className="text-xs text-teal-500 ml-auto">Llama 4 · Not a medical diagnosis</span>
             </div>
             <p className="text-sm text-teal-900 mb-3">{insight.summary}</p>
             {insight.findings?.length > 0 && (

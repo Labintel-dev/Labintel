@@ -18,5 +18,7 @@ export const patientService = {
     getMyTrends: () => api.get('/patient/trends').then(r => r.data),
     getMyProfile: () => api.get('/patient/profile').then(r => r.data),
     updateMyProfile: (data) => api.put('/patient/profile', data).then(r => r.data),
+    sendLinkPhoneOtp: (phone) => api.post('/patient/link-phone/send-otp', { phone }).then(r => r.data),
+    verifyLinkPhoneOtp: (phone, otp) => api.post('/patient/link-phone/verify-otp', { phone, otp }).then(r => r.data),
   },
 };

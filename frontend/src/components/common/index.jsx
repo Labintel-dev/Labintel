@@ -52,6 +52,7 @@ export function Badge({ children, variant = 'default', className }) {
     warning:   'bg-amber-50 text-amber-700 border-amber-200',
     error:     'bg-red-50 text-red-700 border-red-200',
     info:      'bg-blue-50 text-blue-700 border-blue-200',
+    blue:      'bg-blue-50 text-blue-700 border-blue-200',
     teal:      'bg-teal-50 text-teal-700 border-teal-200',
     purple:    'bg-purple-50 text-purple-700 border-purple-200',
   };

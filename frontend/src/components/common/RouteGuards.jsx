@@ -10,8 +10,7 @@ export function RequireAuth({ children }) {
 
 export function RequireRole({ roles, children }) {
   const user = useAuthStore((s) => s.user);
-  const effectiveRole = user?.role === 'manager' ? 'administrator' : user?.role;
   // Relative 'dashboard' — resolves correctly in both app contexts
-  if (!roles.includes(user?.role) && !roles.includes(effectiveRole)) return <Navigate to="dashboard" replace />;
+  if (!roles.includes(user?.role)) return <Navigate to="dashboard" replace />;
   return children;
 }

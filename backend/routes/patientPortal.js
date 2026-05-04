@@ -14,4 +14,7 @@ router.get('/trends',          ctrl.getMyTrends);
 router.get('/profile',         ctrl.getMyProfile);
 router.put('/profile',         validateBody(updatePatientSchema), ctrl.updateMyProfile);
 
+router.post('/link-phone/send-otp',   ctrl.sendLinkPhoneOtp);
+router.post('/link-phone/verify-otp', ctrl.verifyLinkPhoneOtp);
+
 module.exports = router;

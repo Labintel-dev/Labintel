@@ -7,7 +7,7 @@ import { useLabPath } from '../../hooks/useLabPath';
 import { cn } from '../../utils/cn';
 import {
   LayoutDashboard, Users, FileText, FilePlus, BarChart2, Settings,
-  LogOut, FlaskConical, CheckCircle,
+  LogOut, FlaskConical, CheckCircle, UserCog, Beaker,
 } from 'lucide-react';
 
 // ── Main menu items ─────────────────────────────────────────────────────────
@@ -20,9 +20,17 @@ const mainMenuItems = [
 
 // ── Restricted (admin-only) items ───────────────────────────────────────────
 const restrictedItems = [
-  { to: 'analytics', label: 'Analytics',       icon: BarChart2,   roles: ['administrator'] },
-  { to: 'settings',  label: 'Settings',        icon: Settings,    roles: ['administrator'] },
-  { to: 'release',   label: 'Release report',  icon: CheckCircle, roles: ['administrator'] },
+  { to: 'analytics', label: 'Analytics',       icon: BarChart2,   roles: ['administrator', 'manager'] },
+  { to: 'settings',  label: 'Settings',        icon: Settings,    roles: ['administrator', 'manager'] },
+  { to: 'release',   label: 'Release report',  icon: CheckCircle, roles: ['administrator', 'manager'] },
+];
+
+// ── Manager-only admin items ────────────────────────────────────────────────
+const managerItems = [
+  { to: 'staff',          label: 'Staff management', icon: UserCog,  roles: ['administrator', 'manager'] },
+  { to: 'staff-tracking', label: 'Staff Tracking',   icon: Users,    roles: ['administrator', 'manager'] },
+  { to: 'test-panels',    label: 'Test panels',      icon: Beaker,   roles: ['administrator', 'manager'] },
+  { to: 'lab-settings',   label: 'Lab settings',     icon: Settings,  roles: ['administrator', 'manager'] },
 ];
 
 export function LabLayout({ children }) {
@@ -36,10 +44,9 @@ export function LabLayout({ children }) {
 
   const handleLogout = () => { clearAuth(); navigate(lp('login')); };
 
-  const effectiveRole = role === 'manager' ? 'administrator' : role;
-
-  const visibleMain = mainMenuItems.filter((i) => i.roles.includes(role) || i.roles.includes(effectiveRole));
-  const visibleRestricted = restrictedItems.filter((i) => i.roles.includes(role) || i.roles.includes(effectiveRole));
+  const visibleMain = mainMenuItems.filter((i) => i.roles.includes(role));
+  const visibleRestricted = restrictedItems.filter((i) => i.roles.includes(role));
+  const visibleManager = managerItems.filter((i) => i.roles.includes(role));
 
   // Show restricted section to all — but non-admin items show "Admin" badge
   const allRestricted = restrictedItems;
@@ -104,6 +111,35 @@ export function LabLayout({ children }) {
               </p>
               <div className="space-y-0.5">
                 {visibleRestricted.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <NavLink
+                      key={item.to}
+                      to={lp(item.to)}
+                      className={({ isActive }) => cn(
+                        'flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150',
+                        isActive
+                          ? 'bg-blue-50 text-blue-700'
+                          : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50'
+                      )}
+                    >
+                      <Icon size={17} className="shrink-0" />
+                      <span className="truncate">{item.label}</span>
+                    </NavLink>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
+          {/* ── MANAGER ADMIN ──────────────────────────────────────────────── */}
+          {visibleManager.length > 0 && (
+            <>
+              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-2 mb-2 mt-6">
+                Admin
+              </p>
+              <div className="space-y-0.5">
+                {visibleManager.map((item) => {
                   const Icon = item.icon;
                   return (
                     <NavLink

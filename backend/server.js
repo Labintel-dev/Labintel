@@ -15,6 +15,7 @@ const analyticsRoutes     = require('./routes/analytics');
 const dashboardRoutes     = require('./routes/dashboard');
 const settingsRoutes      = require('./routes/settings');
 const patientPortalRoutes = require('./routes/patientPortal');
+const ocrRoutes           = require('./routes/ocr');
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
@@ -65,6 +66,7 @@ app.use('/api/v1/analytics',  analyticsRoutes);
 app.use('/api/v1/dashboard',  dashboardRoutes);
 app.use('/api/v1/settings',   settingsRoutes);
 app.use('/api/v1/patient',    patientPortalRoutes);
+app.use('/api/v1/ocr',        ocrRoutes);
 
 // ── 404 handler ───────────────────────────────────────────────────────────
 app.use((req, res) => {
