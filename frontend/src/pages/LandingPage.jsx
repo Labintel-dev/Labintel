@@ -53,7 +53,7 @@ const LandingProfileDropdown = ({ user, onClose, onUpdateProfile, onMyReports, o
       initial={{ opacity: 0, y: 10, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 10, scale: 0.96 }}
-      className="absolute right-0 top-full mt-3 w-72 overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-2xl z-[70]"
+      className="absolute right-0 top-full z-[70] mt-3 w-[calc(100vw-2rem)] max-w-72 overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-2xl"
       style={{ boxShadow: '0 20px 50px rgba(0,0,0,0.12)' }}
     >
       <div className="border-b border-gray-100 bg-[#f8faf9] p-5">
@@ -155,7 +155,7 @@ export const Navbar = ({ onLoginClick }) => {
   return (
     <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100"
          style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
         {/* Logo */}
         <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate('/')}>
           <img src="/logo.jpg" alt="LabIntel Logo" className="w-9 h-9 rounded-xl object-contain" />
@@ -187,7 +187,7 @@ export const Navbar = ({ onLoginClick }) => {
         </div>
 
         {/* Right side */}
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-2 sm:gap-5">
           {user ? (
             <div className="relative">
               <button

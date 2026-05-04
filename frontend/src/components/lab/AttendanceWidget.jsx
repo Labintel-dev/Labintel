@@ -145,9 +145,9 @@ export function AttendanceWidget() {
         </div>
       </div>
 
-      <div className="p-5 space-y-5">
+      <div className="space-y-5 p-4 sm:p-5">
         {/* Today's status card */}
-        <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
+        <div className="flex flex-col gap-3 rounded-xl border border-slate-100 bg-slate-50 p-4 sm:flex-row sm:items-center sm:gap-4">
           <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm shrink-0">
             {statusConfig.icon}
           </div>
@@ -156,7 +156,7 @@ export function AttendanceWidget() {
             <p className="text-xs text-slate-500">{statusConfig.sub}</p>
           </div>
           {hasCheckedIn && todayRecord?.check_in && (
-            <div className="ml-auto text-right shrink-0">
+            <div className="shrink-0 text-left sm:ml-auto sm:text-right">
               <p className="text-[11px] text-slate-400 uppercase tracking-wide">Check-in</p>
               <p className="text-sm font-bold text-slate-700">{formatTime(todayRecord.check_in)}</p>
             </div>
@@ -173,12 +173,12 @@ export function AttendanceWidget() {
 
         {/* Action buttons */}
         {isLoading ? (
-          <div className="flex gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row">
             <Skeleton className="h-10 flex-1" />
             <Skeleton className="h-10 flex-1" />
           </div>
         ) : (
-          <div className="flex gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row">
             <Button
               id="attendance-check-in-btn"
               variant={hasCheckedIn ? 'secondary' : 'primary'}
@@ -218,7 +218,7 @@ export function AttendanceWidget() {
           </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               <Skeleton className="h-16" />
               <Skeleton className="h-16" />
               <Skeleton className="h-16" />
@@ -226,7 +226,7 @@ export function AttendanceWidget() {
           ) : fetchError ? (
             <p className="text-xs text-slate-400 text-center py-4">Could not load attendance data.</p>
           ) : (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               <SummaryPill
                 label="Present"
                 value={summary.total_present ?? 0}

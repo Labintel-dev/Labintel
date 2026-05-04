@@ -15,7 +15,7 @@ function ReportCard({ report }) {
   const accentColor = lab.primary_color || '#0d9488';
   return (
     <Link to={`/reports/${report.id}`} className="block">
-      <div className="flex items-center gap-4 p-4 rounded-xl bg-white border border-slate-100 hover:border-teal-200 hover:shadow-md transition-all group">
+      <div className="group flex flex-wrap items-center gap-3 rounded-xl border border-slate-100 bg-white p-4 transition-all hover:border-teal-200 hover:shadow-md sm:flex-nowrap sm:gap-4">
         <div className="w-1 self-stretch rounded-full shrink-0" style={{ background: accentColor }} />
         <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white text-lg font-bold shrink-0"
           style={{ background: accentColor }}>
@@ -28,7 +28,7 @@ function ReportCard({ report }) {
             {patientCode ? ` · Patient No. ${patientCode}` : ''}
           </p>
         </div>
-        <div className="shrink-0 flex items-center gap-2">
+        <div className="ml-auto shrink-0 flex items-center gap-2">
           <Badge variant="success">Released</Badge>
           <ChevronRight size={14} className="text-slate-400 group-hover:text-teal-600 transition-colors" />
         </div>

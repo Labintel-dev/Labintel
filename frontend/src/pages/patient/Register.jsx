@@ -53,7 +53,7 @@ export default function PatientRegister() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center gradient-hero relative overflow-hidden">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden gradient-hero px-4 py-8">
       {/* Decorative blobs */}
       <div className="absolute top-[-100px] right-[-100px] w-[500px] h-[500px] bg-teal-600/20 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-[-100px] left-[-100px] w-[400px] h-[400px] bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />

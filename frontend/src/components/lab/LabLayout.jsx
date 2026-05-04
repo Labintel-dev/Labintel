@@ -1,5 +1,5 @@
-import { NavLink, useNavigate } from 'react-router-dom';
-import { useUIStore } from '../../store/uiStore';
+import { useState } from 'react';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useLabContext } from '../../hooks/useLabContext';
 import { usePermission } from '../../hooks/useAuth';
@@ -7,202 +7,200 @@ import { useLabPath } from '../../hooks/useLabPath';
 import { cn } from '../../utils/cn';
 import {
   LayoutDashboard, Users, FileText, FilePlus, BarChart2, Settings,
-  LogOut, FlaskConical, CheckCircle, UserCog, Beaker,
+  LogOut, X, Menu, UserCog, Beaker,
 } from 'lucide-react';
 
-// ── Main menu items ─────────────────────────────────────────────────────────
 const mainMenuItems = [
-  { to: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['administrator', 'receptionist', 'technician'] },
-  { to: 'patients',  label: 'Patients',  icon: Users,           roles: ['administrator', 'receptionist', 'technician'] },
-  { to: 'reports',   label: 'Reports',   icon: FileText,        roles: ['administrator', 'receptionist', 'technician'] },
-  { to: 'reports/new', label: 'New report', icon: FilePlus,      roles: ['technician'] },
+  { to: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['administrator', 'receptionist', 'technician', 'manager'] },
+  { to: 'patients', label: 'Patients', icon: Users, roles: ['administrator', 'receptionist', 'technician', 'manager'] },
+  { to: 'reports', label: 'Reports', icon: FileText, roles: ['administrator', 'receptionist', 'technician', 'manager'] },
+  { to: 'reports/new', label: 'New report', icon: FilePlus, roles: ['technician', 'administrator', 'manager'] },
 ];
 
-// ── Restricted (admin-only) items ───────────────────────────────────────────
 const restrictedItems = [
-  { to: 'analytics', label: 'Analytics',       icon: BarChart2,   roles: ['administrator', 'manager'] },
-  { to: 'release',   label: 'Release report',  icon: CheckCircle, roles: ['administrator', 'manager'] },
+  { to: 'analytics', label: 'Analytics', icon: BarChart2, roles: ['administrator', 'manager'] },
+  { to: 'release', label: 'Release report', icon: FileText, roles: ['administrator', 'manager'] },
 ];
 
-// ── Manager-only admin items ────────────────────────────────────────────────
 const managerItems = [
-  { to: 'staff',          label: 'Staff management', icon: UserCog,  roles: ['administrator', 'manager'] },
-  { to: 'staff-tracking', label: 'Staff Tracking',   icon: Users,    roles: ['administrator', 'manager'] },
-  { to: 'test-panels',    label: 'Test panels',      icon: Beaker,   roles: ['administrator', 'manager'] },
-  { to: 'lab-settings',   label: 'Lab settings',     icon: Settings,  roles: ['administrator', 'manager'] },
+  { to: 'staff', label: 'Staff management', icon: UserCog, roles: ['administrator', 'manager'] },
+  { to: 'staff-tracking', label: 'Staff tracking', icon: Users, roles: ['administrator', 'manager'] },
+  { to: 'test-panels', label: 'Test panels', icon: Beaker, roles: ['administrator', 'manager'] },
+  { to: 'lab-settings', label: 'Lab settings', icon: Settings, roles: ['administrator', 'manager'] },
 ];
+
+function SectionTitle({ children }) {
+  return (
+    <p className="px-2 pb-2 pt-4 text-[10px] font-semibold uppercase tracking-widest text-slate-400">
+      {children}
+    </p>
+  );
+}
 
 export function LabLayout({ children }) {
-  const { toggleSidebar } = useUIStore();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { clearAuth } = useAuthStore();
   const user = useAuthStore((s) => s.user);
   const { labName, logoUrl, primaryColor } = useLabContext();
   const { role } = usePermission();
   const navigate = useNavigate();
+  const location = useLocation();
   const lp = useLabPath();
 
-  const handleLogout = () => { clearAuth(); navigate(lp('login')); };
+  const handleLogout = () => {
+    clearAuth();
+    navigate(lp('login'));
+  };
 
   const visibleMain = mainMenuItems.filter((i) => i.roles.includes(role));
   const visibleRestricted = restrictedItems.filter((i) => i.roles.includes(role));
   const visibleManager = managerItems.filter((i) => i.roles.includes(role));
 
-  // Show restricted section to all — but non-admin items show "Admin" badge
-  const allRestricted = restrictedItems;
-
   const userInitials = user?.full_name
-    ? user.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+    ? user.full_name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
     : 'U';
 
-  return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
-      {/* ── Sidebar ──────────────────────────────────────────────────────── */}
-      <aside className="flex flex-col w-56 bg-white border-r border-slate-200 shrink-0 z-20">
-        {/* Logo */}
-        <div className="flex items-center gap-2.5 px-5 py-5">
+  const currentPage = (() => {
+    const segment = location.pathname.split('/').filter(Boolean).at(-1) || 'dashboard';
+    if (segment === 'new') return 'New report';
+    return segment.replace('-', ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  })();
+
+  const navLinkClass = ({ isActive }) => cn(
+    'flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-150',
+    isActive
+      ? 'bg-blue-50 text-blue-700'
+      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-800',
+  );
+
+  const renderNavGroup = (items) => items.map((item) => {
+    const Icon = item.icon;
+    return (
+      <NavLink
+        key={item.to}
+        to={lp(item.to)}
+        end={item.to === 'dashboard'}
+        className={navLinkClass}
+        onClick={() => setMobileNavOpen(false)}
+      >
+        <Icon size={17} className="shrink-0" />
+        <span className="truncate">{item.label}</span>
+      </NavLink>
+    );
+  });
+
+  const SidebarContent = (
+    <>
+      <div className="flex items-center justify-between gap-2 px-5 py-5">
+        <div className="flex min-w-0 items-center gap-2.5">
           <div
-            className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white"
             style={{ background: primaryColor || '#1a56db' }}
           >
             {logoUrl
-              ? <img src={logoUrl} alt="Logo" className="w-5 h-5 object-contain rounded" />
-              : <span>LI</span>
-            }
+              ? <img src={logoUrl} alt="Logo" className="h-5 w-5 rounded object-contain" />
+              : <span>LI</span>}
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-bold text-slate-800 truncate leading-tight">LabIntel</p>
-            <p className="text-[11px] text-slate-500 truncate leading-tight">{labName}</p>
+            <p className="truncate text-sm font-bold leading-tight text-slate-800">LabIntel</p>
+            <p className="truncate text-[11px] leading-tight text-slate-500">{labName}</p>
           </div>
         </div>
 
-        {/* ── MAIN MENU ──────────────────────────────────────────────────── */}
-        <nav className="flex-1 overflow-y-auto scrollbar-thin px-3 pb-4">
-          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-2 mb-2 mt-2">
-            Main Menu
-          </p>
-          <div className="space-y-0.5">
-            {visibleMain.map((item) => {
-              const Icon = item.icon;
-              return (
-                <NavLink
-                  key={item.to}
-                  to={lp(item.to)}
-                  end={item.to === 'dashboard'}
-                  className={({ isActive }) => cn(
-                    'flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150',
-                    isActive
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50'
-                  )}
-                >
-                  <Icon size={17} className="shrink-0" />
-                  <span className="truncate">{item.label}</span>
-                </NavLink>
-              );
-            })}
+        <button
+          onClick={() => setMobileNavOpen(false)}
+          className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 md:hidden"
+          aria-label="Close menu"
+        >
+          <X size={16} />
+        </button>
+      </div>
+
+      <nav className="flex-1 overflow-y-auto scrollbar-thin px-3 pb-4">
+        <SectionTitle>Main Menu</SectionTitle>
+        <div className="space-y-0.5">{renderNavGroup(visibleMain)}</div>
+
+        {visibleRestricted.length > 0 && (
+          <>
+            <SectionTitle>Restricted</SectionTitle>
+            <div className="space-y-0.5">{renderNavGroup(visibleRestricted)}</div>
+          </>
+        )}
+
+        {visibleManager.length > 0 && (
+          <>
+            <SectionTitle>Admin</SectionTitle>
+            <div className="space-y-0.5">{renderNavGroup(visibleManager)}</div>
+          </>
+        )}
+      </nav>
+
+      <div className="border-t border-slate-100 px-4 py-3">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-600 text-xs font-bold text-white">
+            {userInitials}
           </div>
-
-          {/* ── RESTRICTED ─────────────────────────────────────────────────── */}
-          {visibleRestricted.length > 0 && (
-            <>
-              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-2 mb-2 mt-6">
-                Restricted
-              </p>
-              <div className="space-y-0.5">
-                {visibleRestricted.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <NavLink
-                      key={item.to}
-                      to={lp(item.to)}
-                      className={({ isActive }) => cn(
-                        'flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150',
-                        isActive
-                          ? 'bg-blue-50 text-blue-700'
-                          : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50'
-                      )}
-                    >
-                      <Icon size={17} className="shrink-0" />
-                      <span className="truncate">{item.label}</span>
-                    </NavLink>
-                  );
-                })}
-              </div>
-            </>
-          )}
-
-          {/* ── MANAGER ADMIN ──────────────────────────────────────────────── */}
-          {visibleManager.length > 0 && (
-            <>
-              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-2 mb-2 mt-6">
-                Admin
-              </p>
-              <div className="space-y-0.5">
-                {visibleManager.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <NavLink
-                      key={item.to}
-                      to={lp(item.to)}
-                      className={({ isActive }) => cn(
-                        'flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150',
-                        isActive
-                          ? 'bg-blue-50 text-blue-700'
-                          : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50'
-                      )}
-                    >
-                      <Icon size={17} className="shrink-0" />
-                      <span className="truncate">{item.label}</span>
-                    </NavLink>
-                  );
-                })}
-              </div>
-            </>
-          )}
-        </nav>
-
-        {/* ── User info + Logout at bottom ────────────────────────────────── */}
-        <div className="border-t border-slate-100 px-4 py-3">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-teal-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
-              {userInitials}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-slate-700 truncate leading-tight">
-                {user?.full_name || 'Staff'}
-              </p>
-              <p className="text-[11px] text-slate-400 capitalize leading-tight">
-                {role?.replace('_', ' ')}
-              </p>
-            </div>
-            <button
-              onClick={handleLogout}
-              title="Logout"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all"
-            >
-              <LogOut size={16} />
-            </button>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold leading-tight text-slate-700">
+              {user?.full_name || 'Staff'}
+            </p>
+            <p className="text-[11px] capitalize leading-tight text-slate-400">
+              {role?.replace('_', ' ')}
+            </p>
           </div>
+          <button
+            onClick={handleLogout}
+            title="Logout"
+            className="rounded-lg p-1.5 text-slate-400 transition-all hover:bg-red-50 hover:text-red-500"
+          >
+            <LogOut size={16} />
+          </button>
         </div>
+      </div>
+    </>
+  );
+
+  return (
+    <div className="flex min-h-screen bg-slate-50">
+      <div
+        className={cn(
+          'fixed inset-0 z-30 bg-slate-950/35 transition-opacity md:hidden',
+          mobileNavOpen ? 'opacity-100' : 'pointer-events-none opacity-0',
+        )}
+        onClick={() => setMobileNavOpen(false)}
+      />
+
+      <aside
+        className={cn(
+          'fixed inset-y-0 left-0 z-40 flex w-72 max-w-[85vw] flex-col border-r border-slate-200 bg-white transition-transform md:static md:z-20 md:w-56 md:max-w-none md:translate-x-0',
+          mobileNavOpen ? 'translate-x-0' : '-translate-x-full',
+        )}
+      >
+        {SidebarContent}
       </aside>
 
-      {/* ── Main content ─────────────────────────────────────────────────── */}
-      <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Topbar */}
-        <header className="h-14 bg-white border-b border-slate-100 flex items-center justify-between px-6 shrink-0">
-          <div className="flex items-center gap-2 text-sm">
-            <span className="font-semibold text-slate-800">Dashboard</span>
+      <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-slate-100 bg-white px-4 sm:px-6">
+          <div className="flex min-w-0 items-center gap-2">
+            <button
+              onClick={() => setMobileNavOpen(true)}
+              className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700 md:hidden"
+              aria-label="Open menu"
+            >
+              <Menu size={18} />
+            </button>
+            <span className="truncate text-sm font-semibold text-slate-800">{currentPage}</span>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium text-slate-600">{labName}</span>
-            <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center text-white text-xs font-bold">
+
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="hidden text-sm font-medium text-slate-600 sm:inline">{labName}</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-teal-600 text-xs font-bold text-white">
               {userInitials}
             </div>
           </div>
         </header>
 
-        {/* Page content */}
-        <div className="flex-1 overflow-y-auto scrollbar-thin p-6">
+        <div className="flex-1 overflow-y-auto scrollbar-thin p-4 sm:p-6">
           {children}
         </div>
       </main>

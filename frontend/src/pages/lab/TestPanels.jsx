@@ -57,13 +57,13 @@ export default function TestPanels() {
     <LabLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-slate-800">Test Panels</h1>
             <p className="text-sm text-slate-500">{panels.length} active test panels</p>
           </div>
           {canDo('editLabSettings') && (
-            <Button onClick={() => setShowCreate(true)}>
+            <Button onClick={() => setShowCreate(true)} className="w-full sm:w-auto">
               <Plus size={15} />Add Panel
             </Button>
           )}
@@ -81,7 +81,7 @@ export default function TestPanels() {
             {panels.map(panel => (
               <Card key={panel.id} className="overflow-hidden">
                 <div
-                  className="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50/50 transition-colors"
+                  className="flex items-start justify-between gap-3 p-4 cursor-pointer hover:bg-slate-50/50 transition-colors"
                   onClick={() => setExpandedPanel(expandedPanel === panel.id ? null : panel.id)}
                 >
                   <div className="flex items-center gap-3">
@@ -131,8 +131,8 @@ export default function TestPanels() {
         {/* Create Panel Modal */}
         <Modal open={showCreate} onClose={() => { setShowCreate(false); reset(); }} title="Create Test Panel" className="max-w-2xl">
           <form onSubmit={handleSubmit((d) => createMutation.mutate(d))} className="space-y-4">
-            <div className="grid grid-cols-3 gap-3">
-              <div className="col-span-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="sm:col-span-2">
                 <Input label="Panel Name *" {...register('name', { required: true })} placeholder="Complete Blood Count" />
               </div>
               <Input label="Short Code *" {...register('short_code', { required: true })} placeholder="CBC" />
@@ -149,8 +149,8 @@ export default function TestPanels() {
               </div>
               <div className="space-y-2 max-h-60 overflow-y-auto scrollbar-thin pr-1">
                 {paramRows.map((p, i) => (
-                  <div key={i} className="grid grid-cols-6 gap-1.5 items-center p-2 bg-slate-50 rounded-lg">
-                    <input value={p.name} onChange={e => updateParam(i, 'name', e.target.value)} placeholder="Name" className="col-span-2 input-xs border border-slate-200 rounded px-2 py-1 text-xs" />
+                  <div key={i} className="grid grid-cols-1 gap-1.5 rounded-lg bg-slate-50 p-2 sm:grid-cols-6 sm:items-center">
+                    <input value={p.name} onChange={e => updateParam(i, 'name', e.target.value)} placeholder="Name" className="input-xs border border-slate-200 rounded px-2 py-1 text-xs sm:col-span-2" />
                     <input value={p.unit} onChange={e => updateParam(i, 'unit', e.target.value)} placeholder="Unit" className="input-xs border border-slate-200 rounded px-2 py-1 text-xs" />
                     <input value={p.ref_min_male} onChange={e => updateParam(i, 'ref_min_male', e.target.value)} placeholder="Min M" type="number" className="input-xs border border-slate-200 rounded px-2 py-1 text-xs" />
                     <input value={p.ref_max_male} onChange={e => updateParam(i, 'ref_max_male', e.target.value)} placeholder="Max M" type="number" className="input-xs border border-slate-200 rounded px-2 py-1 text-xs" />
@@ -162,7 +162,7 @@ export default function TestPanels() {
               </div>
             </div>
 
-            <div className="flex gap-2 pt-2">
+            <div className="flex flex-col gap-2 pt-2 sm:flex-row">
               <Button type="submit" isLoading={createMutation.isPending}>Create Panel</Button>
               <Button type="button" variant="secondary" onClick={() => { setShowCreate(false); reset(); }}>Cancel</Button>
             </div>

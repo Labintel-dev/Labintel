@@ -91,7 +91,7 @@ export default function NewReport() {
 
   return (
     <LabLayout>
-      <div className="max-w-2xl mx-auto">
+      <div className="mx-auto max-w-2xl">
         <div className="flex items-center gap-3 mb-6">
           <button onClick={() => navigate(-1)} className="text-slate-400 hover:text-slate-700">
             <ArrowLeft size={18} />
@@ -109,7 +109,7 @@ export default function NewReport() {
         <form onSubmit={handleSubmit((d) => createMutation.mutate(d))}>
           {/* Step 1 */}
           {step === 1 && (
-            <Card className="p-6 space-y-4">
+            <Card className="space-y-4 p-4 sm:p-6">
               <h2 className="font-semibold text-slate-800">Step 1: Patient & Panel</h2>
               <div>
                 <label className="text-sm font-medium text-slate-700 block mb-1">Patient *</label>
@@ -150,7 +150,7 @@ export default function NewReport() {
 
           {/* Step 2 */}
           {step === 2 && (
-            <Card className="p-6">
+            <Card className="p-4 sm:p-6">
               <h2 className="font-semibold text-slate-800 mb-4">Step 2: Enter Test Values</h2>
               <div className="space-y-3">
                 {params.map((p, i) => {
@@ -158,7 +158,7 @@ export default function NewReport() {
                   const refMin = isFem ? p.ref_min_female : p.ref_min_male;
                   const refMax = isFem ? p.ref_max_female : p.ref_max_male;
                   return (
-                    <div key={p.id} className="flex items-center gap-3 p-3 rounded-lg border border-slate-100 bg-slate-50">
+                    <div key={p.id} className="flex flex-col gap-3 rounded-lg border border-slate-100 bg-slate-50 p-3 sm:flex-row sm:items-center">
                       <div className="flex-1">
                         <p className="text-sm font-semibold text-slate-800">{p.name}</p>
                         {refMin != null && refMax != null && (
@@ -170,14 +170,14 @@ export default function NewReport() {
                         step="any"
                         {...register(`values.${i}.value`)}
                         placeholder="0.0"
-                        className="w-28 text-right rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-left text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 sm:w-28 sm:text-right"
                       />
-                      <span className="text-xs text-slate-400 w-12 shrink-0">{p.unit}</span>
+                      <span className="w-full shrink-0 text-xs text-slate-400 sm:w-12">{p.unit}</span>
                     </div>
                   );
                 })}
               </div>
-              <div className="flex gap-2 mt-4">
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                 <Button type="button" variant="secondary" onClick={() => setStep(1)}><ArrowLeft size={15} />Back</Button>
                 <Button type="button" onClick={() => setStep(3)}>Review Results <ArrowRight size={15} /></Button>
               </div>
@@ -186,9 +186,9 @@ export default function NewReport() {
 
           {/* Step 3 */}
           {step === 3 && (
-            <Card className="p-6">
+            <Card className="p-4 sm:p-6">
               <h2 className="font-semibold text-slate-800 mb-4">Step 3: Review & Submit</h2>
-              <div className="rounded-xl border border-slate-100 overflow-hidden mb-4">
+              <div className="mb-4 overflow-x-auto rounded-xl border border-slate-100">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-slate-50">
@@ -213,7 +213,7 @@ export default function NewReport() {
                   </tbody>
                 </table>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <Button type="button" variant="secondary" onClick={() => setStep(2)}><ArrowLeft size={15} />Back</Button>
                 <Button type="submit" isLoading={createMutation.isPending} className="flex-1">
                   <Send size={15} /> Submit Report

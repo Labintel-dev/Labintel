@@ -104,20 +104,22 @@ export default function ReportDetail() {
 
   return (
     <LabLayout>
-      <div className="max-w-4xl mx-auto space-y-5">
+      <div className="mx-auto max-w-4xl space-y-5">
         {/* Back */}
         <Link to={lp('reports')} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors">
           <ArrowLeft size={14} /> All Reports
         </Link>
 
         {/* Header */}
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <h1 className="text-xl font-bold text-slate-800">{panel?.name}</h1>
               <p className="text-slate-500 text-sm">{patient?.full_name} · {formatDate(report.collected_at)}</p>
             </div>
-            <StatusStepper status={report.status} />
+            <div className="w-full overflow-x-auto sm:w-auto">
+              <StatusStepper status={report.status} />
+            </div>
           </div>
           <div className="flex flex-wrap gap-2 mt-4">
             {canDo('downloadPDF') && report.pdf_url && (
@@ -151,7 +153,7 @@ export default function ReportDetail() {
 
         {/* Test values */}
         <Card className="overflow-hidden">
-          <div className="px-5 py-3 border-b border-slate-100">
+          <div className="border-b border-slate-100 px-4 py-3 sm:px-5">
             <h2 className="text-sm font-semibold text-slate-700">Test Results</h2>
           </div>
           <div className="overflow-x-auto">
@@ -218,7 +220,7 @@ export default function ReportDetail() {
               Releasing this report will send an <strong>SMS notification</strong> to the patient and make it visible on their portal.
             </p>
             <p className="text-sm text-slate-500">Continue?</p>
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row">
               <Button onClick={() => statusMutation.mutate('released')} isLoading={statusMutation.isPending} className="flex-1">
                 ✓ Yes, Release Report
               </Button>

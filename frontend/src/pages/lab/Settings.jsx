@@ -134,8 +134,8 @@ function PanelsTab() {
       {/* Create Panel Modal */}
       <Modal open={showCreate} onClose={() => { setShowCreate(false); reset(); }} title="Create Test Panel" className="max-w-2xl">
         <form onSubmit={handleSubmit((d) => createMutation.mutate(d))} className="space-y-4">
-          <div className="grid grid-cols-3 gap-3">
-            <div className="col-span-2"><Input label="Panel Name *" {...register('name', { required: true })} /></div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="sm:col-span-2"><Input label="Panel Name *" {...register('name', { required: true })} /></div>
             <Input label="Short Code *" {...register('short_code', { required: true })} placeholder="CBC" />
           </div>
           <Input label="Price (₹)" type="number" {...register('price', { valueAsNumber: true })} />
@@ -149,8 +149,8 @@ function PanelsTab() {
             </div>
             <div className="space-y-2 max-h-60 overflow-y-auto scrollbar-thin pr-1">
               {paramRows.map((p, i) => (
-                <div key={i} className="grid grid-cols-6 gap-1.5 items-center p-2 bg-slate-50 rounded-lg">
-                  <input value={p.name} onChange={e => updateParam(i,'name',e.target.value)} placeholder="Name" className="col-span-2 input-xs border border-slate-200 rounded px-2 py-1 text-xs" />
+                <div key={i} className="grid grid-cols-1 gap-1.5 rounded-lg bg-slate-50 p-2 sm:grid-cols-6 sm:items-center">
+                  <input value={p.name} onChange={e => updateParam(i,'name',e.target.value)} placeholder="Name" className="input-xs border border-slate-200 rounded px-2 py-1 text-xs sm:col-span-2" />
                   <input value={p.unit} onChange={e => updateParam(i,'unit',e.target.value)} placeholder="Unit" className="input-xs border border-slate-200 rounded px-2 py-1 text-xs" />
                   <input value={p.ref_min_male} onChange={e => updateParam(i,'ref_min_male',e.target.value)} placeholder="Min M" type="number" className="input-xs border border-slate-200 rounded px-2 py-1 text-xs" />
                   <input value={p.ref_max_male} onChange={e => updateParam(i,'ref_max_male',e.target.value)} placeholder="Max M" type="number" className="input-xs border border-slate-200 rounded px-2 py-1 text-xs" />
@@ -287,15 +287,15 @@ export default function Settings() {
           <h1 className="text-2xl font-bold text-slate-800">Settings</h1>
           <p className="text-sm text-slate-500">Manage lab configuration</p>
         </div>
-        <div className="flex gap-1 border-b border-slate-200">
+        <div className="flex gap-1 overflow-x-auto border-b border-slate-200 pb-1">
           {tabs.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
-              className={`flex items-center gap-2 px-5 py-2.5 text-sm font-medium border-b-2 transition-all ${tab === t.id ? 'border-teal-600 text-teal-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
+              className={`whitespace-nowrap flex items-center gap-2 px-5 py-2.5 text-sm font-medium border-b-2 transition-all ${tab === t.id ? 'border-teal-600 text-teal-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
               {t.icon}{t.label}
             </button>
           ))}
         </div>
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           {tab === 'lab'    && <LabProfileTab />}
           {tab === 'panels' && <PanelsTab />}
           {tab === 'staff'  && <StaffTab />}

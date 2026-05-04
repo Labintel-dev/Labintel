@@ -85,7 +85,7 @@ export default function PatientReportView() {
 
   return (
     <PatientLayout>
-      <div className="max-w-2xl mx-auto space-y-5">
+      <div className="mx-auto max-w-2xl space-y-5">
         {/* Back */}
         <Link to="/dashboard" className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors">
           <ArrowLeft size={14} /> Back to reports
@@ -94,13 +94,13 @@ export default function PatientReportView() {
         {/* Header card */}
         <div className="rounded-2xl overflow-hidden shadow-sm border border-slate-100">
           <div className="h-2" style={{ background: accentColor }} />
-          <div className="p-6 bg-white">
-            <div className="flex items-start gap-4">
+          <div className="bg-white p-4 sm:p-6">
+            <div className="flex flex-wrap items-start gap-4">
               <div className="w-14 h-14 rounded-xl flex items-center justify-center text-white text-2xl font-bold shrink-0"
                 style={{ background: accentColor }}>
                 <FlaskConical size={24} />
               </div>
-              <div className="flex-1">
+              <div className="min-w-0 flex-1">
                 <h1 className="text-xl font-bold text-slate-800">{panel?.name}</h1>
                 <p className="text-sm text-slate-500">{lab?.name}</p>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-xs text-slate-500">
@@ -109,10 +109,10 @@ export default function PatientReportView() {
                   <span>📋 Reported: {formatDate(report.reported_at)}</span>
                 </div>
               </div>
-              <Badge variant="success">Released</Badge>
+              <Badge variant="success" className="shrink-0">Released</Badge>
             </div>
-            <div className="mt-4 flex gap-2">
-              <Button onClick={handleDownload} variant="outline" size="sm">
+            <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+              <Button onClick={handleDownload} variant="outline" size="sm" className="w-full sm:w-auto">
                 <Download size={14} /> Download PDF
               </Button>
             </div>

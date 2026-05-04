@@ -160,9 +160,9 @@ export default function PatientDetail() {
         </Link>
 
         {/* Profile header */}
-        <Card className="p-6">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-4">
+        <Card className="p-4 sm:p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               <div className="w-16 h-16 rounded-2xl bg-teal-100 flex items-center justify-center text-teal-700 text-2xl font-bold">
                 {patient.full_name?.[0] || '?'}
               </div>
@@ -179,7 +179,7 @@ export default function PatientDetail() {
                   </div>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit((d) => updateMutation.mutate(d))} className="space-y-3 min-w-[280px]">
+                <form onSubmit={handleSubmit((d) => updateMutation.mutate(d))} className="w-full space-y-3 sm:min-w-[280px]">
                   <Input label="Full Name" {...register('full_name')} error={errors.full_name?.message} />
                   <Input label="Date of Birth" type="date" {...register('date_of_birth')} />
                   <Select label="Gender" {...register('gender')} options={[
@@ -193,7 +193,7 @@ export default function PatientDetail() {
                 </form>
               )}
             </div>
-            <div className="flex gap-2 shrink-0">
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:shrink-0">
               {canDo('registerPatient') && !editing && (
                 <Button size="sm" variant="secondary" onClick={() => setEditing(true)}><Edit3 size={14} />Edit</Button>
               )}
@@ -207,10 +207,10 @@ export default function PatientDetail() {
         </Card>
 
         {/* Tabs */}
-        <div className="flex gap-1 border-b border-slate-200">
+        <div className="flex gap-1 overflow-x-auto border-b border-slate-200 pb-1">
           {tabs.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-all ${tab === t.id ? 'border-teal-600 text-teal-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
+              className={`whitespace-nowrap flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-all ${tab === t.id ? 'border-teal-600 text-teal-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
               {t.icon}{t.label}
             </button>
           ))}

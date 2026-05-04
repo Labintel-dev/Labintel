@@ -51,7 +51,7 @@ export default function LabSettings() {
         {isLoading ? (
           <Skeleton className="h-64" />
         ) : (
-          <Card className="p-6">
+          <Card className="p-4 sm:p-6">
             {/* Color preview accent */}
             <div className="h-2 rounded-xl mb-6" style={{ background: previewColor || '#0d9488' }} />
 

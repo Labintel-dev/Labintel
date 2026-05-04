@@ -43,14 +43,14 @@ export default function Analytics() {
         )}
 
         {/* KPIs */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <KPICard title="Patients This Month" value={kpiData?.patients_this_month} icon={<Users size={20}/>} color="teal" isLoading={kpiLoad} />
           <KPICard title="Reports Today" value={kpiData?.reports_today} icon={<FileText size={20}/>} color="blue" isLoading={kpiLoad} />
           <KPICard title="Pending" value={kpiData?.pending_reports} icon={<Clock size={20}/>} color="amber" isLoading={kpiLoad} />
           <KPICard title="Unread Alerts" value={kpiData?.unread_alerts} icon={<Bell size={20}/>} color={kpiData?.unread_alerts > 0 ? 'red' : 'teal'} isLoading={kpiLoad} />
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-4">
+        <div className="grid gap-4 lg:grid-cols-3">
           {/* Volume bar chart */}
           <Card className="p-5 lg:col-span-2">
             <h2 className="font-semibold text-slate-800 mb-4">Daily Report Volume</h2>
@@ -88,7 +88,7 @@ export default function Analytics() {
         </div>
 
         {/* Turnaround */}
-        <Card className="p-5 max-w-sm">
+        <Card className="max-w-sm p-5">
           <h2 className="font-semibold text-slate-800 mb-2">Avg. Turnaround Time</h2>
           <p className="text-xs text-slate-500 mb-4">Draft → Released over last 30 days</p>
           {turnLoad ? <Skeleton className="h-16 w-32" /> : (

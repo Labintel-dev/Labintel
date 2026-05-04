@@ -11,7 +11,7 @@ const features = [
 
 export default function PatientLogin() {
   return (
-    <div className="min-h-screen flex items-center justify-center gradient-hero relative overflow-hidden">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden gradient-hero px-4 py-8">
       {/* Decorative blobs */}
       <div className="absolute top-[-120px] right-[-120px] w-[500px] h-[500px] bg-teal-500/20 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-[-120px] left-[-120px] w-[450px] h-[450px] bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />

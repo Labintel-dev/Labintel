@@ -179,7 +179,7 @@ export default function StaffTracking() {
       <div className="space-y-6">
 
         {/* ── KPI Summary Cards ──────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <KPICard
             title="Total Staff"
             value={summaryLoading ? undefined : kpis.totalStaff}
@@ -209,8 +209,8 @@ export default function StaffTracking() {
             </>
           ) : (
             <>
-              <div /> {/* spacer */}
-              <div /> {/* spacer */}
+              <div className="hidden xl:block" />
+              <div className="hidden xl:block" />
             </>
           )}
           <KPICard
@@ -225,7 +225,7 @@ export default function StaffTracking() {
 
         {/* ── Filter bar ─────────────────────────────────────────────────── */}
         <Card className="p-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-2">
               <Filter size={18} className="text-slate-400" />
               <h2 className="text-sm font-semibold text-slate-700">Filter Records</h2>
@@ -243,7 +243,7 @@ export default function StaffTracking() {
               <Button
                 id="attendance-export-csv-btn"
                 variant="secondary"
-                className="shrink-0"
+                className="w-full shrink-0 sm:w-auto"
                 disabled={records.length === 0}
                 onClick={() => exportCSV(records)}
               >

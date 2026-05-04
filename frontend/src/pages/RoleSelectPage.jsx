@@ -87,7 +87,7 @@ const RoleSelectPage = () => {
     <div className="min-h-screen bg-[#f8faf9] flex flex-col" style={{ fontFamily: "'Inter', sans-serif" }}>
       <Navbar onLoginClick={() => navigate('/')} />
 
-      <div className="flex-1 max-w-6xl w-full mx-auto px-6 py-10 md:py-16 flex flex-col items-center justify-center">
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col items-center justify-center px-4 py-10 sm:px-6 md:py-16">
         {/* Header */}
         <motion.div
            initial={{ opacity: 0, y: -10 }}
@@ -108,7 +108,7 @@ const RoleSelectPage = () => {
           initial={{ opacity: 0, scale: 0.98, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full max-w-lg bg-white rounded-3xl overflow-hidden shadow-2xl shadow-gray-200/50 border border-gray-100 relative p-8 md:p-12 box-border"
+          className="relative box-border w-full max-w-lg overflow-hidden rounded-3xl border border-gray-100 bg-white p-5 shadow-2xl shadow-gray-200/50 sm:p-8 md:p-12"
         >
           {/* Portal Icon + Title */}
           <div className="mb-8 text-center flex flex-col items-center">

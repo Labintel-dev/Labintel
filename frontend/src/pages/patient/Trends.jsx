@@ -107,7 +107,7 @@ export default function PatientTrends() {
             {/* Chart */}
             {selected && (
               <Card className="p-5">
-                <div className="flex items-center justify-between mb-4">
+                <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <h2 className="font-semibold text-slate-800">{selected.parameter?.name}</h2>
                     <p className="text-xs text-slate-500">{selected.parameter?.unit} · {selected.data.length} data points</p>

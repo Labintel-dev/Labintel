@@ -96,7 +96,7 @@ const DemoNormalReportPanel = () => (
       </div>
 
       <div className="p-5 space-y-4">
-        <div className="grid grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div className="space-y-2">
             <div className="h-2 bg-slate-200 rounded w-full" />
             <div className="h-2 bg-slate-200 rounded w-10/12" />
@@ -110,7 +110,7 @@ const DemoNormalReportPanel = () => (
         </div>
 
         <div className="rounded-xl border border-slate-200 overflow-hidden">
-          <div className="grid grid-cols-3 px-3 py-2 bg-slate-50 text-[10px] font-black uppercase tracking-wider text-slate-500">
+          <div className="grid grid-cols-1 sm:grid-cols-3 px-3 py-2 bg-slate-50 text-[10px] font-black uppercase tracking-wider text-slate-500">
             <span className="col-span-2">Test Name</span>
             <span className="text-right">Result</span>
           </div>
@@ -121,7 +121,7 @@ const DemoNormalReportPanel = () => (
             ['CRP', '8.4'],
             ['ESR', '22'],
           ].map(([name, value]) => (
-            <div key={name} className="grid grid-cols-3 px-3 py-2 border-t border-slate-100 text-[10px] text-slate-600">
+            <div key={name} className="grid grid-cols-1 sm:grid-cols-3 px-3 py-2 border-t border-slate-100 text-[10px] text-slate-600">
               <span className="col-span-2 truncate">{name}</span>
               <span className="text-right font-semibold">{value}</span>
             </div>
@@ -180,7 +180,7 @@ const PrintReport = ({ result }) => {
       </div>
 
       {/* 4. Patient Layer */}
-      <div className="grid grid-cols-2 gap-10 mb-8 pb-6 border-b-2 border-dotted border-gray-200">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 mb-8 pb-6 border-b-2 border-dotted border-gray-200">
         <div className="space-y-4">
            <div>
              <p className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] mb-1.5">Full Patient Name</p>
@@ -328,14 +328,14 @@ const DemoAiReportPanel = () => (
         </div>
       </div>
 
-      <div className="px-5 py-2.5 border-b border-slate-100 text-[10px] font-black uppercase tracking-wider text-slate-500 grid grid-cols-3">
+      <div className="px-5 py-2.5 border-b border-slate-100 text-[10px] font-black uppercase tracking-wider text-slate-500 grid grid-cols-1 sm:grid-cols-3">
         <span>Accession AI-7281</span>
         <span>Male / 45Y</span>
         <span className="text-right text-rose-500">Priority Review</span>
       </div>
 
       <div className="p-5 space-y-4">
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="rounded-xl border border-slate-100 p-3">
             <div className="text-[9px] font-black uppercase tracking-widest text-slate-400">Risk</div>
             <div className="text-xl font-black text-rose-600">High</div>
@@ -358,7 +358,7 @@ const DemoAiReportPanel = () => (
         </div>
 
         <div className="rounded-xl border border-slate-100 overflow-hidden">
-          <div className="grid grid-cols-3 px-3 py-2 bg-slate-50 text-[10px] font-black uppercase tracking-wider text-slate-500">
+          <div className="grid grid-cols-1 sm:grid-cols-3 px-3 py-2 bg-slate-50 text-[10px] font-black uppercase tracking-wider text-slate-500">
             <span>Result</span>
             <span>Range</span>
             <span className="text-right">AI Flag</span>
@@ -368,7 +368,7 @@ const DemoAiReportPanel = () => (
             ['0.8 ng/mL', '> 1.0', 'Low', 'text-rose-600'],
             ['11 %', '> 25%', 'Borderline', 'text-amber-600'],
           ].map(([resultValue, rangeValue, flag, color]) => (
-            <div key={resultValue} className="grid grid-cols-3 px-3 py-2 border-t border-slate-100 text-[10px] text-slate-600">
+            <div key={resultValue} className="grid grid-cols-1 sm:grid-cols-3 px-3 py-2 border-t border-slate-100 text-[10px] text-slate-600">
               <span>{resultValue}</span>
               <span>{rangeValue}</span>
               <span className={`text-right font-black ${color}`}>{flag}</span>
@@ -435,7 +435,7 @@ const TrendLineChart = ({ series = [] }) => {
           />
         ))}
       </svg>
-      <div className="grid grid-cols-4 gap-2 mt-2">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
         {points.map((point) => (
           <div key={point.label} className="text-center">
             <div className="text-[10px] font-black uppercase tracking-wider text-gray-400">{point.label}</div>
@@ -1112,7 +1112,7 @@ const OCRScanningWorkspace = ({ user }) => {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
-                      className="grid grid-cols-3 gap-3 p-4 mt-4"
+                      className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 mt-4"
                     >
                       {[
                         { icon: Camera, label: 'Camera', color: 'bg-blue-50 text-blue-600', action: startCamera },
@@ -1490,3 +1490,4 @@ const OCRScanningWorkspace = ({ user }) => {
 };
 
 export default OCRScanningWorkspace;
+

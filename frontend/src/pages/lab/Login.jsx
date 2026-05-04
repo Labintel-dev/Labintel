@@ -112,7 +112,7 @@ export default function LabLogin({ slug }) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 relative overflow-hidden">
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-slate-50 px-4 py-8">
       {/* Accent top bar using role color */}
       <div
         className="fixed top-0 inset-x-0 h-1"

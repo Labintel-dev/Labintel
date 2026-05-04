@@ -41,7 +41,7 @@ function PolicyLayout({ type }) {
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #f7faf8 0%, #edf3f0 100%)' }}>
       <div className="border-b border-[#d8e4df] bg-white/90 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
           <button
             onClick={() => navigate('/')}
             className="inline-flex items-center gap-2 text-sm font-semibold"
@@ -59,13 +59,13 @@ function PolicyLayout({ type }) {
         </div>
       </div>
 
-      <main className="max-w-4xl mx-auto px-6 py-14 md:py-20">
+      <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6 md:py-20">
         <div
           className="rounded-[2.25rem] border border-[#d6e5df] overflow-hidden"
           style={{ boxShadow: '0 20px 60px rgba(20,69,61,0.08)' }}
         >
           <section
-            className="px-8 md:px-12 py-12 md:py-14 text-white"
+            className="px-5 py-10 text-white sm:px-8 md:px-12 md:py-14"
             style={{ background: `linear-gradient(135deg, #103831 0%, ${P} 52%, ${PL} 100%)` }}
           >
             <p className="text-xs font-bold uppercase tracking-[0.32em] text-white/70 mb-4">
@@ -83,7 +83,7 @@ function PolicyLayout({ type }) {
             </div>
           </section>
 
-          <section className="bg-white px-8 md:px-12 py-10 md:py-12">
+          <section className="bg-white px-5 py-8 sm:px-8 md:px-12 md:py-12">
             <div className="space-y-6">
               {content.body.map((paragraph) => (
                 <p key={paragraph} className="text-[1.02rem] leading-8 text-slate-600">

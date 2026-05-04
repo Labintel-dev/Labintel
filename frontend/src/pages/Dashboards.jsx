@@ -74,7 +74,7 @@ const TealBtn = ({ children, onClick, disabled, size = 'md', className = '' }) =
 /** Search input bar */
 const SearchBar = ({ value, onChange, placeholder = 'Search…' }) => (
   <div className="flex items-center gap-2 bg-gray-50 border border-gray-200
-                  rounded-xl px-3 py-2 flex-1 max-w-xs">
+                  rounded-xl px-3 py-2 flex-1 w-full max-w-xs">
     <Search size={14} className="text-gray-400 shrink-0" />
     <input value={value} onChange={e => onChange(e.target.value)}
            className="bg-transparent text-sm text-gray-600 outline-none
@@ -284,12 +284,12 @@ const Toast = ({ message, type = 'success', onClose }) => (
     initial={{ opacity: 0, y: 50, scale: 0.9 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
     exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-    className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[300] flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl border ${
+    className={`fixed bottom-4 left-1/2 z-[300] flex w-[calc(100%-1.5rem)] max-w-md -translate-x-1/2 items-center gap-3 rounded-2xl border px-4 py-3 shadow-2xl sm:bottom-8 sm:w-auto sm:max-w-none sm:px-5 sm:py-3.5 ${
       type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 
       type === 'info' ? 'bg-blue-50 border-blue-100 text-blue-800' :
       'bg-gray-50 border-gray-100 text-gray-800'
     }`}
-    style={{ minWidth: '280px', pointerEvents: 'auto' }}
+    style={{ pointerEvents: 'auto' }}
   >
     <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
       type === 'success' ? 'bg-emerald-500/10' : 'bg-blue-500/10'
@@ -304,7 +304,7 @@ const Toast = ({ message, type = 'success', onClose }) => (
 );
 
 const Sidebar = ({ navItems, activeIdx, setActiveIdx, user, onLogout }) => (
-  <div className="w-52 shrink-0 bg-white border-r border-gray-100 flex flex-col no-print">
+  <div className="hidden w-52 shrink-0 bg-white border-r border-gray-100 md:flex md:flex-col no-print">
     <Logo />
     <nav className="flex-1 p-3 pt-4 space-y-0.5">
       {navItems.map((item, i) => (
@@ -338,7 +338,7 @@ const ProfileDropdown = ({ user, onClose, onUpdateClick, onMyReportsClick, onLog
       initial={{ opacity: 0, y: 10, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-      className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-gray-100 z-[100] overflow-hidden"
+      className="absolute right-2 mt-2 w-[calc(100vw-1rem)] max-w-72 bg-white rounded-2xl shadow-2xl border border-gray-100 z-[100] overflow-hidden sm:right-0"
       style={{ boxShadow: '0 20px 50px rgba(0,0,0,0.1)' }}
     >
       {/* Header Profile Section */}
@@ -500,7 +500,7 @@ const ProfileUpdateModal = ({ user, onClose, onUpdated }) => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5 block ml-1">Date of Birth</label>
                 <div className="relative">
@@ -533,24 +533,54 @@ const ProfileUpdateModal = ({ user, onClose, onUpdated }) => {
           </button>
         </form>
       </motion.div>
+
+      <nav className="fixed inset-x-0 bottom-0 z-[120] border-t border-gray-200 bg-white/95 backdrop-blur md:hidden no-print">
+        <div
+          className="grid h-16"
+          style={{ gridTemplateColumns: `repeat(${Math.max(navItems.length, 1)}, minmax(0, 1fr))` }}
+        >
+          {navItems.map((item, i) => {
+            const Icon = item.icon;
+            const isActive = activeIdx === i;
+            return (
+              <button
+                key={item.label}
+                onClick={() => {
+                  setActiveIdx(i);
+                  setSearch('');
+                  setShowAiEngine(false);
+                  setAiAnalysis(null);
+                  setIsProfileOpen(false);
+                }}
+                className={`flex flex-col items-center justify-center gap-1 px-1 text-[10px] font-bold transition-colors ${
+                  isActive ? 'text-[#14453d]' : 'text-gray-500 hover:text-[#14453d]'
+                }`}
+              >
+                <Icon size={16} />
+                <span className="truncate">{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 };
 
 const TopBar = ({ showSearch, search, setSearch, user, onProfileClick, onBackHome }) => (
-  <div className="h-14 bg-white border-b border-gray-100 flex items-center px-5 gap-4 shrink-0 no-print">
+  <div className="h-14 bg-white border-b border-gray-100 flex items-center px-3 sm:px-5 gap-3 sm:gap-4 shrink-0 no-print">
     <button
       onClick={onBackHome}
-      className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-bold uppercase tracking-wide text-gray-600 transition-all hover:border-[#14453d]/20 hover:bg-[#f2f7f5] hover:text-[#14453d]"
+      className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-2.5 py-2 text-[10px] font-bold uppercase tracking-wide text-gray-600 transition-all hover:border-[#14453d]/20 hover:bg-[#f2f7f5] hover:text-[#14453d] sm:gap-2 sm:px-3 sm:text-xs"
     >
       <ArrowLeft size={14} />
-      Back
+      <span className="hidden sm:inline">Back</span>
     </button>
     {showSearch
       ? <SearchBar value={search} onChange={setSearch} placeholder="Search reports, patients…" />
       : <div className="text-xs font-bold uppercase tracking-[0.24em] text-gray-400">Dashboard</div>
     }
-    <div className="ml-auto flex items-center gap-4">
+    <div className="ml-auto flex items-center gap-2 sm:gap-4">
       <button className="relative p-2 rounded-xl hover:bg-gray-50 text-gray-400 transition-all">
         <Bell size={17} />
         <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-rose-500" />
@@ -748,7 +778,7 @@ const Shell = ({ navItems, showSearch = false, renderContent }) => {
               />
             ))}
           </AnimatePresence>
-          <div className="dashboard-scroll flex-1 overflow-auto p-6" style={{ background: '#f8faf9' }}>
+          <div className="dashboard-scroll flex-1 overflow-auto p-4 pb-24 sm:p-6 sm:pb-28 md:pb-6" style={{ background: '#f8faf9' }}>
             {showAiEngine ? (
               <AIEngine 
                 patientId={user.id}
@@ -928,7 +958,7 @@ const PatientReports = ({ user }) => {
       </div>
 
       {/* Stat strip */}
-      <div className="grid grid-cols-4 gap-3 mb-5">
+      <div className="mb-5 grid grid-cols-1 sm:grid-cols-2 gap-3 lg:grid-cols-4">
         {[
           { label: 'Total',      value: stats.total,      color: 'text-gray-700',    bg: 'bg-white' },
           { label: 'Ready',      value: stats.ready,      color: 'text-emerald-600', bg: 'bg-emerald-50' },
@@ -1167,7 +1197,7 @@ const LabUpload = ({ user }) => {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-5" style={{ height: 'calc(100% - 80px)' }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5" style={{ height: 'calc(100% - 80px)' }}>
 
         {/* Drop zone */}
         <div className="flex flex-col gap-3">
@@ -1427,7 +1457,7 @@ const AdminOverview = () => {
       </div>
 
       {/* Stat grid */}
-      <div className="grid grid-cols-3 gap-3 mb-5">
+      <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {stats.map(s => (
           <div key={s.label}
                className={`${s.bg} ${s.border} border rounded-2xl px-4 py-3.5`}>
@@ -1679,4 +1709,5 @@ export const DoctorPortal = () => (
     renderContent={(tabIdx, user, search) => <DoctorReports search={search} />}
   />
 );
+
 

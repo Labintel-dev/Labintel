@@ -63,9 +63,9 @@ export default function PatientProfile() {
         </div>
 
         {isLoading ? <Skeleton className="h-64 w-full" /> : (
-          <Card className="p-6">
+          <Card className="p-4 sm:p-6">
             {/* Avatar */}
-            <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-100">
+            <div className="mb-6 flex flex-col gap-4 border-b border-slate-100 pb-6 sm:flex-row sm:items-center">
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white text-2xl font-bold shadow-md shadow-teal-200">
                 {profile?.full_name?.[0] || 'P'}
               </div>
@@ -114,7 +114,7 @@ export default function PatientProfile() {
                     { value: 'other', label: 'Other' },
                   ]}
                 />
-                <div className="flex gap-2 pt-2">
+                <div className="flex flex-col gap-2 pt-2 sm:flex-row">
                   <Button type="submit" isLoading={mutation.isPending}>
                     <Save size={14} /> Save
                   </Button>

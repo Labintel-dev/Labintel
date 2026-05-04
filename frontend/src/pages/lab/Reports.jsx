@@ -39,21 +39,21 @@ export default function Reports() {
   return (
     <LabLayout>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Reports</h1>
           <p className="text-sm text-slate-500">{total} total reports</p>
         </div>
         {canDo('createReport') && (
           <Link to={lp('reports/new')}>
-            <Button><Plus size={15} />New Report</Button>
+            <Button className="w-full sm:w-auto"><Plus size={15} />New Report</Button>
           </Link>
         )}
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-5">
-        <div className="relative flex-1 min-w-[180px]">
+      <div className="mb-5 flex flex-wrap gap-3">
+        <div className="relative flex-1 min-w-0 sm:min-w-[220px]">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             value={search}
@@ -122,7 +122,7 @@ export default function Reports() {
               </table>
             </div>
             {totalPages > 1 && (
-              <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100">
+            <div className="flex flex-col gap-3 border-t border-slate-100 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-xs text-slate-500">Page {page} of {totalPages}</p>
                 <div className="flex gap-2">
                   <Button size="sm" variant="secondary" disabled={page <= 1} onClick={() => setPage(p => p-1)}>Prev</Button>

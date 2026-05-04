@@ -159,6 +159,20 @@
   ::-webkit-scrollbar-thumb:hover {
     background: #8fa8a0;
   }
+
+  img,
+  svg,
+  video,
+  canvas {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  html,
+  body {
+    overflow-x: hidden;
+  }
 }
 
 .client-marquee-shell {

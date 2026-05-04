@@ -103,7 +103,7 @@ function ReportsPage() {
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(204,231,220,0.95),_transparent_35%),linear-gradient(135deg,#f5f8f6_0%,#f8faf9_42%,#edf4f1_100%)] text-slate-900">
-      <div className="mx-auto max-w-7xl px-6 py-10">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}

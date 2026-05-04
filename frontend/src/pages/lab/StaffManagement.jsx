@@ -52,7 +52,7 @@ export default function StaffManagement() {
     <LabLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-slate-800">Staff Management</h1>
             <p className="text-sm text-slate-500">
@@ -60,14 +60,14 @@ export default function StaffManagement() {
             </p>
           </div>
           {canDo('manageStaff') && (
-            <Button onClick={() => setShowInvite(true)}>
+            <Button onClick={() => setShowInvite(true)} className="w-full sm:w-auto">
               <UserPlus size={15} />Invite Staff
             </Button>
           )}
         </div>
 
         {/* Role summary cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {['manager', 'receptionist', 'technician'].map(role => (
             <Card key={role} className="p-4">
               <div className="flex items-center gap-2 mb-1">
@@ -159,7 +159,7 @@ export default function StaffManagement() {
               { value: 'receptionist', label: 'Receptionist' },
               { value: 'technician', label: 'Technician' },
             ]} />
-            <div className="flex gap-2 pt-2">
+            <div className="flex flex-col gap-2 pt-2 sm:flex-row">
               <Button type="submit" isLoading={inviteMutation.isPending}>Send Invite</Button>
               <Button type="button" variant="secondary" onClick={() => { setShowInvite(false); reset(); }}>Cancel</Button>
             </div>

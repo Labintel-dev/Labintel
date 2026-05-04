@@ -73,13 +73,13 @@ export default function Patients() {
   return (
     <LabLayout>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Patients</h1>
           <p className="text-sm text-slate-500">{total} total registered</p>
         </div>
         {canDo('registerPatient') && (
-          <Button onClick={() => setShowCreate(true)}>
+          <Button onClick={() => setShowCreate(true)} className="w-full sm:w-auto">
             <UserPlus size={15} /> Register Patient
           </Button>
         )}
@@ -151,7 +151,7 @@ export default function Patients() {
             </div>
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100">
+              <div className="flex flex-col gap-3 border-t border-slate-100 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-xs text-slate-500">Page {page} of {totalPages}</p>
                 <div className="flex gap-2">
                   <Button size="sm" variant="secondary" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Prev</Button>
@@ -193,7 +193,7 @@ export default function Patients() {
               </div>
 
               {/* Date of Birth & Gender */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <Input 
                     label="Date of Birth" 
@@ -216,7 +216,7 @@ export default function Patients() {
               </div>
 
               {/* Lab Code & Referred By */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <Input 
                     label="Lab Code" 
@@ -244,7 +244,7 @@ export default function Patients() {
             )}
 
             {/* Submit Buttons */}
-            <div className="flex gap-3 pt-4 border-t border-slate-100">
+            <div className="flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row">
               <Button 
                 type="submit" 
                 className="flex-1" 
