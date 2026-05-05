@@ -1,171 +1,335 @@
-# LabIntel Super Admin Panel 🧬📊
+﻿<p align="center">
+  <img src="https://img.shields.io/badge/LabIntel-Smart%20Diagnostics-0d9488?style=for-the-badge&logo=flask&logoColor=white" alt="LabIntel Badge" />
+</p>
 
-![LabIntel Banner](https://via.placeholder.com/1200x300/0a0e17/06b6d4?text=LabIntel+Super+Admin+Panel)
+<h1 align="center">≡ƒº¬ LabIntel ΓÇö Smart Diagnostic Lab Management System</h1>
 
-A highly advanced, dark-themed **Super Admin Dashboard** designed specifically for managing large-scale diagnostic laboratories, teams, session activities, and system logs. Built with a modern tech stack to ensure high performance, security, and scalability.
+<p align="center">
+  A modern, full-stack Laboratory Information Management System (LIMS) built for diagnostic labs to manage patients, reports, staff, and analytics ΓÇö all from a beautifully designed web interface.
+</p>
 
-## 🚀 Key Features
-
-*   **Real-Time Dashboard Overview**: Instantly view critical metrics such as the total number of active labs, processed patients, generated reports, and system alerts.
-*   **Live Active Sessions Monitoring**: Dynamic progress bars and live counters that display concurrent active users across multiple diagnostic lab subdomains in real-time.
-*   **Comprehensive Lab Management**: Dedicated cards to manage individual lab operations. Change statuses (Active, Trial, Inactive), view associated metrics, and perform administrative actions (Activate, Deactivate, Edit settings, Remove).
-*   **Chronological Activity Feed**: An interactive, color-coded feed that logs all system events (success, warnings, errors, infos) to maintain a complete audit trail.
-*   **Team & Access Management**: A detailed tabular view of all registered team members, their assigned roles, lab affiliations, operational statuses, and performance metrics (e.g., reports generated).
-*   **Dynamic Search & Filtering**: Robust search capabilities across all tables and cards, enabling quick location of specific labs or team members.
-*   **Premium Dark Theme UI**: A custom-designed, aesthetic dark mode utilizing glassmorphism, smooth micro-animations, and vibrant gradients (cyan, teal, purple) to ensure a stunning user experience.
-
----
-
-## 🛠 Technology Stack
-
-### Frontend Architecture
-*   **Framework**: React 18
-*   **Build Tool**: Vite (Lightning fast HMR and optimized builds)
-*   **Routing**: React Router DOM v7
-*   **Styling**: Pure Vanilla CSS (`index.css`) with a strictly enforced Design System
-*   **Icons**: Lucide React
-
-### Backend Architecture
-*   **Runtime**: Node.js (v18+)
-*   **Framework**: Express.js
-*   **Middleware**: CORS, Custom Error Handlers
-*   **API Design**: RESTful standard with JSON payloads
-
-### Database & Authentication
-*   **Provider**: Supabase
-*   **Database**: PostgreSQL
-*   **ORM / Client**: `@supabase/supabase-js`
+<p align="center">
+  <img src="https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white" />
+  <img src="https://img.shields.io/badge/Node.js-Express-339933?logo=node.js&logoColor=white" />
+  <img src="https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?logo=supabase&logoColor=white" />
+  <img src="https://img.shields.io/badge/TailwindCSS-3.4-06B6D4?logo=tailwindcss&logoColor=white" />
+  <img src="https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white" />
+</p>
 
 ---
 
-## 📁 Project Structure
+## ≡ƒôï Table of Contents
 
-```text
-Labintel/
-├── server/                     # 🚀 Backend Express Server
-│   ├── db/
-│   │   ├── schema.sql          # SQL Schema for Supabase Tables & RLS Policies
-│   │   ├── seed.js             # Automated Database Seeding Script
-│   │   └── supabase.js         # Supabase Client Configuration
-│   ├── index.js                # Primary Express Application & API Routes
-│   ├── package.json            # Backend Dependencies
-│   └── .env                    # Environment Variables (DB Credentials)
-│
-├── src/                        # 💻 Frontend React Application
-│   ├── components/             # Reusable UI Elements
-│   │   ├── Sidebar.jsx         # Global Navigation
-│   │   ├── LabCard.jsx         # Individual Lab Management Card
-│   │   ├── StatsCards.jsx      # Top-level metric cards
-│   │   ├── ActivityFeed.jsx    # System event logging UI
-│   │   ├── LiveSessions.jsx    # Real-time concurrent user tracking UI
-│   │   └── TeamTable.jsx       # Staff directory table
-│   ├── pages/                  # Route Components
-│   │   ├── Dashboard.jsx       # Main landing overview
-│   │   ├── AllLabs.jsx         # Lab directory and management
-│   │   ├── TeamMembers.jsx     # Staff management page
-│   │   ├── ReportsLogs.jsx     # Detailed system and operational logs
-│   │   ├── Settings.jsx        # Admin preferences and configurations
-│   │   └── ActivityLog.jsx     # Full-page system audit trail
-│   ├── hooks/                  # Custom React Hooks
-│   ├── data/                   # Fallback / Mock State Data
-│   ├── App.jsx                 # Application Root & Router Configuration
-│   ├── main.jsx                # React DOM Render Entry
-│   └── index.css               # Global Stylesheet & Theme Tokens
-│
-├── package.json                # Frontend Dependencies
-└── vite.config.js              # Vite Build Configuration
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [Project Structure](#-project-structure)
+- [Getting Started](#-getting-started)
+- [Environment Variables](#-environment-variables)
+- [Available Scripts](#-available-scripts)
+- [Role-Based Access](#-role-based-access)
+- [API Endpoints](#-api-endpoints)
+- [Deployment](#-deployment)
+- [Contributing](#-contributing)
+
+---
+
+## Γ£¿ Features
+
+### ≡ƒÅÑ Staff Portal (Lab-side)
+- **Role-Based Login** ΓÇö Separate portals for Receptionist, Technician, and Manager with role-specific dashboards
+- **Patient Management** ΓÇö Register patients, view history, track visits
+- **Report Management** ΓÇö Create, edit, and release diagnostic reports with test parameters
+- **Test Panels** ΓÇö Configurable test panels with parameters, reference ranges, and pricing
+- **Analytics Dashboard** ΓÇö Daily report volume, panel mix charts, turnaround time tracking
+- **Health Alerts** ΓÇö Critical value alerts, worsening trends, persistent abnormal detection
+- **Staff Management** ΓÇö Invite staff, assign roles, activate/deactivate accounts
+- **Lab Settings** ΓÇö Customize lab branding (logo, colors), manage test panels
+- **PDF Report Generation** ΓÇö Auto-generated professional PDF reports with lab branding
+- **AI-Powered Insights** ΓÇö Google Gemini integration for intelligent report summaries
+
+### ≡ƒæñ Patient Portal
+- **Report Access** ΓÇö Patients can view their diagnostic reports securely
+- **AI Health Summaries** ΓÇö Plain-language explanations of lab results
+- **Report Download** ΓÇö Download PDF copies of reports
+
+### ≡ƒÄ¿ Design & UX
+- **Modern UI** ΓÇö Glassmorphism, smooth animations, gradient accents
+- **Responsive Design** ΓÇö Works across desktop, tablet, and mobile
+- **White-Label Support** ΓÇö Each lab gets custom branding (colors, logo, slug-based URLs)
+- **Dark/Light Accents** ΓÇö Role-specific color theming throughout the portal
+
+---
+
+## ≡ƒ¢á Tech Stack
+
+| Layer        | Technology                                                    |
+|-------------|---------------------------------------------------------------|
+| **Frontend** | React 18, Vite 5, TailwindCSS 3.4, Framer Motion            |
+| **State**    | Zustand, React Query (TanStack Query v5)                     |
+| **Forms**    | React Hook Form + Zod validation                             |
+| **UI**       | Radix UI primitives, Lucide icons, Recharts                  |
+| **Backend**  | Node.js, Express 4                                           |
+| **Database** | Supabase (PostgreSQL) with Row Level Security                |
+| **Auth**     | JWT-based authentication with bcrypt password hashing        |
+| **AI**       | Google Gemini API for health insights                        |
+| **PDF**      | Puppeteer for server-side PDF generation                     |
+| **SMS**      | Fast2SMS integration for OTP delivery                        |
+| **Deploy**   | Vercel (frontend) + Render (backend)                         |
+
+---
+
+## ≡ƒôü Project Structure
+
+```
+labintel/
+Γö£ΓöÇΓöÇ frontend/                  # React + Vite frontend
+Γöé   Γö£ΓöÇΓöÇ src/
+Γöé   Γöé   Γö£ΓöÇΓöÇ apps/              # App entry points (LabApp, PatientApp)
+Γöé   Γöé   Γö£ΓöÇΓöÇ components/        # Reusable UI components
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ common/        # Buttons, Inputs, Modals, RouteGuards
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ lab/           # Lab-specific layout (LabLayout)
+Γöé   Γöé   Γöé   ΓööΓöÇΓöÇ patient/       # Patient-specific components
+Γöé   Γöé   Γö£ΓöÇΓöÇ hooks/             # Custom hooks (useAuth, useLabPath, useLabContext)
+Γöé   Γöé   Γö£ΓöÇΓöÇ pages/             # Page components
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ lab/           # Staff portal pages
+Γöé   Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ RoleSelect.jsx   # Role selection (3-card portal)
+Γöé   Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ Login.jsx        # Role-specific login form
+Γöé   Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ Dashboard.jsx    # Staff dashboard with KPIs
+Γöé   Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ Patients.jsx     # Patient list & registration
+Γöé   Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ Reports.jsx      # Report list & management
+Γöé   Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ NewReport.jsx    # Create new diagnostic report
+Γöé   Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ Analytics.jsx    # Charts & analytics (Manager)
+Γöé   Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ Settings.jsx     # Lab profile, panels, staff
+Γöé   Γöé   Γöé   Γöé   ΓööΓöÇΓöÇ Alerts.jsx       # Health alerts dashboard
+Γöé   Γöé   Γöé   ΓööΓöÇΓöÇ patient/       # Patient portal pages
+Γöé   Γöé   Γö£ΓöÇΓöÇ services/          # API service layers (axios)
+Γöé   Γöé   Γö£ΓöÇΓöÇ store/             # Zustand stores (auth, UI)
+Γöé   Γöé   ΓööΓöÇΓöÇ utils/             # Utility functions (cn, formatDate)
+Γöé   Γö£ΓöÇΓöÇ index.html
+Γöé   Γö£ΓöÇΓöÇ tailwind.config.js
+Γöé   ΓööΓöÇΓöÇ vite.config.js
+Γöé
+Γö£ΓöÇΓöÇ backend/                   # Node.js + Express API
+Γöé   Γö£ΓöÇΓöÇ controllers/           # Route handlers
+Γöé   Γö£ΓöÇΓöÇ routes/                # Express route definitions
+Γöé   Γöé   Γö£ΓöÇΓöÇ auth.js            # Staff & patient authentication
+Γöé   Γöé   Γö£ΓöÇΓöÇ patients.js        # Patient CRUD + alerts
+Γöé   Γöé   Γö£ΓöÇΓöÇ reports.js         # Report CRUD + PDF generation
+Γöé   Γöé   Γö£ΓöÇΓöÇ analytics.js       # Dashboard analytics
+Γöé   Γöé   Γö£ΓöÇΓöÇ settings.js        # Lab settings, panels, staff
+Γöé   Γöé   Γö£ΓöÇΓöÇ dashboard.js       # Staff dashboard KPIs
+Γöé   Γöé   ΓööΓöÇΓöÇ patientPortal.js   # Patient-facing endpoints
+Γöé   Γö£ΓöÇΓöÇ middleware/            # Auth middleware, error handling
+Γöé   Γö£ΓöÇΓöÇ services/             # Business logic services
+Γöé   Γö£ΓöÇΓöÇ schemas/              # Zod validation schemas
+Γöé   Γö£ΓöÇΓöÇ db/                   # Database migrations & seeds
+Γöé   Γö£ΓöÇΓöÇ templates/            # PDF report HTML templates
+Γöé   Γö£ΓöÇΓöÇ jobs/                 # Cron jobs (alert generation)
+Γöé   Γö£ΓöÇΓöÇ server.js             # Express app entry point
+Γöé   ΓööΓöÇΓöÇ .env.example          # Environment variable template
+Γöé
+ΓööΓöÇΓöÇ README.md
 ```
 
 ---
 
-## ⚙️ Setup & Installation Guide
+## ≡ƒÜÇ Getting Started
 
 ### Prerequisites
-*   Node.js (v18.x or newer)
-*   NPM or Yarn package manager
-*   A newly created [Supabase](https://supabase.com/) Project
 
-### 1. Database Provisioning (Supabase)
-1. Log into your Supabase dashboard and select your project.
-2. Navigate to the **SQL Editor** on the left sidebar.
-3. Open `server/db/schema.sql` from this repository.
-4. Copy the contents and execute the query. This will:
-   *   Create the `labs`, `team_members`, `activity_logs`, and `sessions` tables.
-   *   Establish primary/foreign key relationships.
-   *   Enable Row Level Security (RLS) and default access policies.
+- **Node.js** ΓëÑ 18.x
+- **npm** ΓëÑ 9.x
+- **Supabase** account (free tier works)
+- **Google Gemini API** key (optional, for AI features)
 
-### 2. Backend Initialization
-1. Open a terminal and navigate to the backend directory:
-   ```bash
-   cd server
-   ```
-2. Install necessary node modules:
-   ```bash
-   npm install
-   ```
-3. Create a `.env` file at `server/.env` and inject your Supabase credentials:
-   ```env
-   SUPABASE_URL=your_supabase_project_url
-   SUPABASE_ANON_KEY=your_supabase_anon_key
-   PORT=5000
-   ```
-4. **(Optional)** Seed the database with initial mock data:
-   ```bash
-   npm run seed
-   ```
-5. Launch the backend API server:
-   ```bash
-   npm run dev
-   ```
-   *The server will start listening on `http://localhost:5000`.*
+### 1. Clone the Repository
 
-### 3. Frontend Initialization
-1. Open a separate terminal and ensure you are in the project root:
-   ```bash
-   cd ..
-   ```
-2. Install frontend dependencies:
-   ```bash
-   npm install
-   ```
-3. Start the Vite development server:
-   ```bash
-   npm run dev
-   ```
-   *The application will launch on `http://localhost:5173`. Open this URL in your browser.*
+```bash
+git clone https://github.com/Labintel-dev/Labintel.git
+cd Labintel
+```
 
----
+### 2. Setup Backend
 
-## 🔗 RESTful API Endpoints
+```bash
+cd backend
+npm install
+cp .env.example .env
+# Edit .env with your Supabase credentials and API keys
+```
 
-The Express backend routes all requests through the `/api` prefix.
+### 3. Setup Frontend
 
-### Dashboard & Analytics
-*   `GET /api/stats` - Fetches high-level aggregated numbers for the dashboard cards.
-*   `GET /api/sessions` - Retrieves the active user counts across subdomains.
+```bash
+cd frontend
+npm install
+```
 
-### Lab Management
-*   `GET /api/labs` - Lists all registered labs.
-*   `POST /api/labs` - Registers a new lab entity.
-*   `PUT /api/labs/:id` - Modifies an existing lab's details or status.
-*   `DELETE /api/labs/:id` - Removes a lab from the system.
+### 4. Run Database Migrations
 
-### Team Management
-*   `GET /api/team` - Lists all staff and administrative members.
-*   `POST /api/team` - Provisions a new team member.
-*   `PUT /api/team/:id` - Updates team member roles or operational status.
+```bash
+cd backend
+npm run migrate
+npm run seed          # Seed demo lab data
+```
 
-### Audit & Logging
-*   `GET /api/activity` - Fetches the chronological system event logs.
+### 5. Start Development Servers
+
+**Backend** (runs on port 3001):
+```bash
+cd backend
+npm run dev
+```
+
+**Frontend** (runs on port 5173):
+```bash
+cd frontend
+npm run dev
+```
+
+Open [http://localhost:5173/lab/testlab/login](http://localhost:5173/lab/testlab/login) to access the staff portal.
 
 ---
 
-## 🎨 UI & Design System Specifications
+## ≡ƒöÉ Environment Variables
 
-The application relies on a handcrafted, variable-driven CSS design system (`index.css`) designed to exude a premium feel:
+### Backend (`backend/.env`)
 
-*   **Background Hierarchy**: Utilizing deep navy and grays (`#0a0e17`, `#111827`, `#1a1f2e`) to reduce eye strain and provide contrast.
-*   **Vibrant Accents**: Strategic use of Cyan (`#06b6d4`), Teal (`#14b8a6`), Purple (`#8b5cf6`), and Pink (`#ec4899`) for metrics, progress bars, and alerts.
-*   **Glassmorphism**: Semi-transparent panels with subtle borders (`rgba(255, 255, 255, 0.05)`) and backdrop blurs to create depth.
-*   **Typography**: Using `Inter` or standard system fonts with specific font-weight handling for data readability.
-*   **Micro-interactions**: Hover scaling (`scale(1.02)`), opacity transitions, and continuous pulse animations for live indicators.
+| Variable              | Description                           | Required |
+|-----------------------|---------------------------------------|----------|
+| `PORT`                | Server port (default: 3001)           | Yes      |
+| `SUPABASE_URL`        | Supabase project URL                  | Yes      |
+| `SUPABASE_SERVICE_KEY`| Supabase service role key             | Yes      |
+| `SUPABASE_ANON_KEY`   | Supabase anon/public key              | Yes      |
+| `DATABASE_URL`        | Direct Postgres connection string     | Yes      |
+| `JWT_SECRET`          | Secret for JWT token signing          | Yes      |
+| `GEMINI_API_KEY`      | Google Gemini API key                 | No       |
+| `FAST2SMS_API_KEY`    | Fast2SMS API key for OTP              | No       |
+| `FRONTEND_URL`        | Frontend URL for CORS                 | Yes      |
+| `PDF_STORAGE_BUCKET`  | Supabase storage bucket name          | Yes      |
+
+### Frontend (`frontend/.env`)
+
+| Variable        | Description                  | Required |
+|-----------------|------------------------------|----------|
+| `VITE_API_URL`  | Backend API base URL         | Yes      |
+
+---
+
+## ≡ƒô£ Available Scripts
+
+### Backend
+
+| Command                  | Description                        |
+|--------------------------|------------------------------------|
+| `npm run dev`            | Start dev server with nodemon      |
+| `npm start`              | Start production server            |
+| `npm run migrate`        | Run database migrations            |
+| `npm run seed`           | Seed demo data                     |
+| `npm run seed:enterprise`| Seed enterprise/multi-lab data     |
+| `npm test`               | Run tests with Vitest              |
+
+### Frontend
+
+| Command           | Description                    |
+|-------------------|--------------------------------|
+| `npm run dev`     | Start Vite dev server          |
+| `npm run build`   | Build for production           |
+| `npm run preview` | Preview production build       |
+
+---
+
+## ≡ƒæÑ Role-Based Access
+
+LabIntel uses a role-based access control system with three staff roles:
+
+| Role             | Access Level                                                     |
+|------------------|------------------------------------------------------------------|
+| **Receptionist** | Register patients, view reports, release reports, download PDFs  |
+| **Technician**   | Create/edit reports, enter test values, download PDFs            |
+| **Manager**      | Full access ΓÇö analytics, settings, staff management, approvals   |
+
+### Login Flow
+1. Navigate to `/lab/{lab-slug}/login`
+2. Select your role (Receptionist / Technician / Manager)
+3. Enter your work email and password
+4. Redirected to role-appropriate dashboard
+
+---
+
+## ≡ƒöî API Endpoints
+
+### Authentication
+| Method | Endpoint                    | Description              |
+|--------|-----------------------------|--------------------------|
+| POST   | `/api/v1/auth/staff/login`  | Staff login              |
+| GET    | `/api/v1/auth/lab/:slug`    | Get lab by slug          |
+| POST   | `/api/v1/auth/patient/otp`  | Send patient OTP         |
+| POST   | `/api/v1/auth/patient/verify`| Verify patient OTP      |
+
+### Patients
+| Method | Endpoint                         | Description              |
+|--------|----------------------------------|--------------------------|
+| GET    | `/api/v1/patients`               | List patients            |
+| POST   | `/api/v1/patients`               | Register patient         |
+| GET    | `/api/v1/patients/:id`           | Get patient details      |
+| GET    | `/api/v1/patients/:id/alerts`    | Get patient alerts       |
+
+### Reports
+| Method | Endpoint                         | Description              |
+|--------|----------------------------------|--------------------------|
+| GET    | `/api/v1/reports`                | List reports             |
+| POST   | `/api/v1/reports`                | Create report            |
+| GET    | `/api/v1/reports/:id`            | Get report details       |
+| PUT    | `/api/v1/reports/:id`            | Update report            |
+| GET    | `/api/v1/reports/:id/pdf`        | Download report PDF      |
+
+### Analytics & Settings
+| Method | Endpoint                         | Description              |
+|--------|----------------------------------|--------------------------|
+| GET    | `/api/v1/analytics/dashboard`    | Dashboard KPIs           |
+| GET    | `/api/v1/analytics/volume`       | Report volume data       |
+| GET    | `/api/v1/settings/lab`           | Get lab settings         |
+| PUT    | `/api/v1/settings/lab`           | Update lab settings      |
+| GET    | `/api/v1/settings/panels`        | List test panels         |
+| POST   | `/api/v1/settings/panels`        | Create test panel        |
+
+---
+
+## ≡ƒÜó Deployment
+
+### Frontend ΓÇö Vercel
+1. Connect your GitHub repository to Vercel
+2. Set root directory to `frontend`
+3. Add environment variable: `VITE_API_URL` = your backend URL
+4. Deploy
+
+### Backend ΓÇö Render
+1. Connect your GitHub repository to Render
+2. Set root directory to `backend`
+3. Build command: `npm install`
+4. Start command: `npm start`
+5. Add all environment variables from `.env.example`
+6. Deploy
+
+---
+
+## ≡ƒñ¥ Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## ≡ƒôä License
+
+This project is proprietary software developed by **LabIntel Technologies**.
+
+---
+
+<p align="center">
+  Built with Γ¥ñ∩╕Å by the LabIntel Team
+</p>
