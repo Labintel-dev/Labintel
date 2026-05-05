@@ -2,10 +2,10 @@
   <img src="https://img.shields.io/badge/LabIntel-Smart%20Diagnostics-0d9488?style=for-the-badge&logo=flask&logoColor=white" alt="LabIntel Badge" />
 </p>
 
-<h1 align="center">≡ƒº¬ LabIntel ΓÇö Smart Diagnostic Lab Management System</h1>
+<h1 align="center">🔬 LabIntel — Smart Diagnostic Lab Management System</h1>
 
 <p align="center">
-  A modern, full-stack Laboratory Information Management System (LIMS) built for diagnostic labs to manage patients, reports, staff, and analytics ΓÇö all from a beautifully designed web interface.
+  A modern, full-stack Laboratory Information Management System (LIMS) built for diagnostic labs to manage patients, reports, staff, and analytics — all from a beautifully designed web interface.
 </p>
 
 <p align="center">
@@ -18,7 +18,7 @@
 
 ---
 
-## ≡ƒôï Table of Contents
+## 📋 Table of Contents
 
 - [Features](#-features)
 - [Tech Stack](#-tech-stack)
@@ -33,34 +33,34 @@
 
 ---
 
-## Γ£¿ Features
+## ✨ Features
 
-### ≡ƒÅÑ Staff Portal (Lab-side)
-- **Role-Based Login** ΓÇö Separate portals for Receptionist, Technician, and Manager with role-specific dashboards
-- **Patient Management** ΓÇö Register patients, view history, track visits
-- **Report Management** ΓÇö Create, edit, and release diagnostic reports with test parameters
-- **Test Panels** ΓÇö Configurable test panels with parameters, reference ranges, and pricing
-- **Analytics Dashboard** ΓÇö Daily report volume, panel mix charts, turnaround time tracking
-- **Health Alerts** ΓÇö Critical value alerts, worsening trends, persistent abnormal detection
-- **Staff Management** ΓÇö Invite staff, assign roles, activate/deactivate accounts
-- **Lab Settings** ΓÇö Customize lab branding (logo, colors), manage test panels
-- **PDF Report Generation** ΓÇö Auto-generated professional PDF reports with lab branding
+### 🏥 Staff Portal (Lab-side)
+- **Role-Based Login** — Separate portals for Receptionist, Technician, and Manager with role-specific dashboards
+- **Patient Management** — Register patients, view history, track visits
+- **Report Management** — Create, edit, and release diagnostic reports with test parameters
+- **Test Panels** — Configurable test panels with parameters, reference ranges, and pricing
+- **Analytics Dashboard** — Daily report volume, panel mix charts, turnaround time tracking
+- **Health Alerts** — Critical value alerts, worsening trends, persistent abnormal detection
+- **Staff Management** — Invite staff, assign roles, activate/deactivate accounts
+- **Lab Settings** — Customize lab branding (logo, colors), manage test panels
+- **PDF Report Generation** — Auto-generated professional PDF reports with lab branding
 - **AI-Powered Insights** — Groq AI integration (Llama models) for intelligent report summaries and OCR
 
-### ≡ƒæñ Patient Portal
-- **Report Access** ΓÇö Patients can view their diagnostic reports securely
-- **AI Health Summaries** ΓÇö Plain-language explanations of lab results
-- **Report Download** ΓÇö Download PDF copies of reports
+### 🧑 Patient Portal
+- **Report Access** — Patients can view their diagnostic reports securely
+- **AI Health Summaries** — Plain-language explanations of lab results
+- **Report Download** — Download PDF copies of reports
 
-### ≡ƒÄ¿ Design & UX
-- **Modern UI** ΓÇö Glassmorphism, smooth animations, gradient accents
-- **Responsive Design** ΓÇö Works across desktop, tablet, and mobile
-- **White-Label Support** ΓÇö Each lab gets custom branding (colors, logo, slug-based URLs)
-- **Dark/Light Accents** ΓÇö Role-specific color theming throughout the portal
+### 🎨 Design & UX
+- **Modern UI** — Glassmorphism, smooth animations, gradient accents
+- **Responsive Design** — Works across desktop, tablet, and mobile
+- **White-Label Support** — Each lab gets custom branding (colors, logo, slug-based URLs)
+- **Dark/Light Accents** — Role-specific color theming throughout the portal
 
 ---
 
-## ≡ƒ¢á Tech Stack
+## 🛠 Tech Stack
 
 | Layer        | Technology                                                    |
 |-------------|---------------------------------------------------------------|
@@ -78,67 +78,67 @@
 
 ---
 
-## ≡ƒôü Project Structure
+## 📂 Project Structure
 
 ```
 labintel/
-Γö£ΓöÇΓöÇ frontend/                  # React + Vite frontend
-Γöé   Γö£ΓöÇΓöÇ src/
-Γöé   Γöé   Γö£ΓöÇΓöÇ apps/              # App entry points (LabApp, PatientApp)
-Γöé   Γöé   Γö£ΓöÇΓöÇ components/        # Reusable UI components
-Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ common/        # Buttons, Inputs, Modals, RouteGuards
-Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ lab/           # Lab-specific layout (LabLayout)
-Γöé   Γöé   Γöé   ΓööΓöÇΓöÇ patient/       # Patient-specific components
-Γöé   Γöé   Γö£ΓöÇΓöÇ hooks/             # Custom hooks (useAuth, useLabPath, useLabContext)
-Γöé   Γöé   Γö£ΓöÇΓöÇ pages/             # Page components
-Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ lab/           # Staff portal pages
-Γöé   Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ RoleSelect.jsx   # Role selection (3-card portal)
-Γöé   Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ Login.jsx        # Role-specific login form
-Γöé   Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ Dashboard.jsx    # Staff dashboard with KPIs
-Γöé   Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ Patients.jsx     # Patient list & registration
-Γöé   Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ Reports.jsx      # Report list & management
-Γöé   Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ NewReport.jsx    # Create new diagnostic report
-Γöé   Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ Analytics.jsx    # Charts & analytics (Manager)
-Γöé   Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ Settings.jsx     # Lab profile, panels, staff
-Γöé   Γöé   Γöé   Γöé   ΓööΓöÇΓöÇ Alerts.jsx       # Health alerts dashboard
-Γöé   Γöé   Γöé   ΓööΓöÇΓöÇ patient/       # Patient portal pages
-Γöé   Γöé   Γö£ΓöÇΓöÇ services/          # API service layers (axios)
-Γöé   Γöé   Γö£ΓöÇΓöÇ store/             # Zustand stores (auth, UI)
-Γöé   Γöé   ΓööΓöÇΓöÇ utils/             # Utility functions (cn, formatDate)
-Γöé   Γö£ΓöÇΓöÇ index.html
-Γöé   Γö£ΓöÇΓöÇ tailwind.config.js
-Γöé   ΓööΓöÇΓöÇ vite.config.js
-Γöé
-Γö£ΓöÇΓöÇ backend/                   # Node.js + Express API
-Γöé   Γö£ΓöÇΓöÇ controllers/           # Route handlers
-Γöé   Γö£ΓöÇΓöÇ routes/                # Express route definitions
-Γöé   Γöé   Γö£ΓöÇΓöÇ auth.js            # Staff & patient authentication
-Γöé   Γöé   Γö£ΓöÇΓöÇ patients.js        # Patient CRUD + alerts
-Γöé   Γöé   Γö£ΓöÇΓöÇ reports.js         # Report CRUD + PDF generation
-Γöé   Γöé   Γö£ΓöÇΓöÇ analytics.js       # Dashboard analytics
-Γöé   Γöé   Γö£ΓöÇΓöÇ settings.js        # Lab settings, panels, staff
-Γöé   Γöé   Γö£ΓöÇΓöÇ dashboard.js       # Staff dashboard KPIs
-Γöé   Γöé   ΓööΓöÇΓöÇ patientPortal.js   # Patient-facing endpoints
-Γöé   Γö£ΓöÇΓöÇ middleware/            # Auth middleware, error handling
-Γöé   Γö£ΓöÇΓöÇ services/             # Business logic services
-Γöé   Γö£ΓöÇΓöÇ schemas/              # Zod validation schemas
-Γöé   Γö£ΓöÇΓöÇ db/                   # Database migrations & seeds
-Γöé   Γö£ΓöÇΓöÇ templates/            # PDF report HTML templates
-Γöé   Γö£ΓöÇΓöÇ jobs/                 # Cron jobs (alert generation)
-Γöé   Γö£ΓöÇΓöÇ server.js             # Express app entry point
-Γöé   ΓööΓöÇΓöÇ .env.example          # Environment variable template
-Γöé
-ΓööΓöÇΓöÇ README.md
+├── frontend/                  # React + Vite frontend
+│   ├── src/
+│   │   ├── apps/              # App entry points (LabApp, PatientApp)
+│   │   ├── components/        # Reusable UI components
+│   │   │   ├── common/        # Buttons, Inputs, Modals, RouteGuards
+│   │   │   ├── lab/           # Lab-specific layout (LabLayout)
+│   │   │   └── patient/       # Patient-specific components
+│   │   ├── hooks/             # Custom hooks (useAuth, useLabPath, useLabContext)
+│   │   ├── pages/             # Page components
+│   │   │   ├── lab/           # Staff portal pages
+│   │   │   │   ├── RoleSelect.jsx   # Role selection (3-card portal)
+│   │   │   │   ├── Login.jsx        # Role-specific login form
+│   │   │   │   ├── Dashboard.jsx    # Staff dashboard with KPIs
+│   │   │   │   ├── Patients.jsx     # Patient list & registration
+│   │   │   │   ├── Reports.jsx      # Report list & management
+│   │   │   │   ├── NewReport.jsx    # Create new diagnostic report
+│   │   │   │   ├── Analytics.jsx    # Charts & analytics (Manager)
+│   │   │   │   ├── Settings.jsx     # Lab profile, panels, staff
+│   │   │   │   └── Alerts.jsx       # Health alerts dashboard
+│   │   │   └── patient/       # Patient portal pages
+│   │   ├── services/          # API service layers (axios)
+│   │   ├── store/             # Zustand stores (auth, UI)
+│   │   └── utils/             # Utility functions (cn, formatDate)
+│   ├── index.html
+│   ├── tailwind.config.js
+│   └── vite.config.js
+│
+├── backend/                   # Node.js + Express API
+│   ├── controllers/           # Route handlers
+│   ├── routes/                # Express route definitions
+│   │   ├── auth.js            # Staff & patient authentication
+│   │   ├── patients.js        # Patient CRUD + alerts
+│   │   ├── reports.js         # Report CRUD + PDF generation
+│   │   ├── analytics.js       # Dashboard analytics
+│   │   ├── settings.js        # Lab settings, panels, staff
+│   │   ├── dashboard.js       # Staff dashboard KPIs
+│   │   └── patientPortal.js   # Patient-facing endpoints
+│   ├── middleware/            # Auth middleware, error handling
+│   ├── services/             # Business logic services
+│   ├── schemas/              # Zod validation schemas
+│   ├── db/                   # Database migrations & seeds
+│   ├── templates/            # PDF report HTML templates
+│   ├── jobs/                 # Cron jobs (alert generation)
+│   ├── server.js             # Express app entry point
+│   └── .env.example          # Environment variable template
+│
+└── README.md
 ```
 
 ---
 
-## ≡ƒÜÇ Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
 
-- **Node.js** ΓëÑ 18.x
-- **npm** ΓëÑ 9.x
+- **Node.js** ≥ 18.x
+- **npm** ≥ 9.x
 - **Supabase** account (free tier works)
 - **Groq API** key (optional, for AI features)
 
@@ -191,7 +191,7 @@ Open [http://localhost:5173/lab/testlab/login](http://localhost:5173/lab/testlab
 
 ---
 
-## ≡ƒöÉ Environment Variables
+## 🔐 Environment Variables
 
 ### Backend (`backend/.env`)
 
@@ -216,7 +216,7 @@ Open [http://localhost:5173/lab/testlab/login](http://localhost:5173/lab/testlab
 
 ---
 
-## ≡ƒô£ Available Scripts
+## 📜 Available Scripts
 
 ### Backend
 
@@ -239,7 +239,7 @@ Open [http://localhost:5173/lab/testlab/login](http://localhost:5173/lab/testlab
 
 ---
 
-## ≡ƒæÑ Role-Based Access
+## 👥 Role-Based Access
 
 LabIntel uses a role-based access control system with three staff roles:
 
@@ -247,7 +247,7 @@ LabIntel uses a role-based access control system with three staff roles:
 |------------------|------------------------------------------------------------------|
 | **Receptionist** | Register patients, view reports, release reports, download PDFs  |
 | **Technician**   | Create/edit reports, enter test values, download PDFs            |
-| **Manager**      | Full access ΓÇö analytics, settings, staff management, approvals   |
+| **Manager**      | Full access — analytics, settings, staff management, approvals   |
 
 ### Login Flow
 1. Navigate to `/lab/{lab-slug}/login`
@@ -257,7 +257,7 @@ LabIntel uses a role-based access control system with three staff roles:
 
 ---
 
-## ≡ƒöî API Endpoints
+## 🔌 API Endpoints
 
 ### Authentication
 | Method | Endpoint                    | Description              |
@@ -296,15 +296,15 @@ LabIntel uses a role-based access control system with three staff roles:
 
 ---
 
-## ≡ƒÜó Deployment
+## 🚢 Deployment
 
-### Frontend ΓÇö Vercel
+### Frontend — Vercel
 1. Connect your GitHub repository to Vercel
 2. Set root directory to `frontend`
 3. Add environment variable: `VITE_API_URL` = your backend URL
 4. Deploy
 
-### Backend ΓÇö Render
+### Backend — Render
 1. Connect your GitHub repository to Render
 2. Set root directory to `backend`
 3. Build command: `npm install`
@@ -314,7 +314,7 @@ LabIntel uses a role-based access control system with three staff roles:
 
 ---
 
-## ≡ƒñ¥ Contributing
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
@@ -324,12 +324,12 @@ LabIntel uses a role-based access control system with three staff roles:
 
 ---
 
-## ≡ƒôä License
+## 📄 License
 
 This project is proprietary software developed by **LabIntel Technologies**.
 
 ---
 
 <p align="center">
-  Built with Γ¥ñ∩╕Å by the LabIntel Team
+  Built with ❤️ by the LabIntel Team
 </p>
