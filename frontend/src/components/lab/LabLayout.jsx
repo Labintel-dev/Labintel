@@ -15,7 +15,7 @@ const mainMenuItems = [
   { to: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['administrator', 'receptionist', 'technician'] },
   { to: 'patients',  label: 'Patients',  icon: Users,           roles: ['administrator', 'receptionist', 'technician'] },
   { to: 'reports',   label: 'Reports',   icon: FileText,        roles: ['administrator', 'receptionist', 'technician'] },
-  { to: 'reports/new', label: 'New report', icon: FilePlus,      roles: ['administrator', 'technician'] },
+  { to: 'reports/new', label: 'New report', icon: FilePlus,      roles: ['technician'] },
 ];
 
 // ── Restricted (admin-only) items ───────────────────────────────────────────

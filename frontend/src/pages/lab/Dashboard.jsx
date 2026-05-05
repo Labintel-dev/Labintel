@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { dashboardService } from '../../services/analyticsService';
 import { LabLayout } from '../../components/lab/LabLayout';
+import { AttendanceWidget } from '../../components/lab/AttendanceWidget';
 import { usePermission } from '../../hooks/useAuth';
 import { useLabPath } from '../../hooks/useLabPath';
 import { cn } from '../../utils/cn';
@@ -98,12 +99,21 @@ export default function LabDashboard() {
   const kpi = data?.data?.kpi;
   const reports = data?.data?.reports || [];
 
+  const isTrackableRole = role === 'receptionist' || role === 'technician';
+
   return (
     <LabLayout>
       {/* ── Page title ──────────────────────────────────────────────────── */}
       <div className="mb-6">
         <h1 className="text-xl font-bold text-slate-800">Dashboard</h1>
       </div>
+
+      {/* ── Attendance Widget (receptionist / technician only) ───────────── */}
+      {isTrackableRole && (
+        <div className="mb-8">
+          <AttendanceWidget />
+        </div>
+      )}
 
       {/* ── KPI Cards ───────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
