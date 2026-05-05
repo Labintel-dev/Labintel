@@ -1,15 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AnimatePresence, motion, useAnimation, useInView } from 'framer-motion';
+import { motion, useAnimation, useInView } from 'framer-motion';
 import {
   AlertTriangle, ArrowRight, CheckCircle2, Clock, Mail, ShieldCheck, Sparkles, Star, Stethoscope,
   Users, Microscope, Heart, FlaskConical, Pill,
   Dna, Search, Download, Upload, FileImage, FileText,
-  Award, TestTube, Plus, ChevronDown, Settings, LogOut, Camera, Image as ImageIcon, Loader2
+  Award, TestTube,
 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext.jsx';
-import apiClient from '../services/apiClient';
-import SmartReportViewer from '../components/SmartReportViewer';
 
 /* ── Design tokens ───────────────────────────────────────────────────────── */
 const P  = '#14453d';   // primary dark teal
@@ -35,129 +32,14 @@ const FadeUp = ({ children, delay = 0, className = '' }) => {
   );
 };
 
-const LandingProfileDropdown = ({ user, onClose, onUpdateProfile, onMyReports, onLogout }) => {
-  const ref = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (ref.current && !ref.current.contains(event.target)) {
-        onClose();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [onClose]);
-
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 10, scale: 0.96 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 10, scale: 0.96 }}
-      className="absolute right-0 top-full mt-3 w-72 overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-2xl z-[70]"
-      style={{ boxShadow: '0 20px 50px rgba(0,0,0,0.12)' }}
-    >
-      <div className="border-b border-gray-100 bg-[#f8faf9] p-5">
-        <div className="flex items-center gap-3">
-          {user.avatar_url ? (
-            <img src={user.avatar_url} alt={user.name} className="h-14 w-14 rounded-full object-cover border-2 border-white shadow-sm" />
-          ) : (
-            <div className="flex h-14 w-14 items-center justify-center rounded-full text-lg font-bold text-white shadow-sm" style={{ background: P }}>
-              {user.avatar}
-            </div>
-          )}
-          <div className="min-w-0">
-            <div className="truncate text-base font-bold text-gray-800">{user.name}</div>
-            <div className="truncate text-xs font-medium text-gray-400">{user.email}</div>
-            <span className="mt-2 inline-flex rounded-full bg-[#e8f5f0] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#14453d]">
-              {user.role || 'patient'}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div className="p-2">
-        <button onClick={onUpdateProfile} className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-gray-600 transition-all hover:bg-gray-50 group">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100 transition-all group-hover:bg-white">
-            <Settings size={16} />
-          </div>
-          <span className="text-sm font-semibold">Update Profile</span>
-        </button>
-
-        <button onClick={onMyReports} className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-gray-600 transition-all hover:bg-gray-50 group">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#e8f5f0] text-[#14453d] transition-all group-hover:bg-white">
-            <FileText size={16} />
-          </div>
-          <span className="text-sm font-semibold">My Reports</span>
-        </button>
-
-        <div className="mx-2 my-2 h-px bg-gray-50" />
-
-        <button onClick={onLogout} className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-rose-500 transition-all hover:bg-rose-50 group">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-50 transition-all group-hover:bg-white">
-            <LogOut size={16} />
-          </div>
-          <span className="text-sm font-semibold">Logout</span>
-        </button>
-      </div>
-    </motion.div>
-  );
-};
-
 /* ── Navbar (shared with RoleSelectPage) ─────────────────────────────────── */
 export const Navbar = ({ onLoginClick }) => {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
   const [activeSection, setActiveSection] = useState("");
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isUploadMenuOpen, setIsUploadMenuOpen] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [reportData, setReportData] = useState(null);
-  const [originalFileUrl, setOriginalFileUrl] = useState(null);
-  const [originalFileType, setOriginalFileType] = useState(null);
-  const [isViewerOpen, setIsViewerOpen] = useState(false);
-  const [scanningLogs, setScanningLogs] = useState([]);
-
-  const fileInputRef = useRef(null);
-  const cameraInputRef = useRef(null);
-  const uploadMenuRef = useRef(null);
-
-  useEffect(() => {
-    let timeoutIds = [];
-    if (isUploading) {
-      setScanningLogs([]);
-      const logs = [
-        "> Initializing Gemini AI Vision Engine...",
-        "> Scanning document structure...",
-        "> Identifying patient demographics...",
-        "> Extracting lab parameters...",
-        "> Processing Hemoglobin, RBC, WBC...",
-        "> Analyzing Lipid Profile...",
-        "> Cross-referencing reference ranges...",
-        "> Detecting abnormal values...",
-        "> Generating medical insights...",
-        "> Finalizing report summary..."
-      ];
-      
-      logs.forEach((log, index) => {
-        const timeout = setTimeout(() => {
-          setScanningLogs(prev => [...prev, log]);
-        }, index * 1300 + 500);
-        timeoutIds.push(timeout);
-      });
-    } else {
-      setScanningLogs([]);
-    }
-
-    return () => {
-      timeoutIds.forEach(id => clearTimeout(id));
-    };
-  }, [isUploading]);
 
   useEffect(() => {
     const handleScroll = () => {
-      const sections = ['partners', 'services', 'contact'];
+      const sections = ['partners', 'services', 'book', 'reports', 'contact'];
       let current = "";
       for (const section of sections) {
         const el = document.getElementById(section);
@@ -171,88 +53,18 @@ export const Navbar = ({ onLoginClick }) => {
       setActiveSection(current);
     };
     window.addEventListener("scroll", handleScroll);
-    
-    const handleClickOutsideMenu = (event) => {
-      if (uploadMenuRef.current && !uploadMenuRef.current.contains(event.target)) {
-        setIsUploadMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutsideMenu);
-    
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      document.removeEventListener('mousedown', handleClickOutsideMenu);
-    };
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const navLinks = [
     { id: 'partners', label: 'Partners' },
     { id: 'services', label: 'Services' },
+    { id: 'reports', label: 'Reports' },
     { id: 'contact', label: 'Contact' }
   ];
 
-  const handleUpdateProfile = () => {
-    setIsProfileOpen(false);
-    navigate('/patient?profile=update');
-  };
-
-  const handleFileSelect = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    setIsUploadMenuOpen(false);
-    setIsUploading(true);
-    
-    const fileUrl = URL.createObjectURL(file);
-    setOriginalFileUrl(fileUrl);
-    setOriginalFileType(file.type);
-    
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      try {
-        const base64data = reader.result;
-        
-        const res = await apiClient.post('/ocr/analyze-report-public', {
-          image: base64data,
-          mimeType: file.type
-        });
-        
-        setReportData(res.data);
-        setIsUploading(false);
-        setIsViewerOpen(true);
-      } catch (err) {
-        console.error("OCR Analysis Error:", err);
-        alert(err.response?.data?.details || 'Failed to analyze report. Please try again.');
-        setIsUploading(false);
-      }
-    };
-    
-    try {
-      reader.readAsDataURL(file);
-    } catch (err) {
-      console.error("File Read Error:", err);
-      alert('Failed to read file.');
-      setIsUploading(false);
-    }
-    
-    if (fileInputRef.current) fileInputRef.current.value = '';
-    if (cameraInputRef.current) cameraInputRef.current.value = '';
-  };
-
-  const handleMyReports = () => {
-    setIsProfileOpen(false);
-    navigate('/patient');
-  };
-
-  const handleLogout = async () => {
-    setIsProfileOpen(false);
-    await signOut();
-    navigate('/');
-  };
-
   return (
-    <>
-      <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100"
+    <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100"
          style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
@@ -287,183 +99,18 @@ export const Navbar = ({ onLoginClick }) => {
 
         {/* Right side */}
         <div className="flex items-center gap-5">
-          {user ? (
-            <div className="relative">
-              <button
-                onClick={() => setIsProfileOpen((open) => !open)}
-                className="flex items-center gap-3 rounded-full border border-gray-200 bg-white px-2.5 py-1.5 transition-all hover:border-[#14453d]/20 hover:bg-gray-50"
-              >
-                <div className="h-10 w-10 overflow-hidden rounded-full border border-gray-100 bg-gray-100">
-                  {user.avatar_url ? (
-                    <img src={user.avatar_url} alt={user.name} className="h-full w-full object-cover" />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-sm font-bold text-white" style={{ background: P }}>
-                      {user.avatar}
-                    </div>
-                  )}
-                </div>
-                <div className="hidden md:flex flex-col items-start">
-                  <span className="max-w-[140px] truncate text-sm font-bold text-gray-800">{user.name}</span>
-                  <span className="text-[10px] font-medium uppercase tracking-wide text-gray-400">Patient</span>
-                </div>
-                <ChevronDown size={16} className={`text-gray-400 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              <AnimatePresence>
-                {isProfileOpen && (
-                  <LandingProfileDropdown
-                    user={user}
-                    onClose={() => setIsProfileOpen(false)}
-                    onUpdateProfile={handleUpdateProfile}
-                    onMyReports={handleMyReports}
-                    onLogout={handleLogout}
-                  />
-                )}
-              </AnimatePresence>
-            </div>
-          ) : (
-            <div className="flex items-center gap-3">
-              <div className="relative" ref={uploadMenuRef}>
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => setIsUploadMenuOpen(!isUploadMenuOpen)}
-                  disabled={isUploading}
-                  className="flex items-center gap-2 text-[#14453d] text-sm font-semibold px-5 py-2 rounded-full border border-[#14453d] transition-all bg-white hover:bg-[#f8faf9]"
-                >
-                  {isUploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-                  {isUploading ? 'Analyzing...' : 'Upload Your Report'}
-                </motion.button>
-                
-                <AnimatePresence>
-                  {isUploadMenuOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10, scale: 0.96 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.96 }}
-                      className="absolute right-0 top-full mt-3 w-56 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xl z-[70] p-2"
-                    >
-                      <input 
-                        type="file" 
-                        ref={fileInputRef}
-                        onChange={handleFileSelect}
-                        accept="application/pdf, image/*" 
-                        className="hidden" 
-                      />
-                      <input 
-                        type="file" 
-                        ref={cameraInputRef}
-                        onChange={handleFileSelect}
-                        accept="image/*" 
-                        capture="environment"
-                        className="hidden" 
-                      />
-                      
-                      <button onClick={() => fileInputRef.current?.click()} className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors">
-                        <ImageIcon size={18} className="text-[#14453d]" />
-                        <span className="text-sm font-semibold">Upload Image</span>
-                      </button>
-                      <button onClick={() => fileInputRef.current?.click()} className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors">
-                        <FileText size={18} className="text-[#14453d]" />
-                        <span className="text-sm font-semibold">Upload PDF</span>
-                      </button>
-                      <button onClick={() => cameraInputRef.current?.click()} className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors">
-                        <Camera size={18} className="text-[#14453d]" />
-                        <span className="text-sm font-semibold">Camera</span>
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={onLoginClick || (() => navigate('/select-role'))}
-                className="text-white text-sm font-semibold px-5 py-2 rounded-full transition-all"
-                style={{ background: P }}
-              >
-                Login
-              </motion.button>
-            </div>
-          )}
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={onLoginClick || (() => navigate('/select-role'))}
+            className="text-white text-sm font-semibold px-5 py-2 rounded-full transition-all"
+            style={{ background: P }}
+          >
+            Login
+          </motion.button>
         </div>
       </div>
-
-      </nav>
-
-      <AnimatePresence>
-        {isUploading && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/80 backdrop-blur-md p-6"
-          >
-            <div className="relative w-full max-w-md h-[70vh] rounded-2xl overflow-hidden border-2 border-[#14453d]/50 bg-gray-900 shadow-2xl">
-              {/* Document Preview */}
-              {originalFileUrl ? (
-                <img src={originalFileUrl} alt="Document to scan" className="w-full h-full object-cover opacity-30" />
-              ) : (
-                <div className="w-full h-full bg-gray-800" />
-              )}
-
-              {/* Terminal Logs */}
-              <div className="absolute inset-0 p-6 pt-10 overflow-hidden z-20 flex flex-col justify-start pointer-events-none">
-                {scanningLogs.map((log, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="font-mono text-[11px] md:text-xs text-green-400 mb-2 drop-shadow-[0_0_2px_rgba(74,222,128,0.8)] tracking-tight"
-                  >
-                    {log}
-                  </motion.div>
-                ))}
-                {scanningLogs.length > 0 && scanningLogs.length < 10 && (
-                  <motion.div
-                    animate={{ opacity: [0, 1, 0] }}
-                    transition={{ repeat: Infinity, duration: 0.8 }}
-                    className="w-2 h-3 bg-green-400 mt-1"
-                  />
-                )}
-              </div>
-              
-              {/* Scanning Line & Glow */}
-              <motion.div
-                animate={{ top: ['0%', '100%', '0%'] }}
-                transition={{ duration: 3, ease: 'linear', repeat: Infinity }}
-                className="absolute left-0 right-0 h-1 bg-green-400 shadow-[0_0_15px_3px_rgba(74,222,128,0.7)]"
-                style={{ zIndex: 10 }}
-              />
-              <motion.div
-                animate={{ top: ['0%', '100%', '0%'] }}
-                transition={{ duration: 3, ease: 'linear', repeat: Infinity }}
-                className="absolute left-0 right-0 h-32 bg-gradient-to-b from-transparent to-green-400/20 -translate-y-full"
-              />
-              
-              {/* Scanning Text */}
-              <div className="absolute bottom-6 left-0 right-0 flex justify-center">
-                <div className="bg-black/50 backdrop-blur-sm px-6 py-2 rounded-full border border-gray-700">
-                  <span className="text-white text-sm font-semibold flex items-center gap-2">
-                    <Loader2 size={16} className="animate-spin text-green-400" />
-                    AI is analyzing your report...
-                  </span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <SmartReportViewer 
-        isOpen={isViewerOpen} 
-        onClose={() => setIsViewerOpen(false)} 
-        originalFileUrl={originalFileUrl} 
-        originalFileType={originalFileType}
-        reportData={reportData} 
-      />
-    </>
+    </nav>
   );
 };
 
@@ -601,7 +248,9 @@ const SPECIALISED_DOCTORS = [
   },
 ];
 
-/* ── Landing Page Component ────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════════
+   LANDING PAGE
+══════════════════════════════════════════════════════════════════════════ */
 const LandingPage = () => {
   const navigate = useNavigate();
 
@@ -613,8 +262,8 @@ const LandingPage = () => {
 
       {/* ── HERO ───────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden" style={{ background: '#f8faf9' }}>
-        <div className="w-full max-w-[1600px] mx-auto px-5 sm:px-6 py-14 sm:py-16 md:py-24 lg:px-10 xl:px-12">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 xl:gap-16 items-center">
+        <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             {/* Left content */}
             <div>
               {/* NABL Badge */}
@@ -653,14 +302,13 @@ const LandingPage = () => {
                 <motion.button
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.97 }}
-                  onClick={() => document.getElementById('partners')?.scrollIntoView({ behavior: 'smooth' })}
+                  onClick={() => document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' })}
                   className="flex items-center gap-2 text-white font-semibold text-sm
                              px-6 py-3 rounded-full transition-all"
                   style={{ background: P }}
                 >
                   Book a Test <ArrowRight size={15} />
                 </motion.button>
-
                 <motion.button
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.97 }}
@@ -704,16 +352,14 @@ const LandingPage = () => {
               initial={{ opacity: 0, x: 40 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="relative w-full lg:max-w-[760px] lg:justify-self-end"
+              className="relative"
             >
-              <div
-                className="overflow-hidden rounded-[1.5rem] shadow-2xl sm:rounded-2xl"
-                style={{ boxShadow: '0 20px 60px rgba(20,69,61,0.15)' }}
-              >
+              <div className="rounded-2xl overflow-hidden shadow-2xl"
+                   style={{ boxShadow: '0 20px 60px rgba(20,69,61,0.15)' }}>
                 <img
                   src="/lab-hero.png"
                   alt="Modern pathology laboratory"
-                  className="aspect-[4/3] w-full object-cover object-center sm:aspect-[16/10] md:h-[420px] md:aspect-auto"
+                  className="w-full h-80 md:h-[420px] object-cover"
                 />
               </div>
 
@@ -722,7 +368,8 @@ const LandingPage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
-                className="absolute -bottom-4 -left-4 hidden items-center gap-3 rounded-xl border border-gray-100 bg-white px-4 py-3 shadow-lg sm:flex md:-left-6"
+                className="absolute -bottom-4 -left-4 md:-left-6 bg-white rounded-xl
+                           shadow-lg px-4 py-3 flex items-center gap-3 border border-gray-100"
               >
                 <div className="w-10 h-10 rounded-lg flex items-center justify-center"
                      style={{ background: P }}>
@@ -740,7 +387,7 @@ const LandingPage = () => {
 
       {/* ── PARTNER LABS ───────────────────────────────────────────────── */}
       <section id="partners" className="py-20 bg-white">
-        <div className="w-full max-w-[1600px] mx-auto px-5 sm:px-6 lg:px-10 xl:px-12">
+        <div className="max-w-7xl mx-auto px-6">
           <FadeUp className="mb-14 text-center">
             <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: P }}>
               Trusted Network
@@ -1046,7 +693,7 @@ const LandingPage = () => {
                     <img
                       src={doctor.image}
                       alt={doctor.name}
-                      className="aspect-[4/5] w-full bg-slate-100 object-cover object-top sm:aspect-auto sm:h-72"
+                      className="h-72 w-full object-cover object-top bg-slate-100"
                       loading="lazy"
                     />
                     <div className="absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(180deg,rgba(15,23,42,0)_0%,rgba(15,23,42,0.78)_100%)]"></div>
@@ -1145,7 +792,198 @@ const LandingPage = () => {
       </section>
 
 
+      {/* ── DOWNLOAD REPORTS ───────────────────────────────────────────── */}
+      {/* â”€â”€ BOOK A TEST â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      <section id="book" className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <FadeUp className="max-w-4xl mx-auto">
+            <h2
+              className="text-3xl md:text-4xl font-extrabold text-gray-800 mb-3 text-center"
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
+              Upload Your Report
+            </h2>
+            <p className="text-gray-500 text-base text-center mb-10 max-w-2xl mx-auto leading-8">
+              Submit your lab report securely for fast review. Upload a clear photo or a PDF and let LabIntel turn complex findings into easier-to-understand insights.
+            </p>
 
+            <div
+              className="bg-white rounded-[2rem] border border-gray-200 p-6 md:p-8"
+              style={{ boxShadow: '0 18px 45px rgba(20,69,61,0.08)' }}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+                <label className="group cursor-pointer">
+                  <input type="file" accept="image/*" className="sr-only" />
+                  <div className="h-full rounded-2xl border border-[#cfe0db] bg-[#f8fbfa] p-6 transition-all group-hover:border-[#14453d] group-hover:bg-white">
+                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4" style={{ background: '#e8f5f0', color: P }}>
+                      <FileImage size={22} />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-800 mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+                      Upload Photo
+                    </h3>
+                    <p className="text-sm text-gray-500 leading-7 mb-5">
+                      Add a clear photo from your phone or camera. Best for printed reports, prescriptions, or lab snapshots.
+                    </p>
+                    <div className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: P }}>
+                      <Upload size={16} />
+                      Choose image
+                    </div>
+                  </div>
+                </label>
+
+                <label className="group cursor-pointer">
+                  <input type="file" accept="application/pdf" className="sr-only" />
+                  <div className="h-full rounded-2xl border border-[#cfe0db] bg-[#f8fbfa] p-6 transition-all group-hover:border-[#14453d] group-hover:bg-white">
+                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4" style={{ background: '#e8f5f0', color: P }}>
+                      <FileText size={22} />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-800 mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+                      Upload PDF
+                    </h3>
+                    <p className="text-sm text-gray-500 leading-7 mb-5">
+                      Send your digital report in PDF format for cleaner parsing, faster review, and better readability.
+                    </p>
+                    <div className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: P }}>
+                      <Upload size={16} />
+                      Choose PDF
+                    </div>
+                  </div>
+                </label>
+              </div>
+
+              <div className="rounded-2xl border border-[#d7e5e0] bg-[#fbfcfc] p-5 md:p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2 text-sm font-semibold mb-2" style={{ color: P }}>
+                    <ShieldCheck size={16} />
+                    Secure report handling
+                  </div>
+                  <p className="text-sm text-gray-500 leading-7">
+                    Supported formats: JPG, PNG, HEIC, and PDF. Make sure text is readable and all pages are visible before uploading.
+                  </p>
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  className="text-white font-semibold text-sm px-6 py-3.5 rounded-xl transition-all whitespace-nowrap"
+                  style={{ background: P }}
+                >
+                  Start Upload
+                </motion.button>
+              </div>
+            </div>
+          </FadeUp>
+        </div>
+      </section>
+
+      <section className="py-18 bg-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <FadeUp>
+            <div
+              className="rounded-[2.25rem] overflow-hidden border border-[#d6e5df]"
+              style={{ background: `linear-gradient(135deg, #103831 0%, ${P} 48%, ${PL} 100%)` }}
+            >
+              <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr_1fr_1fr] gap-0">
+                <div
+                  className="p-8 md:p-10 border-b lg:border-b-0 lg:border-r border-white/10 cursor-pointer transition-colors hover:bg-white/5"
+                  onClick={() => navigate('/about-us')}
+                >
+                  <div className="flex items-center gap-3 mb-6">
+                    <img src="/logo.jpg" alt="LabIntel Logo" className="w-11 h-11 rounded-2xl object-contain bg-white/10 p-1.5" />
+                    <span className="text-2xl text-white" style={{ fontFamily: 'var(--font-display)', letterSpacing: '-0.04em' }}>
+                      LabIntel
+                    </span>
+                  </div>
+                  <h3 className="text-white text-sm font-bold uppercase tracking-[0.22em] mb-0" style={{ fontFamily: 'var(--font-body)' }}>
+                    About Us
+                  </h3>
+                </div>
+
+                <div className="p-8 md:p-10 border-b lg:border-b-0 lg:border-r border-white/10">
+                  <h3 className="text-white text-sm font-bold uppercase tracking-[0.22em] mb-4" style={{ fontFamily: 'var(--font-body)' }}>
+                    Contact
+                  </h3>
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center text-white shrink-0">
+                      <Mail size={18} />
+                    </div>
+                    <div>
+                      <p className="text-white/70 text-[11px] uppercase tracking-[0.22em] mb-2">Email</p>
+                      <a href="mailto:contact.labintel@gmail.com" className="text-white text-sm font-medium break-all">
+                        contact.labintel@gmail.com
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  className="p-8 md:p-10 border-b lg:border-b-0 lg:border-r border-white/10 cursor-pointer transition-colors hover:bg-white/5"
+                  onClick={() => navigate('/terms')}
+                >
+                  <h3 className="text-white text-sm font-bold uppercase tracking-[0.22em] mb-0 leading-6" style={{ fontFamily: 'var(--font-body)' }}>
+                    Terms And Conditions
+                  </h3>
+                </div>
+
+                <div
+                  className="p-8 md:p-10 cursor-pointer transition-colors hover:bg-white/5"
+                  onClick={() => navigate('/refund-policy')}
+                >
+                  <h3 className="text-white text-sm font-bold uppercase tracking-[0.22em] mb-0 leading-6" style={{ fontFamily: 'var(--font-body)' }}>
+                    Cancellation And Refund Policy
+                  </h3>
+                </div>
+              </div>
+            </div>
+          </FadeUp>
+        </div>
+      </section>
+
+      <section id="reports" className="py-16">
+        <div className="max-w-7xl mx-auto px-6">
+          <FadeUp>
+            <div className="rounded-3xl px-8 md:px-12 py-10 flex flex-col md:flex-row
+                            items-center justify-between gap-8"
+                 style={{ background: `linear-gradient(135deg, #0f3330, ${P}, ${PL})` }}>
+              {/* Left */}
+              <div className="text-white">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center">
+                    <Download size={20} className="text-white" />
+                  </div>
+                  <h2 className="text-2xl font-extrabold">Download Reports</h2>
+                </div>
+                <p className="text-white/60 text-sm max-w-sm leading-relaxed">
+                  Enter your Report ID or Patient ID to instantly access and
+                  download your diagnostic results. Secure and encrypted.
+                </p>
+              </div>
+
+              {/* Right — Search */}
+              <div className="flex items-center gap-3 w-full md:w-auto">
+                <div className="relative flex-1 md:w-72">
+                  <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    placeholder="Report ID or Patient ID"
+                    className="w-full bg-white text-sm text-gray-700 rounded-xl pl-11 pr-4 py-3
+                               outline-none border-2 border-transparent focus:border-white/30"
+                  />
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="flex items-center gap-2 bg-white font-semibold text-sm
+                             px-5 py-3 rounded-xl transition-all"
+                  style={{ color: P }}
+                >
+                  <Download size={15} />
+                  Download
+                </motion.button>
+              </div>
+            </div>
+          </FadeUp>
+        </div>
+      </section>
 
       {/* ── FOOTER ─────────────────────────────────────────────────────── */}
       <footer id="contact" className="border-t border-gray-100 bg-white">
