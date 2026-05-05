@@ -1,432 +1,223 @@
-import { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { attendanceService } from '../../services/attendanceService';
+import { useState } from 'react';
 import { LabLayout } from '../../components/lab/LabLayout';
-import { Card, Button, Select, Skeleton, KPICard } from '../../components/common';
-import { cn } from '../../utils/cn';
-import {
-  Users, Clock, CalendarX, TrendingUp,
-  Filter, Download, AlertCircle,
-  CalendarDays,
-} from 'lucide-react';
+import { Card, Button, Select } from '../../components/common';
+import { Users, Clock, CalendarX, Activity, CalendarDays, Search, Filter } from 'lucide-react';
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// Mocked Data
+const mockStaffData = [
+  { id: 1, name: 'Arjun Sharma', role: 'Manager', dept: 'Administration', status: 'present', entryTime: '2026-04-19T08:00:00', exitTime: null, presentDays: 18, absentDays: 0, attendance: 100 },
+  { id: 2, name: 'Priya Patel', role: 'Receptionist', dept: 'Front Desk', status: 'present', entryTime: '2026-04-19T08:15:00', exitTime: null, presentDays: 17, absentDays: 1, attendance: 94 },
+  { id: 3, name: 'Rahul Gupta', role: 'Technician', dept: 'Laboratory', status: 'absent', entryTime: null, exitTime: null, presentDays: 12, absentDays: 6, attendance: 66 },
+  { id: 4, name: 'Sunita Mehta', role: 'Manager', dept: 'Administration', status: 'present', entryTime: '2026-04-19T07:45:00', exitTime: '2026-04-19T14:30:00', presentDays: 15, absentDays: 3, attendance: 83 },
+  { id: 5, name: 'Vikram Singh', role: 'Technician', dept: 'Laboratory', status: 'on_leave', entryTime: null, exitTime: null, presentDays: 10, absentDays: 8, attendance: 55 },
+  { id: 6, name: 'Ananya Bose', role: 'Technician', dept: 'Laboratory', status: 'present', entryTime: '2026-04-19T09:00:00', exitTime: null, presentDays: 16, absentDays: 2, attendance: 88 },
+];
 
-function formatTime(iso) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleTimeString('en-IN', {
-    hour:   '2-digit',
-    minute: '2-digit',
-    hour12: true,
-  });
-}
+const timeFilterOptions = [
+  { value: 'today', label: 'Today' },
+  { value: 'week', label: 'This Week' },
+  { value: 'month', label: 'This Month' },
+  { value: 'custom', label: 'Custom' },
+];
 
-function formatShift(minutes) {
-  if (minutes == null) return '—';
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return `${h}h ${m}m`;
-}
-
-/** Returns 'YYYY-MM' string for the current month. */
-function currentMonthStr() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-}
-
-// ── Status badge ──────────────────────────────────────────────────────────────
-
-function StatusBadge({ status }) {
-  const map = {
-    present:  { label: 'Present',  cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-    absent:   { label: 'Absent',   cls: 'bg-red-50 text-red-700 border-red-200'             },
-    half_day: { label: 'Half Day', cls: 'bg-amber-50 text-amber-700 border-amber-200'       },
-  };
-  const cfg = map[status] || { label: status, cls: 'bg-slate-50 text-slate-600 border-slate-200' };
-  return (
-    <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border', cfg.cls)}>
-      <span className={cn('w-1.5 h-1.5 rounded-full', {
-        'bg-emerald-500': status === 'present',
-        'bg-red-500':     status === 'absent',
-        'bg-amber-500':   status === 'half_day',
-        'bg-slate-400':   !['present','absent','half_day'].includes(status),
-      })} />
-      {cfg.label}
-    </span>
-  );
-}
-
-// ── CSV export ────────────────────────────────────────────────────────────────
-
-function exportCSV(records) {
-  const headers = ['Staff Name', 'Role', 'Date', 'Check-in', 'Check-out', 'Shift Duration', 'Status'];
-  const rows = records.map(r => [
-    r.full_name  ?? '',
-    r.role       ?? '',
-    r.date       ?? '',
-    r.check_in   ? new Date(r.check_in).toLocaleTimeString('en-IN')  : '',
-    r.check_out  ? new Date(r.check_out).toLocaleTimeString('en-IN') : '',
-    r.shift_duration_minutes != null ? `${Math.floor(r.shift_duration_minutes/60)}h ${r.shift_duration_minutes%60}m` : '',
-    r.status     ?? '',
-  ]);
-  const csv = [headers, ...rows].map(row => row.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = `attendance-${currentMonthStr()}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-// ── Loading skeleton ──────────────────────────────────────────────────────────
-
-function TableSkeleton() {
-  return (
-    <div className="p-4 space-y-3">
-      {[1, 2, 3, 4, 5].map(i => (
-        <Skeleton key={i} className="h-12 w-full rounded-lg" />
-      ))}
-    </div>
-  );
-}
-
-// ── Month picker (native <input type="month">) ────────────────────────────────
-
-function MonthPicker({ value, onChange }) {
-  return (
-    <input
-      id="attendance-month-picker"
-      type="month"
-      value={value}
-      max={currentMonthStr()}
-      onChange={e => onChange(e.target.value)}
-      className="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
-    />
-  );
-}
-
-// ── Main component ────────────────────────────────────────────────────────────
+const roleFilterOptions = [
+  { value: 'all', label: 'All Roles' },
+  { value: 'manager', label: 'Manager' },
+  { value: 'receptionist', label: 'Receptionist' },
+  { value: 'technician', label: 'Technician' },
+];
 
 export default function StaffTracking() {
-  const [month,      setMonth]      = useState(currentMonthStr());
+  const [timeFilter, setTimeFilter] = useState('today');
   const [roleFilter, setRoleFilter] = useState('all');
 
-  // ── Data fetching ──────────────────────────────────────────────────────────
-  const {
-    data: allData,
-    isLoading: allLoading,
-    error: allError,
-  } = useQuery({
-    queryKey: ['attendance-all', month, roleFilter],
-    queryFn: () => attendanceService.getAllAttendance({
-      month,
-      role: roleFilter !== 'all' ? roleFilter : undefined,
-    }),
-    staleTime: 1000 * 60 * 2,
-  });
+  const filteredStaff = mockStaffData.filter(s => roleFilter === 'all' || s.role.toLowerCase() === roleFilter);
+  
+  // Calculate aggregate stats
+  const presentCount = mockStaffData.filter(s => s.status === 'present').length;
+  const absentCount = mockStaffData.filter(s => s.status === 'absent' || s.status === 'on_leave').length;
+  
+  // Calculate average shift duration roughly (using mock logic)
+  const avgShiftDuration = "8h 15m"; // Static mock for aesthetics
+  
+  // Find most absent
+  const mostAbsentStaff = [...mockStaffData].sort((a,b) => b.absentDays - a.absentDays)[0];
 
-  const {
-    data: summaryData,
-    isLoading: summaryLoading,
-  } = useQuery({
-    queryKey: ['attendance-summary', month],
-    queryFn: () => attendanceService.getSummary({ month }),
-    staleTime: 1000 * 60 * 2,
-  });
+  const formatTime = (isoString) => {
+    if (!isoString) return '—';
+    const d = new Date(isoString);
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
 
-  const records  = allData?.data     || [];
-  const summary  = summaryData?.data || [];
+  const getShiftDuration = (entry, exit) => {
+    if (!entry) return '—';
+    const start = new Date(entry);
+    const end = exit ? new Date(exit) : new Date();
+    const diffMs = end - start;
+    const diffHrs = Math.floor(diffMs / 3600000);
+    const diffMins = Math.floor((diffMs % 3600000) / 60000);
+    return `${diffHrs}h ${diffMins}m`;
+  };
 
-  // ── Derived KPIs ───────────────────────────────────────────────────────────
-  const kpis = useMemo(() => {
-    const isCurrentMonth = month === currentMonthStr();
-    const todayISO = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+  const StatusBadge = ({ status }) => {
+    if (status === 'present') return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Present</span>;
+    if (status === 'absent') return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200"><span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>Absent</span>;
+    return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200"><span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>On Leave</span>;
+  };
 
-    const presentToday = isCurrentMonth
-      ? records.filter(r => r.date === todayISO && r.status === 'present').length
-      : null;
-    const absentToday  = isCurrentMonth
-      ? records.filter(r => r.date === todayISO && r.status === 'absent').length
-      : null;
-
-    const totalStaff   = summary.length;
-    const avgAttendance = summary.length > 0
-      ? Math.round(summary.reduce((acc, s) => acc + (s.attendance_percentage ?? 0), 0) / summary.length)
-      : null;
-
-    return { presentToday, absentToday, totalStaff, avgAttendance };
-  }, [records, summary, month]);
-
-  const roleFilterOptions = [
-    { value: 'all',          label: 'All Roles'    },
-    { value: 'receptionist', label: 'Receptionist' },
-    { value: 'technician',   label: 'Technician'   },
-  ];
-
-  const isLoading = allLoading || summaryLoading;
-  const isCurrentMonth = month === currentMonthStr();
-
-  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <LabLayout>
-      {/* Page header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-slate-800">Staff Tracking</h1>
-        <p className="text-sm text-slate-500 mt-1">Live attendance monitoring and monthly performance tracking</p>
+        <p className="text-sm text-slate-500">Live attendance monitoring and absence tracking</p>
       </div>
 
       <div className="space-y-6">
-
-        {/* ── KPI Summary Cards ──────────────────────────────────────────── */}
+        {/* 4. Summary Stats Row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <KPICard
-            title="Total Staff"
-            value={summaryLoading ? undefined : kpis.totalStaff}
-            sub="Tracked this month"
-            icon={<Users size={20} />}
-            color="teal"
-            isLoading={summaryLoading}
-          />
-          {isCurrentMonth ? (
-            <>
-              <KPICard
-                title="Present Today"
-                value={allLoading ? undefined : kpis.presentToday}
-                sub="Checked in today"
-                icon={<CalendarDays size={20} />}
-                color="blue"
-                isLoading={allLoading}
-              />
-              <KPICard
-                title="Absent Today"
-                value={allLoading ? undefined : kpis.absentToday}
-                sub="Marked absent"
-                icon={<CalendarX size={20} />}
-                color="red"
-                isLoading={allLoading}
-              />
-            </>
-          ) : (
-            <>
-              <div /> {/* spacer */}
-              <div /> {/* spacer */}
-            </>
-          )}
-          <KPICard
-            title="Avg Attendance"
-            value={summaryLoading ? undefined : (kpis.avgAttendance != null ? `${kpis.avgAttendance}%` : '—')}
-            sub="Across all staff"
-            icon={<TrendingUp size={20} />}
-            color="amber"
-            isLoading={summaryLoading}
-          />
+          <Card className="p-5 flex items-center gap-4 border-l-4 border-emerald-500">
+            <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
+              <Users size={24} />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Staff Present</p>
+              <p className="text-2xl font-bold text-slate-800">{presentCount}</p>
+            </div>
+          </Card>
+          <Card className="p-5 flex items-center gap-4 border-l-4 border-red-500">
+            <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-600 shrink-0">
+              <CalendarX size={24} />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Staff Absent</p>
+              <p className="text-2xl font-bold text-slate-800">{absentCount}</p>
+            </div>
+          </Card>
+          <Card className="p-5 flex items-center gap-4 border-l-4 border-blue-500">
+            <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
+              <Clock size={24} />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Avg Shift Duration</p>
+              <p className="text-2xl font-bold text-slate-800">{avgShiftDuration}</p>
+            </div>
+          </Card>
+          <Card className="p-5 flex items-center gap-4 border-l-4 border-amber-500">
+            <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-amber-600 shrink-0">
+              <Activity size={24} />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Most Absent</p>
+              <p className="text-lg font-bold text-slate-800 truncate" title={mostAbsentStaff?.name}>{mostAbsentStaff?.name || '—'}</p>
+              <p className="text-xs text-slate-500">{mostAbsentStaff?.absentDays} days away</p>
+            </div>
+          </Card>
         </div>
 
-        {/* ── Filter bar ─────────────────────────────────────────────────── */}
+        {/* 3. Time Filter Controls */}
         <Card className="p-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Filter size={18} className="text-slate-400" />
               <h2 className="text-sm font-semibold text-slate-700">Filter Records</h2>
             </div>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-              <MonthPicker value={month} onChange={setMonth} />
+            <div className="flex flex-col sm:flex-row gap-3">
               <div className="w-full sm:w-48">
                 <Select
-                  id="attendance-role-filter"
-                  options={roleFilterOptions}
-                  value={roleFilter}
-                  onChange={e => setRoleFilter(e.target.value)}
+                  options={timeFilterOptions}
+                  value={timeFilter}
+                  onChange={(e) => setTimeFilter(e.target.value)}
                 />
               </div>
-              <Button
-                id="attendance-export-csv-btn"
-                variant="secondary"
-                className="shrink-0"
-                disabled={records.length === 0}
-                onClick={() => exportCSV(records)}
-              >
-                <Download size={16} />
-                Export CSV
-              </Button>
+              <div className="w-full sm:w-48">
+                <Select
+                  options={roleFilterOptions}
+                  value={roleFilter}
+                  onChange={(e) => setRoleFilter(e.target.value)}
+                />
+              </div>
+              <Button variant="secondary" className="shrink-0"><Search size={16} /> Apply</Button>
             </div>
           </div>
         </Card>
 
-        {/* ── Main grid ─────────────────────────────────────────────────── */}
+        {/* Live Attendance and Tracker Grid */}
         <div className="grid lg:grid-cols-3 gap-6">
-
-          {/* Attendance records table — 2/3 width */}
+          
+          {/* 1. Live Attendance Panel - Table */}
           <div className="lg:col-span-2">
             <Card className="h-full flex flex-col">
-              <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CalendarDays size={18} className="text-teal-600" />
-                  <h2 className="font-semibold text-slate-800">Attendance Records</h2>
-                </div>
-                {!isLoading && records.length > 0 && (
-                  <span className="text-xs text-slate-400 font-medium">{records.length} records</span>
-                )}
+              <div className="p-5 border-b border-slate-100 flex items-center gap-2">
+                <CalendarDays size={18} className="text-teal-600" />
+                <h2 className="font-semibold text-slate-800">Live Attendance Panel</h2>
               </div>
-
-              {/* Error state */}
-              {allError && !allLoading && (
-                <div className="flex flex-col items-center justify-center py-12 gap-3 text-center px-6">
-                  <AlertCircle size={32} className="text-red-400" />
-                  <p className="text-sm font-semibold text-slate-700">Failed to load attendance records</p>
-                  <p className="text-xs text-slate-400">
-                    {allError?.response?.data?.error || 'Please check your connection and try again.'}
-                  </p>
-                </div>
-              )}
-
-              {/* Loading state */}
-              {allLoading && <TableSkeleton />}
-
-              {/* Table */}
-              {!allLoading && !allError && (
-                <div className="overflow-x-auto flex-1">
-                  <table className="w-full text-sm text-left">
-                    <thead className="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold tracking-wider">
-                      <tr>
-                        <th className="px-5 py-3">Staff Member</th>
-                        <th className="px-4 py-3">Date</th>
-                        <th className="px-4 py-3">Check-in</th>
-                        <th className="px-4 py-3">Check-out</th>
-                        <th className="px-4 py-3">Shift</th>
-                        <th className="px-5 py-3 text-right">Status</th>
+              <div className="overflow-x-auto flex-1">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold tracking-wider">
+                    <tr>
+                      <th className="px-5 py-3 rounded-tl-xl">Staff Member</th>
+                      <th className="px-4 py-3">Status</th>
+                      <th className="px-4 py-3">Entry Time</th>
+                      <th className="px-4 py-3">Exit Time</th>
+                      <th className="px-5 py-3 text-right">Duration</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredStaff.map(staff => (
+                      <tr key={staff.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-5 py-3">
+                          <p className="font-medium text-slate-800">{staff.name}</p>
+                          <p className="text-xs text-slate-500">{staff.role}</p>
+                        </td>
+                        <td className="px-4 py-3"><StatusBadge status={staff.status} /></td>
+                        <td className="px-4 py-3 text-slate-600 font-medium">{formatTime(staff.entryTime)}</td>
+                        <td className="px-4 py-3 text-slate-600">
+                          {staff.exitTime ? formatTime(staff.exitTime) : (
+                            staff.status === 'present' ? <span className="text-xs text-indigo-600 font-medium bg-indigo-50 px-2 py-0.5 rounded backdrop-blur-sm">Still In</span> : '—'
+                          )}
+                        </td>
+                        <td className="px-5 py-3 text-right font-medium text-slate-700">
+                          {getShiftDuration(staff.entryTime, staff.exitTime)}
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                      {records.map(r => (
-                        <tr key={r.id} className="hover:bg-slate-50/60 transition-colors">
-                          <td className="px-5 py-3">
-                            <p className="font-medium text-slate-800">{r.full_name}</p>
-                            <p className="text-xs text-slate-400 capitalize">{r.role}</p>
-                          </td>
-                          <td className="px-4 py-3 text-slate-600 text-xs font-medium">
-                            {r.date
-                              ? new Date(r.date).toLocaleDateString('en-IN', {
-                                  day: 'numeric', month: 'short', year: 'numeric',
-                                })
-                              : '—'}
-                          </td>
-                          <td className="px-4 py-3 font-medium text-slate-700">
-                            {formatTime(r.check_in)}
-                          </td>
-                          <td className="px-4 py-3 text-slate-600">
-                            {r.check_out ? formatTime(r.check_out) : (
-                              r.status === 'present'
-                                ? <span className="text-xs text-indigo-600 font-medium bg-indigo-50 px-2 py-0.5 rounded">Still In</span>
-                                : '—'
-                            )}
-                          </td>
-                          <td className="px-4 py-3 text-slate-600">
-                            {formatShift(r.shift_duration_minutes)}
-                          </td>
-                          <td className="px-5 py-3 text-right">
-                            <StatusBadge status={r.status} />
-                          </td>
-                        </tr>
-                      ))}
-
-                      {records.length === 0 && (
-                        <tr>
-                          <td colSpan={6} className="px-5 py-12 text-center text-slate-400">
-                            <CalendarDays size={32} className="mx-auto mb-3 text-slate-300" />
-                            <p className="font-medium text-slate-500">No attendance records found</p>
-                            <p className="text-xs mt-1">Try adjusting the month or role filter.</p>
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                    ))}
+                    {filteredStaff.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="px-5 py-8 text-center text-slate-500">No records found for the applied filters.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </Card>
           </div>
 
-          {/* Absence tracker / monthly summary — 1/3 width */}
+          {/* 2. Absence Tracker Summary */}
           <div>
             <Card className="h-full flex flex-col">
               <div className="p-5 border-b border-slate-100">
-                <h2 className="font-semibold text-slate-800">Monthly Summary</h2>
-                <p className="text-xs text-slate-400 mt-1">Per-staff attendance for {month}</p>
+                <h2 className="font-semibold text-slate-800">Absence Tracker</h2>
+                <p className="text-xs text-slate-500 mt-1">Monthly performance summary</p>
               </div>
-
-              <div className="flex-1 overflow-y-auto p-3">
-                {summaryLoading ? (
-                  <div className="space-y-2">
-                    {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-20" />)}
-                  </div>
-                ) : summary.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <Clock size={28} className="text-slate-300 mb-2" />
-                    <p className="text-sm text-slate-400">No summary data available.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {summary
-                      .filter(s => roleFilter === 'all' || s.role === roleFilter)
-                      .map(s => (
-                        <div
-                          key={s.staff_id}
-                          className="p-3 bg-slate-50 border border-slate-100 rounded-xl hover:border-teal-100 transition-colors"
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="min-w-0">
-                              <p className="text-sm font-semibold text-slate-800 truncate">{s.full_name}</p>
-                              <p className="text-[11px] text-slate-400 capitalize">{s.role}</p>
-                            </div>
-                            <p className={cn('text-lg font-bold shrink-0 ml-2', {
-                              'text-emerald-600': s.attendance_percentage >= 90,
-                              'text-amber-600':   s.attendance_percentage >= 75 && s.attendance_percentage < 90,
-                              'text-red-600':     s.attendance_percentage < 75,
-                            })}>
-                              {s.attendance_percentage}%
-                            </p>
-                          </div>
-
-                          {/* Mini stats row */}
-                          <div className="flex gap-3 text-[11px]">
-                            <span className="flex items-center gap-1 text-emerald-600">
-                              <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
-                              {s.total_present}P
-                            </span>
-                            <span className="flex items-center gap-1 text-red-500">
-                              <span className="w-1.5 h-1.5 bg-red-400 rounded-full" />
-                              {s.total_absent}A
-                            </span>
-                            {s.total_half_day > 0 && (
-                              <span className="flex items-center gap-1 text-amber-600">
-                                <span className="w-1.5 h-1.5 bg-amber-400 rounded-full" />
-                                {s.total_half_day}H
-                              </span>
-                            )}
-                            {s.avg_shift_minutes != null && (
-                              <span className="flex items-center gap-1 text-slate-400 ml-auto">
-                                <Clock size={10} />
-                                {formatShift(s.avg_shift_minutes)}
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Attendance progress bar */}
-                          <div className="mt-2 h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                            <div
-                              className={cn('h-full rounded-full transition-all', {
-                                'bg-emerald-500': s.attendance_percentage >= 90,
-                                'bg-amber-500':   s.attendance_percentage >= 75 && s.attendance_percentage < 90,
-                                'bg-red-500':     s.attendance_percentage < 75,
-                              })}
-                              style={{ width: `${Math.min(s.attendance_percentage, 100)}%` }}
-                            />
-                          </div>
+              <div className="flex-1 overflow-y-auto p-2">
+                <div className="space-y-2">
+                  {mockStaffData.map(staff => (
+                    <div key={staff.id} className="p-3 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between hover:border-teal-100 transition-colors">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-slate-800 truncate">{staff.name}</p>
+                        <div className="flex gap-3 text-xs mt-1 text-slate-500">
+                          <span title="Total Days Present" className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span>{staff.presentDays}P</span>
+                          <span title="Total Days Absent" className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-red-400 rounded-full"></span>{staff.absentDays}A</span>
                         </div>
-                      ))}
-                  </div>
-                )}
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className={`text-lg font-bold ${staff.attendance >= 90 ? 'text-emerald-600' : staff.attendance >= 75 ? 'text-amber-600' : 'text-red-600'}`}>
+                          {staff.attendance}%
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </Card>
           </div>

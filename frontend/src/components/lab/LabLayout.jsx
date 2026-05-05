@@ -21,6 +21,7 @@ const mainMenuItems = [
 // ── Restricted (admin-only) items ───────────────────────────────────────────
 const restrictedItems = [
   { to: 'analytics', label: 'Analytics',       icon: BarChart2,   roles: ['administrator', 'manager'] },
+  { to: 'settings',  label: 'Settings',        icon: Settings,    roles: ['administrator', 'manager'] },
   { to: 'release',   label: 'Release report',  icon: CheckCircle, roles: ['administrator', 'manager'] },
 ];
 

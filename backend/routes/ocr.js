@@ -23,4 +23,12 @@ router.post(
   ctrl.analyzeReport
 );
 
+// Public endpoint for the landing page "Upload Your Report" feature
+router.post(
+  '/analyze-report-public',
+  ocrLimiter,
+  validateBody(analyzeReportSchema),
+  ctrl.analyzeReport
+);
+
 module.exports = router;
