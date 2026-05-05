@@ -1,4 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { useUIStore } from '../../store/uiStore';
 import { useAuthStore } from '../../store/authStore';
 import { useLabContext } from '../../hooks/useLabContext';
@@ -33,13 +34,19 @@ const managerItems = [
 ];
 
 export function LabLayout({ children }) {
-  const { toggleSidebar } = useUIStore();
+  const { sidebarOpen, setSidebar, toggleSidebar } = useUIStore();
   const { clearAuth } = useAuthStore();
   const user = useAuthStore((s) => s.user);
   const { labName, logoUrl, primaryColor } = useLabContext();
   const { role } = usePermission();
   const navigate = useNavigate();
   const lp = useLabPath();
+
+  useEffect(() => {
+    if (window.innerWidth < 1024) {
+      setSidebar(false);
+    }
+  }, [setSidebar]);
 
   const handleLogout = () => { clearAuth(); navigate(lp('login')); };
 
@@ -55,9 +62,28 @@ export function LabLayout({ children }) {
     : 'U';
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
+    <div className="flex min-h-[100dvh] flex-col bg-slate-50 overflow-x-hidden lg:flex-row">
+      <button
+        type="button"
+        onClick={toggleSidebar}
+        className="fixed left-4 top-4 z-30 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm lg:hidden"
+      >
+        <span className="inline-flex h-2 w-2 rounded-full bg-teal-500" />
+        Menu
+      </button>
+
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-slate-900/35 lg:hidden"
+          onClick={toggleSidebar}
+        />
+      )}
+
       {/* ── Sidebar ──────────────────────────────────────────────────────── */}
-      <aside className="flex flex-col w-56 bg-white border-r border-slate-200 shrink-0 z-20">
+      <aside className={cn(
+        'fixed inset-y-0 left-0 z-40 flex w-72 -translate-x-full flex-col border-r border-slate-200 bg-white shadow-xl transition-transform duration-200 lg:static lg:z-20 lg:w-64 lg:translate-x-0 lg:shadow-none',
+        sidebarOpen ? 'translate-x-0' : ''
+      )}>
         {/* Logo */}
         <div className="flex items-center gap-2.5 px-5 py-5">
           <div
@@ -187,14 +213,14 @@ export function LabLayout({ children }) {
       </aside>
 
       {/* ── Main content ─────────────────────────────────────────────────── */}
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {/* Topbar */}
-        <header className="h-14 bg-white border-b border-slate-100 flex items-center justify-between px-6 shrink-0">
+        <header className="flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-white px-4 py-3 sm:px-6 shrink-0">
           <div className="flex items-center gap-2 text-sm">
             <span className="font-semibold text-slate-800">Dashboard</span>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-sm font-medium text-slate-600">{labName}</span>
+            <span className="hidden text-sm font-medium text-slate-600 sm:inline">{labName}</span>
             <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center text-white text-xs font-bold">
               {userInitials}
             </div>
@@ -202,7 +228,7 @@ export function LabLayout({ children }) {
         </header>
 
         {/* Page content */}
-        <div className="flex-1 overflow-y-auto scrollbar-thin p-6">
+        <div className="flex-1 overflow-y-auto scrollbar-thin p-4 sm:p-6 lg:p-8">
           {children}
         </div>
       </main>

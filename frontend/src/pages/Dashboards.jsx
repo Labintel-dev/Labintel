@@ -7,7 +7,7 @@ import {
   ShieldCheck, Users, TrendingUp, CheckCircle,
   Search, Activity, Clock, AlertCircle, Plus,
   Stethoscope, Sparkles, Camera, ChevronRight, FolderOpen, ArrowLeft,
-  Mail, Settings, Phone, Calendar
+  Mail, Settings, Phone, Calendar, Menu
 } from 'lucide-react';
 import { 
   supabase, getReports as getSupabaseReports, 
@@ -303,17 +303,33 @@ const Toast = ({ message, type = 'success', onClose }) => (
   </motion.div>
 );
 
-const Sidebar = ({ navItems, activeIdx, setActiveIdx, user, onLogout }) => (
-  <div className="w-52 shrink-0 bg-white border-r border-gray-100 flex flex-col no-print">
-    <Logo />
-    <nav className="flex-1 p-3 pt-4 space-y-0.5">
-      {navItems.map((item, i) => (
-        <NavItem key={item.label} icon={item.icon} label={item.label}
-                 active={activeIdx === i} onClick={() => setActiveIdx(i)} />
-      ))}
-    </nav>
-    {/* Sidebar bottom section removed - user info and logout are now in the top-right profile dropdown */}
-  </div>
+const Sidebar = ({ navItems, activeIdx, setActiveIdx, user, onLogout, isMobileOpen, setMobileOpen }) => (
+  <>
+    {/* Mobile Overlay */}
+    <AnimatePresence>
+      {isMobileOpen && (
+        <motion.div
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          onClick={() => setMobileOpen(false)}
+          className="md:hidden fixed inset-0 bg-black/40 z-[40]"
+        />
+      )}
+    </AnimatePresence>
+    
+    <div className={`
+      fixed md:relative top-0 left-0 h-full z-[50] w-64 md:w-52 shrink-0 bg-white border-r border-gray-100 
+      flex flex-col no-print transition-transform duration-300 ease-in-out
+      ${isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+    `}>
+      <Logo />
+      <nav className="flex-1 p-3 pt-4 space-y-0.5 overflow-y-auto">
+        {navItems.map((item, i) => (
+          <NavItem key={item.label} icon={item.icon} label={item.label}
+                   active={activeIdx === i} onClick={() => { setActiveIdx(i); setMobileOpen(false); }} />
+        ))}
+      </nav>
+    </div>
+  </>
 );
 
 
@@ -537,11 +553,14 @@ const ProfileUpdateModal = ({ user, onClose, onUpdated }) => {
   );
 };
 
-const TopBar = ({ showSearch, search, setSearch, user, onProfileClick, onBackHome }) => (
-  <div className="h-14 bg-white border-b border-gray-100 flex items-center px-5 gap-4 shrink-0 no-print">
+const TopBar = ({ showSearch, search, setSearch, user, onProfileClick, onBackHome, onMenuClick }) => (
+  <div className="h-14 bg-white border-b border-gray-100 flex items-center px-4 md:px-5 gap-3 md:gap-4 shrink-0 no-print">
+    <button onClick={onMenuClick} className="md:hidden p-1.5 -ml-1.5 text-gray-500 hover:bg-gray-100 rounded-lg">
+      <Menu size={20} />
+    </button>
     <button
       onClick={onBackHome}
-      className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-bold uppercase tracking-wide text-gray-600 transition-all hover:border-[#14453d]/20 hover:bg-[#f2f7f5] hover:text-[#14453d]"
+      className="hidden md:inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-bold uppercase tracking-wide text-gray-600 transition-all hover:border-[#14453d]/20 hover:bg-[#f2f7f5] hover:text-[#14453d]"
     >
       <ArrowLeft size={14} />
       Back
@@ -590,6 +609,7 @@ const Shell = ({ navItems, showSearch = false, renderContent }) => {
   
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [toasts, setToasts] = useState([]);
   
   const addToast = (message, type = 'success') => {
@@ -701,9 +721,11 @@ const Shell = ({ navItems, showSearch = false, renderContent }) => {
         <Sidebar navItems={navItems} activeIdx={activeIdx}
                  setActiveIdx={(i) => { setActiveIdx(i); setSearch(''); setShowAiEngine(false); setAiAnalysis(null); }}
                  user={user}
-                 onLogout={onLogout} />
+                 onLogout={onLogout}
+                 isMobileOpen={isSidebarOpen}
+                 setMobileOpen={setIsSidebarOpen} />
 
-        <div className="dashboard-main flex-1 flex flex-col overflow-hidden relative">
+        <div className="dashboard-main flex-1 flex flex-col min-w-0 overflow-hidden relative">
           <TopBar 
             showSearch={showSearch} 
             search={search} 
@@ -711,6 +733,7 @@ const Shell = ({ navItems, showSearch = false, renderContent }) => {
             user={user}
             onProfileClick={() => setIsProfileOpen(!isProfileOpen)}
             onBackHome={() => navigate('/')}
+            onMenuClick={() => setIsSidebarOpen(true)}
           />
 
           <AnimatePresence>
@@ -748,7 +771,7 @@ const Shell = ({ navItems, showSearch = false, renderContent }) => {
               />
             ))}
           </AnimatePresence>
-          <div className="dashboard-scroll flex-1 overflow-auto p-6" style={{ background: '#f8faf9' }}>
+          <div className="dashboard-scroll flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6" style={{ background: '#f8faf9' }}>
             {showAiEngine ? (
               <AIEngine 
                 patientId={user.id}
@@ -928,7 +951,7 @@ const PatientReports = ({ user }) => {
       </div>
 
       {/* Stat strip */}
-      <div className="grid grid-cols-4 gap-3 mb-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
         {[
           { label: 'Total',      value: stats.total,      color: 'text-gray-700',    bg: 'bg-white' },
           { label: 'Ready',      value: stats.ready,      color: 'text-emerald-600', bg: 'bg-emerald-50' },
@@ -1167,7 +1190,7 @@ const LabUpload = ({ user }) => {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-5" style={{ height: 'calc(100% - 80px)' }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5" style={{ minHeight: '400px' }}>
 
         {/* Drop zone */}
         <div className="flex flex-col gap-3">
@@ -1427,7 +1450,7 @@ const AdminOverview = () => {
       </div>
 
       {/* Stat grid */}
-      <div className="grid grid-cols-3 gap-3 mb-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-5">
         {stats.map(s => (
           <div key={s.label}
                className={`${s.bg} ${s.border} border rounded-2xl px-4 py-3.5`}>

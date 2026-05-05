@@ -61,7 +61,7 @@ const ChatAssistant = ({ reportData, onClose }) => {
       initial={{ opacity: 0, scale: 0.9, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.9, y: 20 }}
-      className="fixed bottom-6 right-6 w-96 h-[500px] bg-white rounded-[2rem] shadow-2xl border border-gray-100 flex flex-col z-[100] overflow-hidden"
+      className="fixed bottom-3 right-3 h-[min(500px,calc(100vh-1.5rem))] w-[calc(100vw-1.5rem)] max-w-96 bg-white rounded-[2rem] shadow-2xl border border-gray-100 flex flex-col z-[100] overflow-hidden sm:bottom-6 sm:right-6 sm:w-96"
       style={{ boxShadow: '0 24px 80px rgba(20,69,61,0.2)' }}
     >
       {/* Header */}

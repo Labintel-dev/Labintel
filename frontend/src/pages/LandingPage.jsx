@@ -385,8 +385,8 @@ const LandingPage = () => {
 
       {/* ── HERO ───────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden" style={{ background: '#f8faf9' }}>
-        <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+        <div className="w-full max-w-[1600px] mx-auto px-5 sm:px-6 py-14 sm:py-16 md:py-24 lg:px-10 xl:px-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 xl:gap-16 items-center">
             {/* Left content */}
             <div>
               {/* NABL Badge */}
@@ -475,14 +475,16 @@ const LandingPage = () => {
               initial={{ opacity: 0, x: 40 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="relative"
+              className="relative w-full lg:max-w-[760px] lg:justify-self-end"
             >
-              <div className="rounded-2xl overflow-hidden shadow-2xl"
-                   style={{ boxShadow: '0 20px 60px rgba(20,69,61,0.15)' }}>
+              <div
+                className="overflow-hidden rounded-[1.5rem] shadow-2xl sm:rounded-2xl"
+                style={{ boxShadow: '0 20px 60px rgba(20,69,61,0.15)' }}
+              >
                 <img
                   src="/lab-hero.png"
                   alt="Modern pathology laboratory"
-                  className="w-full h-80 md:h-[420px] object-cover"
+                  className="aspect-[4/3] w-full object-cover object-center sm:aspect-[16/10] md:h-[420px] md:aspect-auto"
                 />
               </div>
 
@@ -491,8 +493,7 @@ const LandingPage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
-                className="absolute -bottom-4 -left-4 md:-left-6 bg-white rounded-xl
-                           shadow-lg px-4 py-3 flex items-center gap-3 border border-gray-100"
+                className="absolute -bottom-4 -left-4 hidden items-center gap-3 rounded-xl border border-gray-100 bg-white px-4 py-3 shadow-lg sm:flex md:-left-6"
               >
                 <div className="w-10 h-10 rounded-lg flex items-center justify-center"
                      style={{ background: P }}>
@@ -510,7 +511,7 @@ const LandingPage = () => {
 
       {/* ── PARTNER LABS ───────────────────────────────────────────────── */}
       <section id="partners" className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="w-full max-w-[1600px] mx-auto px-5 sm:px-6 lg:px-10 xl:px-12">
           <FadeUp className="mb-14 text-center">
             <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: P }}>
               Trusted Network
@@ -816,7 +817,7 @@ const LandingPage = () => {
                     <img
                       src={doctor.image}
                       alt={doctor.name}
-                      className="h-72 w-full object-cover object-top bg-slate-100"
+                      className="aspect-[4/5] w-full bg-slate-100 object-cover object-top sm:aspect-auto sm:h-72"
                       loading="lazy"
                     />
                     <div className="absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(180deg,rgba(15,23,42,0)_0%,rgba(15,23,42,0.78)_100%)]"></div>
