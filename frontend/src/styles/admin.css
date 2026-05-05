@@ -34,7 +34,7 @@ body {
   overflow-x: hidden;
 }
 
-#root { display: flex; min-height: 100vh; }
+#root { min-height: 100vh; }
 
 .app-layout { display: flex; width: 100%; min-height: 100vh; }
 
@@ -872,4 +872,3 @@ body {
   font-size: 10px !important;
   opacity: 0.5;
 }
-

@@ -1,4 +1,4 @@
-﻿<p align="center">
+<p align="center">
   <img src="https://img.shields.io/badge/LabIntel-Smart%20Diagnostics-0d9488?style=for-the-badge&logo=flask&logoColor=white" alt="LabIntel Badge" />
 </p>
 
@@ -45,7 +45,7 @@
 - **Staff Management** ΓÇö Invite staff, assign roles, activate/deactivate accounts
 - **Lab Settings** ΓÇö Customize lab branding (logo, colors), manage test panels
 - **PDF Report Generation** ΓÇö Auto-generated professional PDF reports with lab branding
-- **AI-Powered Insights** ΓÇö Google Gemini integration for intelligent report summaries
+- **AI-Powered Insights** — Groq AI integration (Llama models) for intelligent report summaries and OCR
 
 ### ≡ƒæñ Patient Portal
 - **Report Access** ΓÇö Patients can view their diagnostic reports securely
@@ -71,7 +71,7 @@
 | **Backend**  | Node.js, Express 4                                           |
 | **Database** | Supabase (PostgreSQL) with Row Level Security                |
 | **Auth**     | JWT-based authentication with bcrypt password hashing        |
-| **AI**       | Google Gemini API for health insights                        |
+| **AI**       | Groq Cloud SDK (Llama models) for health insights & OCR      |
 | **PDF**      | Puppeteer for server-side PDF generation                     |
 | **SMS**      | Fast2SMS integration for OTP delivery                        |
 | **Deploy**   | Vercel (frontend) + Render (backend)                         |
@@ -140,7 +140,7 @@ labintel/
 - **Node.js** ΓëÑ 18.x
 - **npm** ΓëÑ 9.x
 - **Supabase** account (free tier works)
-- **Google Gemini API** key (optional, for AI features)
+- **Groq API** key (optional, for AI features)
 
 ### 1. Clone the Repository
 
@@ -203,7 +203,7 @@ Open [http://localhost:5173/lab/testlab/login](http://localhost:5173/lab/testlab
 | `SUPABASE_ANON_KEY`   | Supabase anon/public key              | Yes      |
 | `DATABASE_URL`        | Direct Postgres connection string     | Yes      |
 | `JWT_SECRET`          | Secret for JWT token signing          | Yes      |
-| `GEMINI_API_KEY`      | Google Gemini API key                 | No       |
+| `GROQ_API_KEY`        | Groq API key                          | No       |
 | `FAST2SMS_API_KEY`    | Fast2SMS API key for OTP              | No       |
 | `FRONTEND_URL`        | Frontend URL for CORS                 | Yes      |
 | `PDF_STORAGE_BUCKET`  | Supabase storage bucket name          | Yes      |

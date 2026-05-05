@@ -291,7 +291,7 @@ export default function Landing() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <div className="bg-white rounded-3xl shadow-2xl shadow-slate-200 border border-slate-100 p-8 max-w-sm mx-auto">
+            <div className="bg-white rounded-3xl shadow-2xl shadow-slate-200 border border-slate-100 p-8 max-w-sm">
               {/* Header */}
               <div className="flex flex-col items-center text-center mb-6">
                 <div className="w-14 h-14 rounded-2xl gradient-teal flex items-center justify-center shadow-xl shadow-teal-500/30 mb-3">

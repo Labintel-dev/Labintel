@@ -252,19 +252,19 @@ export const Navbar = ({ onLoginClick }) => {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100"
+      <nav className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-gray-100"
          style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
         {/* Logo */}
-        <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate('/')}>
-          <img src="/logo.jpg" alt="LabIntel Logo" className="w-9 h-9 rounded-xl object-contain" />
-          <span className="text-lg font-bold tracking-tight" style={{ color: P }}>
+        <div className="flex shrink-0 items-center gap-2.5 cursor-pointer" onClick={() => navigate('/')}>
+          <img src="/logo.jpg" alt="LabIntel Logo" className="h-9 w-9 rounded-xl object-contain" />
+          <span className="hidden text-lg font-bold tracking-tight sm:inline" style={{ color: P }}>
             LabIntel
           </span>
         </div>
 
         {/* Nav links */}
-        <div className="hidden md:flex items-center gap-2">
+        <div className="hidden min-w-0 items-center gap-2 lg:flex">
           {navLinks.map(link => (
             <a
               key={link.id}
@@ -286,7 +286,7 @@ export const Navbar = ({ onLoginClick }) => {
         </div>
 
         {/* Right side */}
-        <div className="flex items-center gap-5">
+        <div className="flex min-w-0 items-center justify-end gap-2 sm:gap-3">
           {user ? (
             <div className="relative">
               <button
@@ -322,17 +322,18 @@ export const Navbar = ({ onLoginClick }) => {
               </AnimatePresence>
             </div>
           ) : (
-            <div className="flex items-center gap-3">
+            <div className="flex min-w-0 items-center justify-end gap-2 sm:gap-3">
               <div className="relative" ref={uploadMenuRef}>
                 <motion.button
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
                   onClick={() => setIsUploadMenuOpen(!isUploadMenuOpen)}
                   disabled={isUploading}
-                  className="flex items-center gap-2 text-[#14453d] text-sm font-semibold px-5 py-2 rounded-full border border-[#14453d] transition-all bg-white hover:bg-[#f8faf9]"
+                  className="flex max-w-full items-center gap-1.5 whitespace-nowrap rounded-full border border-[#14453d] bg-white px-3 py-2 text-sm font-semibold text-[#14453d] transition-all hover:bg-[#f8faf9] sm:gap-2 sm:px-5"
                 >
                   {isUploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-                  {isUploading ? 'Analyzing...' : 'Upload Your Report'}
+                  <span className="hidden sm:inline">{isUploading ? 'Analyzing...' : 'Upload Your Report'}</span>
+                  <span className="sm:hidden">{isUploading ? 'Analyzing' : 'Upload'}</span>
                 </motion.button>
                 
                 <AnimatePresence>
@@ -380,7 +381,7 @@ export const Navbar = ({ onLoginClick }) => {
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={onLoginClick || (() => navigate('/select-role'))}
-                className="text-white text-sm font-semibold px-5 py-2 rounded-full transition-all"
+                className="whitespace-nowrap rounded-full px-3.5 py-2 text-sm font-semibold text-white transition-all sm:px-5"
                 style={{ background: P }}
               >
                 Login
@@ -606,7 +607,7 @@ const LandingPage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-white" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen w-full overflow-x-hidden bg-white" style={{ fontFamily: "'Inter', sans-serif" }}>
 
       {/* ── NAVBAR ─────────────────────────────────────────────────────── */}
       <Navbar />
@@ -632,7 +633,7 @@ const LandingPage = () => {
               {/* Headline */}
               <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
                          transition={{ duration: 0.65, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-                         className="text-4xl md:text-5xl font-extrabold leading-tight tracking-tight text-gray-900 mb-6">
+                         className="max-w-full text-3xl font-extrabold leading-tight tracking-tight text-gray-900 mb-6 sm:text-4xl md:text-5xl">
                 Precision Diagnostics,<br />
                 <span className="italic" style={{ color: P }}>Human Care.</span>
               </motion.h1>
@@ -649,7 +650,7 @@ const LandingPage = () => {
               {/* CTAs */}
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.6, delay: 0.32 }}
-                          className="flex items-center gap-3 flex-wrap">
+                          className="flex max-w-full flex-wrap items-center gap-3">
                 <motion.button
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.97 }}
@@ -685,7 +686,7 @@ const LandingPage = () => {
               {/* Trust badges */}
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                           transition={{ delay: 0.5 }}
-                          className="flex items-center gap-6 mt-10 flex-wrap">
+                           className="flex max-w-full flex-wrap items-center gap-x-6 gap-y-3 mt-10">
                 {[
                   { icon: Clock, label: 'Results in 24hrs' },
                   { icon: ShieldCheck, label: 'ISO 15189 Certified' },
