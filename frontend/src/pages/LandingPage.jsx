@@ -8,6 +8,7 @@ import {
   Award, TestTube, Plus, ChevronDown, Settings, LogOut, Camera, Image as ImageIcon, Loader2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useAuthStore } from '../store/authStore.js';
 import apiClient from '../services/apiClient';
 import SmartReportViewer from '../components/SmartReportViewer';
 
@@ -108,7 +109,9 @@ const LandingProfileDropdown = ({ user, onClose, onUpdateProfile, onMyReports, o
 /* ── Navbar (shared with RoleSelectPage) ─────────────────────────────────── */
 export const Navbar = ({ onLoginClick }) => {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user: supabaseUser, signOut: supabaseSignOut } = useAuth();
+  const authStoreUser = useAuthStore((s) => s.user);
+  const clearAuth = useAuthStore((s) => s.clearAuth);
   const [activeSection, setActiveSection] = useState("");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isUploadMenuOpen, setIsUploadMenuOpen] = useState(false);
@@ -123,12 +126,26 @@ export const Navbar = ({ onLoginClick }) => {
   const cameraInputRef = useRef(null);
   const uploadMenuRef = useRef(null);
 
+  let user = null;
+  if (authStoreUser) {
+    user = {
+      id: authStoreUser.id,
+      name: authStoreUser.full_name || authStoreUser.email?.split('@')[0] || authStoreUser.phone || 'User',
+      email: authStoreUser.email || authStoreUser.phone || '',
+      role: authStoreUser.role || 'patient',
+      avatar_url: authStoreUser.avatar_url || null,
+      avatar: (authStoreUser.full_name || authStoreUser.email || 'U').charAt(0).toUpperCase(),
+    };
+  } else if (supabaseUser) {
+    user = supabaseUser;
+  }
+
   useEffect(() => {
     let timeoutIds = [];
     if (isUploading) {
       setScanningLogs([]);
       const logs = [
-        "> Initializing Gemini AI Vision Engine...",
+        "> Initializing Advanced AI Vision Engine...",
         "> Scanning document structure...",
         "> Identifying patient demographics...",
         "> Extracting lab parameters...",
@@ -246,7 +263,10 @@ export const Navbar = ({ onLoginClick }) => {
 
   const handleLogout = async () => {
     setIsProfileOpen(false);
-    await signOut();
+    clearAuth();
+    if (supabaseUser) {
+      await supabaseSignOut();
+    }
     navigate('/');
   };
 

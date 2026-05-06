@@ -1,11 +1,9 @@
 'use strict';
-const { analyzeReportImage } = require('../services/gemini');
+const { analyzeReportImage } = require('../services/aiService');
 const logger = require('../logger');
 
 /**
  * POST /api/v1/ocr/analyze-report
- * Analyzes a medical report image using Gemini Vision
- * 
  * Request body:
  * {
  *   image: base64-encoded image string,

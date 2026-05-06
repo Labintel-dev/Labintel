@@ -363,7 +363,7 @@ const MedicalReportView = ({ data, onBack }) => {
                 <span className="text-sm font-black text-gray-300 tracking-tight">LABINTEL AI ENGINE v1.2</span>
              </div>
              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-center max-w-lg">
-               This report was generated using Gemini 1.5 Clinical NLP model. Data processing is encrypted and adheres to digital privacy standards.
+               This report was generated using Llama 4 Clinical NLP model. Data processing is encrypted and adheres to digital privacy standards.
              </p>
           </footer>
         </main>

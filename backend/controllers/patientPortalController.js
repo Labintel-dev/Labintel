@@ -3,6 +3,7 @@ const supabase = require('../db/supabase');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { sendOTP } = require('../services/sms');
+const { generateDetailedInsight } = require('../services/aiService');
 const logger = require('../logger');
 
 async function getPatientLabMap(patient_id) {
@@ -34,14 +35,13 @@ async function getMyReports(req, res) {
     const { data, error } = await supabase
       .from('reports')
       .select(`
-        id, lab_id, reported_at, status, pdf_url, share_token, created_at,
+        id, lab_id, reported_at, collected_at, status, pdf_url, share_token, created_at,
         labs!reports_lab_id_fkey ( name, logo_url, primary_color ),
         test_panels ( name, short_code )
       `)
       .eq('patient_id', patient_id)
-      .eq('status', 'released')
       .in('lab_id', labIds)
-      .order('reported_at', { ascending: false });
+      .order('created_at', { ascending: false });
 
     if (error) return res.status(500).json({ error: error.message });
 
@@ -75,7 +75,6 @@ async function getMyReport(req, res) {
     `)
     .eq('id', report_id)
     .eq('patient_id', patient_id)
-    .eq('status', 'released')
     .single();
 
   if (error || !report) {
@@ -99,6 +98,44 @@ async function getMyReport(req, res) {
     report.test_values.sort((a, b) =>
       (a.test_parameters?.sort_order || 0) - (b.test_parameters?.sort_order || 0)
     );
+  }
+
+  try {
+    const patient = report.patients || {};
+    const dob = patient.date_of_birth ? new Date(patient.date_of_birth) : null;
+    const age = dob
+      ? Math.floor((Date.now() - dob.getTime()) / (365.25 * 24 * 3600 * 1000))
+      : 'Unknown';
+
+    const insightInput = (report.test_values || []).map((tv) => {
+      const p = tv.test_parameters || {};
+      const isFemale = patient.gender === 'female';
+      return {
+        name: p.name || 'Unknown',
+        value: tv.value,
+        unit: p.unit || '',
+        ref_min: isFemale ? p.ref_min_female : p.ref_min_male,
+        ref_max: isFemale ? p.ref_max_female : p.ref_max_male,
+        flag: tv.flag || 'normal',
+      };
+    });
+
+    const existingInsight = Array.isArray(report.report_insights)
+      ? (report.report_insights[0] || {})
+      : (report.report_insights || {});
+
+    report.ai_analysis = await generateDetailedInsight(
+      { age, gender: patient.gender || 'unknown', full_name: patient.full_name || '' },
+      { name: report.test_panels?.name || 'Diagnostic Panel' },
+      insightInput,
+      {
+        summary: existingInsight.summary,
+        findings: existingInsight.findings,
+        recommendation: existingInsight.recommendation,
+      }
+    );
+  } catch (err) {
+    logger.error(`Detailed AI analysis failed for report ${report_id}: ${err.message}`);
   }
 
   return res.json({ data: report });

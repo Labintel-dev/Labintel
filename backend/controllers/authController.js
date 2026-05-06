@@ -394,7 +394,7 @@ async function getProfile(req, res) {
 
 async function upsertProfile(req, res) {
   const patient_id = req.user.patient_id;
-  const { full_name, phone, dob, email } = req.body;
+  const { full_name, phone, dob, email, gender } = req.body;
   
   // Use data from JWT if not in body
   const finalPhone = phone || req.user.phone;
@@ -407,7 +407,8 @@ async function upsertProfile(req, res) {
       full_name,
       phone: finalPhone,
       date_of_birth: dob || null,
-      email: finalEmail
+      email: finalEmail,
+      gender: gender || null
     }, { onConflict: 'id' })
     .select()
     .single();

@@ -1,7 +1,7 @@
 'use strict';
 const supabase = require('../db/supabase');
 const { computeFlag }            = require('../services/flagService');
-const { generateInsight }        = require('../services/gemini');
+const aiService = require('../services/aiService');
 const { generateAndUploadPDF }   = require('../services/pdf');
 const { getSignedUrl }           = require('../services/storage');
 const { sendReportReady }        = require('../services/sms');
@@ -155,7 +155,7 @@ async function createReport(req, res) {
         };
       });
 
-      const insight = await generateInsight(
+      const insight = await aiService.generateInsight(
         { age, gender: patient.gender || 'unknown' },
         panel,
         insightInput
@@ -166,7 +166,7 @@ async function createReport(req, res) {
         summary:        insight.summary,
         findings:       insight.findings,
         recommendation: insight.recommendation,
-        model_used:     'gemini-1.5-flash',
+        model_used:     'llama-3.3-70b',
       }, { onConflict: 'report_id' });
 
       logger.info(`AI insight saved for report ${report.id}`);
@@ -303,7 +303,7 @@ async function updateStatus(req, res) {
   }
 }
 
-// ─── Manually retrigger Gemini insight ────────────────────────────────────
+// ─── Manually retrigger AI insight ────────────────────────────────────────
 async function regenerateInsights(req, res) {
   const lab_id    = req.user.lab_id;
   const report_id = req.params.id;
@@ -349,7 +349,7 @@ async function regenerateInsights(req, res) {
         flag: tv.flag,
       }));
 
-      const insight = await generateInsight(
+      const insight = await aiService.generateInsight(
         { age, gender: patient?.gender || 'unknown' },
         report.test_panels,
         insightInput
@@ -360,7 +360,7 @@ async function regenerateInsights(req, res) {
         summary:        insight.summary,
         findings:       insight.findings,
         recommendation: insight.recommendation,
-        model_used:     'gemini-1.5-flash',
+        model_used:     'llama-3.3-70b',
       }, { onConflict: 'report_id' });
 
       logger.info(`Insight regenerated for report ${report_id}`);

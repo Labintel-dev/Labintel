@@ -171,7 +171,7 @@ export default function PatientReportView() {
             <div className="flex items-center gap-2 mb-3">
               <Brain size={18} className="text-teal-600" />
               <h2 className="text-sm font-bold text-teal-800 uppercase tracking-wide">AI Health Summary</h2>
-              <span className="text-xs text-teal-500 ml-auto">Gemini 1.5 Flash · Not a medical diagnosis</span>
+              <span className="text-xs text-teal-500 ml-auto">Llama 4 · Not a medical diagnosis</span>
             </div>
             <p className="text-sm text-teal-900 mb-3">{insight.summary}</p>
             {insight.findings?.length > 0 && (

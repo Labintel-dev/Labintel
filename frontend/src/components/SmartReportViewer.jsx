@@ -258,7 +258,7 @@ const SmartReportViewer = ({ isOpen, onClose, originalFileUrl, originalFileType,
                     )}
                   </div>
                   <div className="mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-                     <p className="text-[10px] text-blue-200 font-medium uppercase tracking-widest">Powered by Gemini 1.5 Flash AI</p>
+                     <p className="text-[10px] text-blue-200 font-medium uppercase tracking-widest">Powered by Advanced Clinical AI</p>
                      <p className="text-[10px] bg-amber-400 text-amber-900 px-3 py-1 rounded-full font-bold">NOT A DIAGNOSIS</p>
                   </div>
                 </div>

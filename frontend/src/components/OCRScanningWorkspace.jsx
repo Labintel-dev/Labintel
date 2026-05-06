@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  Camera, Image as ImageIcon, FileText, 
+import {
+  Camera, Image as ImageIcon, FileText,
   Sparkles, X, Loader2, CheckCircle2, AlertCircle,
-  Plus, ArrowRight, Download, Share2, Printer, 
+  Plus, ArrowRight, Download, Share2, Printer,
   Languages, Volume2, Save, MoreHorizontal,
   FileDown, Sunrise, Sun, Moon, Heart, Mail, MapPin, Phone, Stethoscope
 } from 'lucide-react';
@@ -57,8 +57,8 @@ const normalizeAnalysis = (payload = {}) => {
       name: patientInfo.name || 'Valued Patient',
       age: patientInfo.age || '--',
       gender: patientInfo.gender || '--',
-      date: patientInfo.date || new Date().toLocaleDateString(),
-      doctor: patientInfo.doctor || '',
+      date: patientInfo.date || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '/'),
+      doctor: patientInfo.doctor || 'Certified Physician',
     },
     results: {
       ...results,
@@ -147,169 +147,243 @@ const PrintReport = ({ result }) => {
   const isPrescription = result.type === 'Prescription';
 
   return (
-    <div className="bg-white text-black p-8 font-serif leading-relaxed">
-      {/* 1. Branding Header */}
-      <div className="flex justify-between items-start mb-8">
-        <div>
-          <h1 className="text-5xl font-black tracking-tighter mb-2">Labintel</h1>
-          <p className="text-sm font-bold text-gray-600">contact.labintel@gmail.com</p>
+    <div className="bg-white text-black p-4 sm:p-10 font-serif leading-tight max-w-[210mm] mx-auto height-auto min-h-0 flex flex-col overflow-visible print-report-container">
+      <style>{`
+        @media print {
+          @page { size: A4; margin: 0mm; }
+          #print-root .print-report-container {
+            padding: 12mm 18mm !important;
+            margin: 0 !important;
+            width: 100% !important;
+            max-width: none !important;
+            background: white !important;
+            display: flex !important;
+            flex-direction: column !important;
+          }
+          #print-root .print-report-container * {
+            font-size: 8.5pt !important;
+            line-height: 1.25 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color: inherit !important;
+          }
+          #print-root .compact-header {
+            border: 1.5pt solid #14453d !important;
+            border-radius: 12pt !important;
+            padding: 15pt !important;
+            margin-bottom: 20pt !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+          }
+          #print-root .compact-header h1 { font-size: 24pt !important; color: #14453d !important; }
+          #print-root .logo-box {
+            width: 60pt !important;
+            height: 60pt !important;
+            border: 1pt solid #14453d !important;
+            border-radius: 8pt !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            margin-right: 15pt !important;
+            overflow: hidden !important;
+          }
+          #print-root .logo-box img {
+            max-width: 90% !important;
+            max-height: 90% !important;
+          }
+          #print-root .parameter-card {
+            break-inside: avoid !important;
+            margin-bottom: 10pt !important;
+            border: 0.5pt solid #e2e8f0 !important;
+            border-radius: 10pt !important;
+            padding: 10pt !important;
+          }
+          #print-root .text-highlight { color: #14453d !important; font-weight: 800 !important; }
+        }
+      `}</style>
+
+      {/* 1. Institutional Header - High Contrast & Reliable Logo */}
+      <div className="compact-header">
+        <div className="flex items-center">
+          <div className="logo-box shadow-sm">
+            <img src="/logo.jpg" alt="Company Logo" className="object-contain" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-black tracking-tighter uppercase leading-none mb-1 text-highlight">Labintel</h1>
+            <p className="text-[8px] font-black uppercase text-emerald-600 tracking-[0.3em]">Precision Diagnostics & AI Analysis</p>
+          </div>
         </div>
         <div className="text-right">
-           <img src="/logo.jpg" alt="Logo" className="w-16 h-16 inline-block object-contain" />
-        </div>
-      </div>
-
-      {/* 2. Horizontal Line */}
-      <div className="h-0.5 bg-black w-full mb-6" />
-
-      {/* 3. Entity (Lab or Clinic) Layer */}
-      <div className="mb-6">
-        <h2 className="text-xl font-black uppercase tracking-widest mb-1">{result.labDetails?.name || (isPrescription ? 'Medical Prescription' : 'Diagnostic Report')}</h2>
-        <div className="flex flex-col gap-0.5">
-          {result.labDetails?.address && (
-            <p className="text-xs text-gray-500 font-bold flex items-center gap-2 uppercase tracking-wide">
-              <MapPin size={10} /> {result.labDetails.address}
-            </p>
-          )}
-          {result.labDetails?.contact && (
-            <p className="text-xs text-gray-500 font-bold flex items-center gap-2 uppercase tracking-wide">
-              <Phone size={10} /> {result.labDetails.contact}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* 4. Patient Layer */}
-      <div className="grid grid-cols-2 gap-10 mb-8 pb-6 border-b-2 border-dotted border-gray-200">
-        <div className="space-y-4">
-           <div>
-             <p className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] mb-1.5">Full Patient Name</p>
-             <p className="text-xl font-black">{result.patientInfo?.name}</p>
-           </div>
-           <div>
-             <p className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] mb-1.5">Demographics</p>
-             <p className="text-sm font-bold text-gray-700">{result.patientInfo?.age} Years / {result.patientInfo?.gender}</p>
-           </div>
-        </div>
-        <div className="space-y-4 text-right">
-           <div>
-             <p className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] mb-1.5">Report Date</p>
-             <p className="text-base font-black">{result.patientInfo?.date}</p>
-           </div>
-           <div>
-             <p className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] mb-1.5">Analysis ID</p>
-             <p className="text-xs font-mono font-bold text-gray-400">LAB-{Math.random().toString(36).substr(2, 9).toUpperCase()}</p>
+           <p className="text-[14pt] font-black uppercase tracking-tight text-highlight leading-none mb-2">
+             {result.labDetails?.name || 'Sunrise Diagnostic Centre'}
+           </p>
+           <div className="text-[7.5px] text-gray-500 font-bold uppercase tracking-widest leading-relaxed">
+             <p className="border-b border-gray-100 pb-1 mb-1">{result.labDetails?.address || 'AS 100, BLOCK-R, R.M ROAD, KOL-157'}</p>
+             <p className="text-highlight">Contact: {result.labDetails?.contact || '+91 00000 00000'}</p>
+             <p className="mt-1 text-[6px] text-gray-400">Credentialed Clinical Asset Registry</p>
            </div>
         </div>
       </div>
 
-      {/* 5. Clinical Content Layer */}
-      <div className="space-y-8">
+      {/* 2. Patient Info Grid - COMPACT */}
+      <div className="patient-grid">
+        <div>
+          <p className="text-[7px] font-black uppercase text-gray-400 tracking-widest mb-1">Patient Name</p>
+          <p className="text-lg font-black text-gray-900">{result.patientInfo?.name}</p>
+        </div>
+        <div className="text-center">
+          <p className="text-[7px] font-black uppercase text-gray-400 tracking-widest mb-1">Age / Gender</p>
+          <p className="text-base font-black text-gray-800 uppercase tracking-tight">{result.patientInfo?.age || '--'} / {result.patientInfo?.gender || '--'}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-[7px] font-black uppercase text-gray-400 tracking-widest mb-1">Report Date</p>
+          <p className="text-lg font-black text-[#2f5fcf]">{result.patientInfo?.date}</p>
+        </div>
+      </div>
+
+      {/* 4. Clinical Content */}
+      <div className="space-y-4">
         {isLabReport && (
           <>
-            <div className="flex items-center gap-4 mb-6">
-              <h3 className="text-xs font-black uppercase tracking-[0.3em] bg-black text-white px-4 py-2">Clinical Biomarker Intelligence</h3>
-              <div className="flex-1 h-px bg-gray-200" />
+            <div className="flex items-center gap-3 mb-3">
+              <div className="bg-highlight px-2 py-0.5 rounded text-[7px] font-black uppercase tracking-widest">Diagnostic Matrix</div>
+              <div className="flex-1 h-px bg-gray-100" />
             </div>
-            
-            {parameters.map((p, i) => {
-              const status = normalizeStatus(p.status);
-              const isAbnormal = status === 'Abnormal';
-              return (
-                <div key={i} className="space-y-4 break-inside-avoid border-b border-gray-100 pb-6 last:border-0">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="text-lg font-black tracking-tight flex items-center gap-3">
-                        {p.name}
-                        {isAbnormal && <AlertCircle size={18} className="text-black" />}
-                      </h4>
-                      <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">
-                        Observed: {p.value} {p.unit} <span className="mx-2 opacity-30">|</span> Ref: {p.range}
-                      </p>
+
+            <div className="space-y-2">
+              {parameters.map((p, i) => {
+                const status = normalizeStatus(p.status);
+                const isAbnormal = status === 'Abnormal';
+                return (
+                  <div key={i} className="parameter-card">
+                    <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-50">
+                      <div>
+                        <h4 className="text-[10pt] font-black text-gray-800 leading-none mb-1">{p.name}</h4>
+                        <div className="flex items-center gap-3 text-[7.5pt] font-bold uppercase text-gray-400">
+                          <span>Observed: <span className="text-highlight">{p.value} {p.unit}</span></span>
+                          <span>Ref: <span>{p.range}</span></span>
+                        </div>
+                      </div>
+                      <div className={`px-2 py-0.5 rounded text-[7px] font-black uppercase border ${isAbnormal ? 'bg-rose-50 text-rose-600 border-rose-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
+                        {isAbnormal ? `⚠️ ${p.status}` : 'Normal'}
+                      </div>
                     </div>
-                    <div className={`px-4 py-2 border-2 border-black text-xs font-black uppercase tracking-widest ${isAbnormal ? 'bg-black text-white' : 'bg-white text-black'}`}>
-                      {p.status}
+
+                    <div className="parameter-grid">
+                      <div className="space-y-2">
+                        <div>
+                          <p className="text-[6px] font-black uppercase text-gray-300 tracking-widest mb-1">Insight</p>
+                          <p className="text-[8.5pt] font-medium leading-tight text-gray-500 italic">"{p.insight}"</p>
+                        </div>
+                        {p.creativeSolution && (
+                          <div>
+                            <p className="text-[6px] font-black uppercase text-gray-300 tracking-widest mb-1">Protocol</p>
+                            <p className="text-[8.5pt] font-black leading-tight text-highlight">{p.creativeSolution}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="bg-gray-50 rounded-lg p-2.5 space-y-2">
+                        {(p.suggestedMedicine && p.suggestedMedicine !== "None Required" && p.suggestedMedicine !== "NONE") && (
+                          <div>
+                            <p className="text-[6px] font-black uppercase text-gray-400 mb-0.5">Therapeutics</p>
+                            <p className="text-[8pt] font-black text-gray-600 uppercase leading-none">{p.suggestedMedicine}</p>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2">
+                           <div className="w-6 h-6 rounded bg-white border border-gray-100 flex items-center justify-center shrink-0">
+                             <div className="w-3 h-3 rounded-full bg-highlight opacity-20" />
+                           </div>
+                           <div>
+                             <p className="text-[6px] font-black uppercase text-gray-400 leading-none">Referral</p>
+                             <p className="text-[8pt] font-black uppercase text-highlight leading-none">{p.suggestedSpecialist || "Physician"}</p>
+                           </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                    <div className="space-y-5">
-                      <div className="pl-4 border-l-2 border-gray-100">
-                         <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest mb-1.5">Simplification</p>
-                         <p className="text-sm leading-relaxed text-gray-700 italic">"{p.insight}"</p>
-                      </div>
-                      <div className="pl-4 border-l-2 border-black">
-                         <p className="text-[9px] font-black uppercase text-black tracking-widest mb-1.5">Creative Solution</p>
-                         <p className="text-sm font-bold leading-relaxed">{p.creativeSolution || "Maintain balanced nutrition and regular movement."}</p>
-                      </div>
-                    </div>
-                    <div className="space-y-5">
-                      <div className="p-5 bg-gray-50 border border-gray-100 rounded-xl">
-                         <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest mb-2">Suggestive Medicine Ref</p>
-                         <p className="text-xs font-bold leading-relaxed text-gray-600">{p.suggestedMedicine || "Educational medication groups info provided upon consult."}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </>
         )}
 
         {isPrescription && (
-          <>
-            <div className="flex items-center gap-4 mb-6">
-              <h3 className="text-xs font-black uppercase tracking-[0.3em] bg-black text-white px-4 py-2">Medication Intelligence Schedule</h3>
-              <div className="flex-1 h-px bg-gray-200" />
-            </div>
-            
-            <div className="border border-black rounded-xl overflow-hidden">
-               <table className="w-full text-left">
-                  <thead className="bg-gray-100 text-[10px] font-black uppercase tracking-widest">
-                    <tr>
-                      <th className="p-4 border-r border-gray-200">Medicine Name</th>
-                      <th className="p-4 border-r border-gray-200">Dosage</th>
-                      <th className="p-4 border-r border-gray-200">Schedule</th>
-                      <th className="p-4">Purpose</th>
+          <div className="border border-black rounded-lg overflow-hidden mt-4">
+             <table className="w-full text-left">
+                <thead className="bg-gray-100 text-[6px] font-black uppercase">
+                  <tr>
+                    <th className="p-2 border-r border-gray-200">Medicine</th>
+                    <th className="p-2 border-r border-gray-200">Dosage</th>
+                    <th className="p-2 border-r border-gray-200">Schedule</th>
+                    <th className="p-2">Purpose</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 text-[7px] font-bold">
+                  {medicines.map((m, i) => (
+                    <tr key={i}>
+                      <td className="p-2 border-r border-gray-200 font-black">{m.name}</td>
+                      <td className="p-2 border-r border-gray-200">{m.dosage}</td>
+                      <td className="p-2 border-r border-gray-200 flex gap-0.5">
+                        {['Morning', 'Afternoon', 'Night'].map(time => (
+                          <span key={time} className={`px-1 py-0.5 rounded border ${m.frequency?.includes(time) ? 'bg-black text-white' : 'text-gray-300'}`}>
+                            {time[0]}
+                          </span>
+                        ))}
+                      </td>
+                      <td className="p-2 text-gray-500 italic">{m.purpose}</td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 text-xs font-bold">
-                    {medicines.map((m, i) => (
-                      <tr key={i}>
-                        <td className="p-4 border-r border-gray-200">{m.name}</td>
-                        <td className="p-4 border-r border-gray-200">{m.dosage}</td>
-                        <td className="p-4 border-r border-gray-200">
-                          <div className="flex gap-1">
-                            {['Morning', 'Afternoon', 'Night'].map(time => (
-                              <span key={time} className={`px-1.5 py-0.5 rounded border ${m.frequency?.includes(time) ? 'bg-black text-white border-black' : 'text-gray-300 border-gray-200'}`}>
-                                {time[0]}
-                              </span>
-                            ))}
-                          </div>
-                        </td>
-                        <td className="p-4">{m.purpose}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-               </table>
-            </div>
-          </>
+                  ))}
+                </tbody>
+             </table>
+          </div>
         )}
       </div>
 
-      {/* Summary Recap */}
-      <div className="mt-10 p-6 border-2 border-black rounded-2xl break-inside-avoid">
-         <p className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] mb-4">Clinical Executive Summary</p>
-         <p className="text-base font-bold leading-relaxed">{result.summary}</p>
+      {/* 5. Abnormal Marker Guidance - Detailed Clinical Support */}
+      {parameters.filter(p => normalizeStatus(p.status) === 'Abnormal').length > 0 && (
+        <div className="mt-4 p-5 rounded-2xl border-2 border-rose-100 bg-rose-50/20 no-print-break">
+          <h3 className="text-[9px] font-black uppercase tracking-[0.3em] text-rose-700 mb-4 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-rose-500" /> Abnormal Marker Guidance & Clinical Protocol
+          </h3>
+          <div className="space-y-3">
+            {parameters.filter(p => normalizeStatus(p.status) === 'Abnormal').map((p, i) => (
+              <div key={i} className="p-4 bg-white rounded-xl border border-rose-100 shadow-sm">
+                <p className="text-[12pt] font-black text-rose-800 mb-2 leading-none">{p.name}</p>
+                <div className="grid grid-cols-1 gap-2 text-[9px] font-bold text-gray-600 uppercase tracking-tight">
+                  <p><span className="text-rose-600 font-black">Explanation:</span> {p.insight}</p>
+                  <p><span className="text-rose-600 font-black">Corrective Action:</span> {p.creativeSolution || "Professional clinical review required."}</p>
+                  <p><span className="text-rose-600 font-black">Medicine Guidance:</span> {p.suggestedMedicine || "Medication planning by physician only."}</p>
+                  <p><span className="text-rose-600 font-black">Clinical Referral:</span> Consult a {p.suggestedSpecialist || "General Physician"} for trend analysis.</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 6. Executive Summary */}
+      <div className="mt-4 p-5 rounded-xl bg-[#10261f] text-white no-print-break">
+         <p className="text-[7px] font-black uppercase text-white/40 tracking-[0.2em] mb-2">Clinical Executive Summary</p>
+         <p className="text-[10px] font-medium leading-relaxed">{result.summary}</p>
       </div>
 
-      {/* Footer Disclaimer */}
-      <div className="mt-auto pt-16 pb-6 text-center">
-        <div className="w-20 h-0.5 bg-gray-200 mx-auto mb-6" />
-        <p className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-300 max-w-2xl mx-auto leading-loose">
-          VALIDATED THROUGH LABINTEL CLINICAL INTELLIGENCE PROTOCOL. 
-          THIS IS AN EDUCATIONAL SYNTHESIS, NOT A REPLACEMENT FOR PROFESSIONAL MEDICAL ADVICE.
-          © 2026 LabIntel Digital Health Solutions.
-        </p>
+      {/* 6. Footer Disclaimer */}
+      <div className="mt-auto pt-8 pb-4 border-t border-gray-100">
+        <div className="bg-rose-50/50 p-4 rounded-xl border border-rose-100 text-center mb-6">
+           <p className="text-[8px] font-black text-rose-950 uppercase tracking-tight mb-1">
+             ⚠️ AI-ASSISTED ANALYSIS - DOCTOR VALIDATION REQUIRED
+           </p>
+           <p className="text-[7px] font-bold text-rose-800/60 leading-relaxed uppercase tracking-tighter">
+             This report is synthesized using neural correlation and is NOT a final medical diagnosis. All findings, medicines, and suggestions MUST be reviewed and confirmed by a qualified physician.
+           </p>
+        </div>
+        <div className="flex justify-between items-end text-[7px] font-black uppercase tracking-[0.2em] text-gray-300">
+          <span>© 2026 LABINTEL DIGITAL HEALTH</span>
+          <span>CLINICAL ASSET ID: {result.id?.substring(0,12).toUpperCase() || 'AI-X-82941'}</span>
+          <span>VERIFY THROUGH PROFESSIONAL CONSULT</span>
+        </div>
       </div>
     </div>
   );
@@ -454,7 +528,7 @@ const RangeIndicator = ({ value, low, high, status, unit }) => {
   const numericValue = parseFloat(value);
   const nLow = parseFloat(low);
   const nHigh = parseFloat(high);
-  
+
   let percentage = 0;
   if (!isNaN(numericValue) && !isNaN(nLow) && !isNaN(nHigh)) {
     const range = nHigh - nLow || 1;
@@ -483,9 +557,9 @@ const RangeIndicator = ({ value, low, high, status, unit }) => {
       <div className="absolute top-[3.5rem] right-[25%] translate-x-1/2 text-[10px] font-black text-gray-400 bg-white px-1">
         {nHigh || '--'}
       </div>
-      
+
       {/* Marker Tooltip/Box */}
-      <motion.div 
+      <motion.div
         initial={{ left: '50%' }}
         animate={{ left: `${percentage}%` }}
         className="absolute top-2 -translate-x-1/2 flex flex-col items-center z-10"
@@ -526,12 +600,22 @@ const OCRScanningWorkspace = ({ user }) => {
   const [demoSplit, setDemoSplit] = useState(44);
   const [selectedMarkerIndex, setSelectedMarkerIndex] = useState(0);
   const [isPrinting, setIsPrinting] = useState(false);
-  
+  const [sourcePdfObjectUrl, setSourcePdfObjectUrl] = useState(null);
+
   const docInputRef = useRef(null);
   const photoInputRef = useRef(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
-  
+
+  const replaceSourcePdfUrl = (nextUrl) => {
+    setSourcePdfObjectUrl((previousUrl) => {
+      if (previousUrl) {
+        URL.revokeObjectURL(previousUrl);
+      }
+      return nextUrl;
+    });
+  };
+
   // PRIMARY FIX: Reset marker selection when a new report is generated/loaded
   useEffect(() => {
     if (result) {
@@ -549,8 +633,8 @@ const OCRScanningWorkspace = ({ user }) => {
     setIsCameraOpen(true);
     setError(null);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } } 
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
       });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -577,7 +661,7 @@ const OCRScanningWorkspace = ({ user }) => {
       canvas.height = video.videoHeight;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      
+
       const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
       setCapturedImage(dataUrl);
       setIsReviewing(true);
@@ -597,52 +681,148 @@ const OCRScanningWorkspace = ({ user }) => {
       });
   };
 
+  const compressImage = (base64Str) => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = base64Str;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_DIM = 2400; // Increased for better clarity on large/dense reports
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_DIM) {
+            height *= MAX_DIM / width;
+            width = MAX_DIM;
+          }
+        } else {
+          if (height > MAX_DIM) {
+            width *= MAX_DIM / height;
+            height = MAX_DIM;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
+      };
+      img.onerror = () => resolve(base64Str); // Fallback
+    });
+  };
+
   const handleFile = (selectedFile) => {
     if (!selectedFile) return;
     setFile(selectedFile);
-    
+
     const reader = new FileReader();
     reader.onload = (e) => setImagePreview(e.target.result);
     reader.readAsDataURL(selectedFile);
+  };
+
+  const convertPdfToImage = async (file) => {
+    return new Promise((resolve, reject) => {
+      // Use dynamic loading for PDF.js to avoid dependency issues
+      if (window.pdfjsLib) {
+        processPdf(window.pdfjsLib, resolve, reject);
+      } else {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js';
+        script.onload = () => {
+          const pdfjsLib = window['pdfjs-dist/build/pdf'];
+          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+          processPdf(pdfjsLib, resolve, reject);
+        };
+        script.onerror = () => reject(new Error('Failed to load PDF processing library'));
+        document.body.appendChild(script);
+      }
+
+      async function processPdf(pdfjsLib, resolve, reject) {
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+          const pdf = await loadingTask.promise;
+          const page = await pdf.getPage(1); // Process first page
+
+          const scale = 2.0; // Higher scale for better OCR accuracy
+          const viewport = page.getViewport({ scale });
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+
+          canvas.height = viewport.height;
+          canvas.width = viewport.width;
+
+          await page.render({ canvasContext: context, viewport }).promise;
+          resolve(canvas.toDataURL('image/jpeg', 0.85));
+        } catch (err) {
+          reject(err);
+        }
+      }
+    });
   };
 
   const startProcessing = async (selectedFile) => {
     setStep('processing');
     setSubStep(0);
     setError(null);
+    let localSourcePdfUrl = null;
+    const isPdfFile = selectedFile.type === 'application/pdf' || selectedFile.name?.toLowerCase().endsWith('.pdf');
 
     try {
       // Convert file to base64
-      const reader = new FileReader();
-      const base64Promise = new Promise((resolve) => {
-        reader.onload = (e) => resolve(e.target.result);
-        reader.readAsDataURL(selectedFile);
-      });
-      const base64 = await base64Promise;
+      let base64;
+      if (isPdfFile) {
+        setSubStep(0); // Converting PDF...
+        base64 = await convertPdfToImage(selectedFile);
+        localSourcePdfUrl = URL.createObjectURL(selectedFile);
+      } else {
+        const reader = new FileReader();
+        const base64Promise = new Promise((resolve) => {
+          reader.onload = (e) => resolve(e.target.result);
+          reader.readAsDataURL(selectedFile);
+        });
+        base64 = await base64Promise;
+      }
+
+      // Image Compression for Groq (Max 4MB limit)
+      // Keep PDF-derived image quality as-is for better extraction fidelity.
+      if (!isPdfFile) {
+        base64 = await compressImage(base64);
+      }
 
       // SINGLE STEP MULTIMODAL ANALYSIS (Top-Notch accuracy)
       setSubStep(0); // Analyzing
-      const response = await apiClient.post('/ocr/analyze-report', { 
-        image: base64, 
-        mimeType: selectedFile.type,
+      const response = await apiClient.post('/ocr/analyze-report', {
+        image: base64,
+        mimeType: 'image/jpeg', // We converted/compressed to JPEG
         patientId: user?.id
       });
-      
+
       setSubStep(1); // Structuring
       await new Promise(r => setTimeout(r, 600));
       setSubStep(2); // Finalizing
       await new Promise(r => setTimeout(r, 600));
-      
+
       const isImageFile = (selectedFile.type || '').startsWith('image/');
       const originalImage = isImageFile ? base64 : null;
       const normalized = normalizeAnalysis(response.data);
-      setResult({ ...normalized, originalImage, sourceFileName: selectedFile.name || 'Uploaded file' });
+      replaceSourcePdfUrl(localSourcePdfUrl);
+      setResult({
+        ...normalized,
+        originalImage,
+        sourceFileName: selectedFile.name || 'Uploaded file',
+        sourcePdfUrl: localSourcePdfUrl,
+        sourceIsPdf: isPdfFile,
+      });
       setShowComparison(Boolean(originalImage));
       setStep('results');
     } catch (err) {
       console.error('Pipeline Error:', err);
       let errMsg = 'Intelligence pipeline failed. Please check the document clarity.';
-      
+
       if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
         errMsg = 'The AI is taking longer than usual due to high demand. Please try again in 30 seconds.';
       } else if (err.response?.status === 503) {
@@ -650,7 +830,11 @@ const OCRScanningWorkspace = ({ user }) => {
       } else {
         errMsg = err.response?.data?.details || err.response?.data?.error || errMsg;
       }
-      
+
+      if (localSourcePdfUrl) {
+        URL.revokeObjectURL(localSourcePdfUrl);
+      }
+
       setError(errMsg);
       setStep('upload');
     }
@@ -692,11 +876,33 @@ const OCRScanningWorkspace = ({ user }) => {
   };
 
   const handlePrint = () => {
+    if (result?.sourceIsPdf && result?.sourcePdfUrl) {
+      const win = window.open(result.sourcePdfUrl, '_blank', 'noopener,noreferrer');
+      if (!win) {
+        alert('Please allow popups to print your original PDF report.');
+      }
+      return;
+    }
+
     setIsPrinting(true);
     setTimeout(() => {
       window.print();
       setIsPrinting(false);
     }, 500);
+  };
+
+  const handleDownloadPdf = () => {
+    if (result?.sourceIsPdf && result?.sourcePdfUrl) {
+      const anchor = document.createElement('a');
+      anchor.href = result.sourcePdfUrl;
+      const baseName = (result.sourceFileName || 'report.pdf').replace(/\.[^/.]+$/, '');
+      anchor.download = `${baseName}-ai-generated.pdf`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      return;
+    }
+    handlePrint();
   };
 
   const handleVoice = () => {
@@ -787,6 +993,8 @@ const OCRScanningWorkspace = ({ user }) => {
       ...demoReport,
       originalImage: null,
       sourceFileName: 'Demo Lab Report',
+      sourcePdfUrl: null,
+      sourceIsPdf: false,
     });
     setShowComparison(false);
     setStep('results');
@@ -846,12 +1054,15 @@ const OCRScanningWorkspace = ({ user }) => {
       ...demoReport,
       originalImage: null,
       sourceFileName: 'Demo Prescription',
+      sourcePdfUrl: null,
+      sourceIsPdf: false,
     });
     setShowComparison(false);
     setStep('results');
   };
 
   const reset = () => {
+    replaceSourcePdfUrl(null);
     setStep('upload');
     setFile(null);
     setImagePreview(null);
@@ -867,11 +1078,14 @@ const OCRScanningWorkspace = ({ user }) => {
   useEffect(() => {
     const activeVideo = videoRef.current;
     return () => {
+      if (sourcePdfObjectUrl) {
+        URL.revokeObjectURL(sourcePdfObjectUrl);
+      }
       if (activeVideo && activeVideo.srcObject) {
         activeVideo.srcObject.getTracks().forEach(track => track.stop());
       }
     };
-  }, []);
+  }, [sourcePdfObjectUrl]);
 
   const parameterList = result?.results?.parameters || [];
   const statusCounts = parameterList.reduce(
@@ -938,8 +1152,15 @@ const OCRScanningWorkspace = ({ user }) => {
           .ocr-print-card {
             box-shadow: none !important;
             border-color: #d1d5db !important;
-            break-inside: avoid;
-            page-break-inside: avoid;
+          }
+          .print-section {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+            margin-bottom: 1.5rem !important;
+          }
+          .print-row {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
           }
           .ocr-print-table {
             overflow: visible !important;
@@ -950,15 +1171,15 @@ const OCRScanningWorkspace = ({ user }) => {
         }
       `}</style>
       <canvas ref={canvasRef} className="hidden" />
-      <input 
-        type="file" 
+      <input
+        type="file"
         ref={photoInputRef}
         className="hidden"
         onChange={(e) => handleFile(e.target.files[0])}
         accept="image/*"
       />
-      <input 
-        type="file" 
+      <input
+        type="file"
         ref={docInputRef}
         className="hidden"
         onChange={(e) => handleFile(e.target.files[0])}
@@ -968,27 +1189,27 @@ const OCRScanningWorkspace = ({ user }) => {
       <AnimatePresence mode="wait">
         {/* Camera Modal */}
         {isCameraOpen && (
-          <motion.div 
+          <motion.div
             key="camera-modal"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center"
           >
-            <video 
-              ref={videoRef} 
-              autoPlay 
-              playsInline 
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-x-0 bottom-12 flex items-center justify-center gap-8">
-              <button 
+              <button
                 onClick={stopCamera}
                 className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30"
               >
                 <X size={28} />
               </button>
-              <button 
+              <button
                 onClick={capturePhoto}
                 className="w-20 h-20 rounded-full bg-white flex items-center justify-center text-[#14453d] shadow-2xl border-4 border-white transform transition-transform active:scale-90"
               >
@@ -1004,7 +1225,7 @@ const OCRScanningWorkspace = ({ user }) => {
 
         {/* Review Modal */}
         {isReviewing && (
-          <motion.div 
+          <motion.div
             key="review-modal"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1015,13 +1236,13 @@ const OCRScanningWorkspace = ({ user }) => {
               <img src={capturedImage} className="w-full h-full object-contain" alt="Captured" />
             </div>
             <div className="mt-8 flex gap-4 w-full max-w-md">
-              <button 
+              <button
                 onClick={() => { setIsReviewing(false); setCapturedImage(null); startCamera(); }}
                 className="flex-1 py-4 rounded-2xl border border-white/20 text-white font-bold hover:bg-white/10 transition-colors"
               >
                 Retake
               </button>
-              <button 
+              <button
                 onClick={handleReviewConfirm}
                 className="flex-1 py-4 rounded-2xl bg-white text-[#14453d] font-bold hover:brightness-90 transition-all shadow-xl shadow-white/5"
               >
@@ -1032,7 +1253,7 @@ const OCRScanningWorkspace = ({ user }) => {
         )}
 
         {step === 'upload' && (
-          <motion.div 
+          <motion.div
             key="upload"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -1046,38 +1267,38 @@ const OCRScanningWorkspace = ({ user }) => {
               </div>
               <h1 className="text-3xl font-black text-gray-800 tracking-tight mb-3 uppercase">AI Scan Station</h1>
               <p className="text-gray-500 max-w-md mx-auto">
-                Upload reports or prescriptions. Our multimodal Gemini engine transforms raw scans into "AI Scan" reports instantly.
+                Upload reports or prescriptions. Our advanced Llama 4 engine transforms raw scans into "AI Scan" reports instantly.
               </p>
             </div>
 
             <div className="w-full relative">
-              <div 
-                className={`relative bg-white rounded-[2.5rem] p-4 shadow-xl border-2 transition-all 
+              <div
+                className={`relative bg-white rounded-[2.5rem] p-4 shadow-xl border-2 transition-all
                   ${error ? 'border-rose-100' : 'border-gray-100 hover:border-[#14453d]/20'}`}
                 style={{ boxShadow: '0 20px 50px rgba(0,0,0,0.05)' }}
               >
                 <div className="flex items-center gap-4 bg-gray-50 p-6 rounded-[2rem] border border-gray-100">
                   <div className="flex-1">
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       readOnly
                       value={file ? file.name : ''}
-                      placeholder="Upload report, prescription, or scan..." 
+                      placeholder="Upload report, prescription, or scan..."
                       className="bg-transparent w-full text-lg outline-none text-gray-700 placeholder-gray-400 cursor-pointer"
                       onClick={() => setShowOptions(!showOptions)}
                     />
                   </div>
-                  
+
                   <div className="flex gap-2">
                     {file && (
-                      <button 
+                      <button
                         onClick={() => { setFile(null); setImagePreview(null); }}
                         className="p-3 bg-rose-50 rounded-2xl border border-rose-100 text-rose-600 hover:shadow-md transition-all active:scale-95 shadow-sm"
                       >
                         <X size={22} />
                       </button>
                     )}
-                    <button 
+                    <button
                       onClick={() => {
                         if (file) {
                           startProcessing(file);
@@ -1085,12 +1306,12 @@ const OCRScanningWorkspace = ({ user }) => {
                           setShowOptions(!showOptions);
                         }
                       }}
-                      className={`p-3 rounded-2xl border transition-all active:scale-95 shadow-sm 
+                      className={`p-3 rounded-2xl border transition-all active:scale-95 shadow-sm
                         ${showOptions ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-white border-gray-100 text-[#14453d] hover:shadow-md'}`}
                     >
                       <Plus size={22} className={`transition-transform duration-300 ${showOptions ? 'rotate-45' : ''}`} />
                     </button>
-                    <button 
+                    <button
                       onClick={() => {
                         if (file) {
                           startProcessing(file);
@@ -1108,7 +1329,7 @@ const OCRScanningWorkspace = ({ user }) => {
 
                 <AnimatePresence>
                   {showOptions && (
-                    <motion.div 
+                    <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
@@ -1119,7 +1340,7 @@ const OCRScanningWorkspace = ({ user }) => {
                         { icon: ImageIcon, label: 'Photos', color: 'bg-purple-50 text-purple-600', action: () => photoInputRef.current?.click() },
                         { icon: FileText, label: 'Files', color: 'bg-emerald-50 text-emerald-600', action: () => docInputRef.current?.click() }
                       ].map((opt) => (
-                        <button 
+                        <button
                           key={opt.label}
                           onClick={() => { setShowOptions(false); opt.action(); }}
                           className={`${opt.color} p-4 rounded-3xl flex flex-col items-center gap-2 hover:scale-[1.02] transition-transform font-bold text-xs uppercase tracking-widest`}
@@ -1142,13 +1363,13 @@ const OCRScanningWorkspace = ({ user }) => {
 
             <div className="mt-8 flex flex-col items-center gap-4">
               <div className="flex gap-6">
-                <button 
+                <button
                   onClick={runDemoAiReport}
                   className="text-xs font-bold text-gray-400 hover:text-[#14453d] transition-colors flex items-center gap-2"
                 >
                   <Sparkles size={14} className="opacity-50" /> Try Demo Lab Report
                 </button>
-                <button 
+                <button
                   onClick={runDemoPrescription}
                   className="text-xs font-bold text-gray-400 hover:text-[#14453d] transition-colors flex items-center gap-2"
                 >
@@ -1160,7 +1381,7 @@ const OCRScanningWorkspace = ({ user }) => {
         )}
 
         {step === 'processing' && (
-          <motion.div 
+          <motion.div
             key="processing"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1171,25 +1392,25 @@ const OCRScanningWorkspace = ({ user }) => {
               <div className="w-32 h-32 rounded-full border-4 border-gray-100 flex items-center justify-center">
                 <Loader2 size={48} className="text-[#14453d] animate-spin" />
               </div>
-              <motion.div 
+              <motion.div
                 animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.3, 0.1] }}
                 transition={{ repeat: Infinity, duration: 2 }}
                 className="absolute inset-0 bg-[#14453d] rounded-full blur-2xl"
               />
             </div>
-            
+
             <h2 className="text-2xl font-black text-gray-800 mb-6">Medical Pipeline Active</h2>
-            
+
             <div className="w-full max-sm space-y-4 mx-auto">
               {processingSteps.map((text, i) => (
                 <div key={i} className="flex items-center gap-4 px-4">
-                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-500 
-                    ${subStep > i ? 'bg-emerald-500 text-white shadow-lg' : 
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-500
+                    ${subStep > i ? 'bg-emerald-500 text-white shadow-lg' :
                       subStep === i ? 'bg-[#14453d] text-white animate-pulse' : 'bg-gray-100 text-gray-300'}`}
                   >
                     {subStep > i ? <CheckCircle2 size={16} /> : <div className="text-xs font-bold">{i+1}</div>}
                   </div>
-                  <span className={`text-sm font-bold transition-all duration-500 
+                  <span className={`text-sm font-bold transition-all duration-500
                     ${subStep === i ? 'text-gray-800 scale-105 origin-left' : 'text-gray-400'}`}>
                     {text}
                   </span>
@@ -1200,7 +1421,7 @@ const OCRScanningWorkspace = ({ user }) => {
         )}
 
         {step === 'results' && result && (
-          <motion.div 
+          <motion.div
             key="results"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1209,7 +1430,7 @@ const OCRScanningWorkspace = ({ user }) => {
             {/* Premium Action Bar */}
             <div className="flex items-center justify-between mb-8 no-print px-2">
               <div className="flex items-center gap-4">
-                <button 
+                <button
                   onClick={reset}
                   className="flex items-center gap-2 px-4 py-2 bg-white text-gray-500 font-bold rounded-xl border border-gray-100 hover:text-[#14453d] hover:border-[#14453d]/40 transition-all text-xs shadow-sm"
                 >
@@ -1219,12 +1440,12 @@ const OCRScanningWorkspace = ({ user }) => {
               <div className="flex gap-2">
                 <div className="flex items-center bg-white rounded-xl border border-gray-100 shadow-sm p-1">
                   {[
-                    { icon: Download, action: handlePrint, label: 'Save PDF' },
+                    { icon: Download, action: handleDownloadPdf, label: 'Save PDF' },
                     { icon: Share2, action: handleShare, label: 'Share' },
                     { icon: Printer, action: handlePrint, label: 'Print' }
                   ].map((opt, i) => (
-                    <button 
-                      key={i} 
+                    <button
+                      key={i}
                       onClick={opt.action}
                       title={opt.label}
                       className="p-2 text-gray-400 hover:text-[#14453d] hover:bg-gray-50 rounded-lg transition-all"
@@ -1232,7 +1453,7 @@ const OCRScanningWorkspace = ({ user }) => {
                       <opt.icon size={18} />
                     </button>
                   ))}
-                <button 
+                <button
                   onClick={handleSave}
                   style={{ background: PRIMARY }}
                   className="px-6 py-2.5 text-white rounded-xl font-bold shadow-lg flex items-center gap-2 active:scale-95 transition-all text-sm"
@@ -1245,7 +1466,7 @@ const OCRScanningWorkspace = ({ user }) => {
 
             {/* THE REAL AI LAB REPORT (Digital View) */}
             <div className="max-w-4xl mx-auto w-full space-y-10 pb-20">
-              
+
               {/* Report Header / Demographic Card */}
               <div className="ocr-print-card bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full -mr-32 -mt-32 blur-3xl pointer-events-none" />
@@ -1266,9 +1487,28 @@ const OCRScanningWorkspace = ({ user }) => {
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Analysis Date</p>
                     <p className="text-sm font-bold text-gray-700">{result.patientInfo?.date}</p>
                     <p className="text-[11px] text-emerald-600 font-bold mt-1">Status: Clinical Synthesis Complete</p>
+                    <p className="text-[10px] text-blue-700 font-bold mt-1 uppercase tracking-widest">AI generated from uploaded report</p>
                   </div>
                 </div>
               </div>
+
+              {result.sourceIsPdf && result.sourcePdfUrl && (
+                <div className="ocr-print-card bg-white rounded-[2.5rem] border border-blue-100 shadow-xl overflow-hidden no-print">
+                  <div className="p-6 border-b border-blue-100 bg-blue-50/40">
+                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-blue-800">Original Uploaded PDF (Unchanged)</h3>
+                    <p className="text-sm text-blue-700 mt-2">
+                      This is your exact uploaded report file. AI summary is generated from this document without changing the source PDF.
+                    </p>
+                  </div>
+                  <div className="p-4">
+                    <iframe
+                      title="Original Uploaded PDF"
+                      src={result.sourcePdfUrl}
+                      className="w-full h-[900px] rounded-2xl border border-gray-200"
+                    />
+                  </div>
+                </div>
+              )}
               {/* Comprehensive Medical Panel (Conditional) */}
               {result.type === 'Lab Report' ? (
                 <div className="ocr-print-card bg-white rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden">
@@ -1283,7 +1523,7 @@ const OCRScanningWorkspace = ({ user }) => {
                        </span>
                      </div>
                   </div>
-                  
+
                   <div className="overflow-x-auto ocr-print-table">
                     <table className="w-full text-left">
                       <thead>
@@ -1301,9 +1541,9 @@ const OCRScanningWorkspace = ({ user }) => {
                           const isSelected = selectedMarkerIndex === i;
                           return (
                             <React.Fragment key={i}>
-                              <tr 
+                              <tr
                                 onClick={() => setSelectedMarkerIndex(isSelected ? -1 : i)}
-                                className={`group cursor-pointer hover:bg-gray-50 transition-colors ${isSelected ? 'bg-emerald-50/30' : ''}`}
+                                className={`print-row group cursor-pointer hover:bg-gray-50 transition-colors ${isSelected ? 'bg-emerald-50/30' : ''}`}
                               >
                                 <td className="px-8 py-6">
                                   <div className="text-sm font-black text-gray-800">{p.name}</div>
@@ -1318,8 +1558,8 @@ const OCRScanningWorkspace = ({ user }) => {
                                 <td className="px-8 py-6 text-center text-xs font-bold text-gray-400">{p.range}</td>
                                 <td className="px-8 py-6 text-right">
                                   <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border
-                                    ${status === 'Abnormal' ? 'bg-rose-50 border-rose-100 text-rose-600' : 
-                                      status === 'Borderline' ? 'bg-amber-50 border-amber-100 text-amber-600' : 
+                                    ${status === 'Abnormal' ? 'bg-rose-50 border-rose-100 text-rose-600' :
+                                      status === 'Borderline' ? 'bg-amber-50 border-amber-100 text-amber-600' :
                                       'bg-emerald-50 border-emerald-100 text-emerald-600'}`}>
                                     {p.status}
                                   </span>
@@ -1327,8 +1567,8 @@ const OCRScanningWorkspace = ({ user }) => {
                               </tr>
                               <tr className={`${isSelected ? 'table-row' : 'hidden print:table-row ocr-print-expanded'} bg-emerald-50/20`}>
                                 <td colSpan={5} className="px-8 pb-10 pt-4">
-                                  <motion.div 
-                                    initial={{ opacity: 0, y: -10 }} 
+                                  <motion.div
+                                    initial={{ opacity: 0, y: -10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     className="grid grid-cols-1 md:grid-cols-2 gap-12"
                                   >
@@ -1386,7 +1626,7 @@ const OCRScanningWorkspace = ({ user }) => {
                        </span>
                      </div>
                   </div>
-                  
+
                   <div className="overflow-x-auto">
                     <table className="w-full text-left">
                       <thead>
@@ -1399,7 +1639,7 @@ const OCRScanningWorkspace = ({ user }) => {
                       </thead>
                       <tbody className="divide-y divide-gray-50">
                         {result.results?.medicines?.length > 0 ? result.results.medicines.map((m, i) => (
-                          <tr key={i} className="hover:bg-gray-50 transition-colors">
+                          <tr key={i} className="print-row hover:bg-gray-50 transition-colors">
                             <td className="px-8 py-6">
                               <div className="text-sm font-black text-gray-800">{m.name}</div>
                               {m.duration && <div className="text-[10px] text-gray-400 font-bold uppercase mt-1 tracking-widest">For {m.duration}</div>}
@@ -1438,7 +1678,7 @@ const OCRScanningWorkspace = ({ user }) => {
                    </div>
                    <h3 className="text-lg font-black text-gray-800 mb-2">General Medical Document</h3>
                    <p className="text-sm text-gray-500 max-w-sm mx-auto">
-                     This document doesn't contain standard lab markers or prescriptions. 
+                     This document doesn't contain standard lab markers or prescriptions.
                      Please refer to the AI Summary below for interpreted insights.
                    </p>
                 </div>
@@ -1451,8 +1691,8 @@ const OCRScanningWorkspace = ({ user }) => {
                   {result.advice?.map((item, i) => (
                     <div key={i} className="flex items-center gap-6 p-6 bg-gray-50/50 rounded-3xl border border-gray-100 hover:bg-emerald-50 transition-all group">
                       <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shrink-0 shadow-sm border border-gray-100 group-hover:scale-110 transition-transform">
-                        {i === 0 ? <CheckCircle2 size={22} className="text-emerald-500" /> : 
-                         i === 1 ? <Sun size={22} className="text-amber-500" /> : 
+                        {i === 0 ? <CheckCircle2 size={22} className="text-emerald-500" /> :
+                         i === 1 ? <Sun size={22} className="text-amber-500" /> :
                          <Sparkles size={22} className="text-blue-500" />}
                       </div>
                       <span className="text-sm font-bold text-gray-700 leading-snug">{item}</span>

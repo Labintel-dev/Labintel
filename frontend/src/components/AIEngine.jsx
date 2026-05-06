@@ -230,7 +230,7 @@ const AIEngine = ({ onAnalysisComplete, onClose, patientId }) => {
                 </div>
                 <h3 className="text-2xl font-bold text-gray-800 mb-2">Intelligent Analysis In Progress</h3>
                 <p className="text-gray-500 max-w-xs mx-auto">
-                  Gemini AI is reading your reports, understanding biomarkers, and generating your health profile...
+                  Advanced AI is reading your reports, understanding biomarkers, and generating your health profile...
                 </p>
                 
                 <div className="mt-8 space-y-3 w-full max-w-xs">
