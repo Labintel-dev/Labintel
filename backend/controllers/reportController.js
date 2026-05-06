@@ -384,8 +384,16 @@ async function generatePdf(req, res) {
 
   if (!report) return res.status(404).json({ error: 'Report not found.' });
 
-  res.json({ message: 'PDF generation triggered.' });
-  generateAndUploadPDF(report_id);
+  const pdfUrl = await generateAndUploadPDF(report_id);
+
+  if (!pdfUrl) {
+    return res.status(500).json({ error: 'PDF generation failed.' });
+  }
+
+  return res.json({
+    message: 'PDF generated successfully.',
+    url: pdfUrl,
+  });
 }
 
 // ─── Get fresh signed PDF URL ─────────────────────────────────────────────

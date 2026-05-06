@@ -58,6 +58,7 @@ export default function ReportDetail() {
   const panel   = report?.test_panels;
   const insight = report?.report_insights;
   const isFemale = patient?.gender === 'female';
+  const hasPdf = Boolean(report?.pdf_url);
 
   const nextStatus = { draft: 'in_review', in_review: 'released' }[report?.status];
   const canAdvance = nextStatus && (nextStatus === 'released' ? canDo('releaseReport') : canDo('editTestValues'));
@@ -79,34 +80,27 @@ export default function ReportDetail() {
 
   const generatePdfMutation = useMutation({
     mutationFn: () => reportService.generatePdf(id),
-    onSuccess: async () => {
-      addToast('Generating PDF... Please wait.', 'info');
-      // Wait for backend to complete PDF generation and upload
-      await new Promise(r => setTimeout(r, 3000));
-      // Refetch the report to get the new pdf_url
-      await qc.invalidateQueries({ queryKey: ['report', id] });
-      // Wait for refetch to complete
-      await new Promise(r => setTimeout(r, 1000));
-      // Get fresh data and auto-download
-      const freshData = qc.getQueryData(['report', id]);
-      if (freshData?.data?.pdf_url) {
-        try {
-          const downloadUrl = await reportService.getDownloadUrl(id);
-          window.open(downloadUrl.url, '_blank');
-          addToast('PDF generated and downloading...', 'success');
-        } catch {
-          addToast('PDF generated but download failed. Click Download PDF to view.', 'warning');
-        }
+    onSuccess: (response) => {
+      if (response?.url) {
+        qc.setQueryData(['report', id], (current) => (
+          current
+            ? { ...current, data: { ...current.data, pdf_url: response.url } }
+            : current
+        ));
+        window.open(response.url, '_blank', 'noopener,noreferrer');
+      } else {
+        qc.invalidateQueries({ queryKey: ['report', id] });
       }
+      addToast('PDF generated successfully. Opening PDF...', 'success');
     },
     onError: () => addToast('Failed to generate PDF. Please try again.', 'error'),
   });
 
-  const handleDownload = async () => {
+  const handleViewPdf = async () => {
     try {
-      const r = await reportService.getDownloadUrl(id);
-      window.open(r.url, '_blank');
-    } catch { addToast('Download failed.', 'error'); }
+      const r = hasPdf ? { url: report.pdf_url } : await reportService.getDownloadUrl(id);
+      window.open(r.url, '_blank', 'noopener,noreferrer');
+    } catch { addToast('Unable to open PDF.', 'error'); }
   };
 
   const copyShareLink = () => {
@@ -136,12 +130,16 @@ export default function ReportDetail() {
             <StatusStepper status={report.status} />
           </div>
           <div className="flex flex-wrap gap-2 mt-4">
-            {canDo('downloadPDF') && report.pdf_url && (
-              <Button size="sm" variant="secondary" onClick={handleDownload}><Download size={14} />Download PDF</Button>
-            )}
-            {canDo('downloadPDF') && !report.pdf_url && report.status === 'released' && (
-              <Button size="sm" variant="secondary" onClick={() => generatePdfMutation.mutate()} isLoading={generatePdfMutation.isPending}>
-                <RefreshCw size={14} /> Generate PDF
+            {canDo('downloadPDF') && report.status === 'released' && (
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={hasPdf ? handleViewPdf : () => generatePdfMutation.mutate()}
+                isLoading={!hasPdf && generatePdfMutation.isPending}
+                disabled={!hasPdf && generatePdfMutation.isPending}
+              >
+                {hasPdf ? <Download size={14} /> : <RefreshCw size={14} />}
+                {hasPdf ? 'View PDF' : 'Generate PDF'}
               </Button>
             )}
             {report.share_token && (
