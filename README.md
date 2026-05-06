@@ -314,6 +314,17 @@ LabIntel uses a role-based access control system with three staff roles:
 
 ---
 
+## CI/CD and VPS Deployment
+
+This repository includes a Docker and GitHub Actions based CI/CD setup for the full `frontend` and `backend` application.
+
+- Branch: `feature/cicd-testing`
+- Workflow: `.github/workflows/ci-cd.yml`
+- Docker: `Dockerfile` and `docker-compose.yml`
+- Deployment guide: `docs/CI_CD.md`
+
+Sensitive values must be stored in GitHub Secrets or VPS-only env files. Do not commit VPS credentials, SSH keys, Supabase service keys, JWT secrets, database URLs, or Docker access tokens.
+
 ## ≡ƒñ¥ Contributing
 
 1. Fork the repository
