@@ -107,23 +107,22 @@ const LandingProfileDropdown = ({ user, onClose, onUpdateProfile, onMyReports, o
 };
 
 /* ── Navbar (shared with RoleSelectPage) ─────────────────────────────────── */
-export const Navbar = ({ onLoginClick }) => {
+export const Navbar = ({ 
+  onLoginClick, 
+  isUploading = false, 
+  setIsUploading = () => {},
+  isUploadMenuOpen = false,
+  setIsUploadMenuOpen = () => {},
+  fileInputRef = { current: null },
+  cameraInputRef = { current: null },
+  handleFileSelect = () => {}
+}) => {
   const navigate = useNavigate();
   const { user: supabaseUser, signOut: supabaseSignOut } = useAuth();
   const authStoreUser = useAuthStore((s) => s.user);
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const [activeSection, setActiveSection] = useState("");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isUploadMenuOpen, setIsUploadMenuOpen] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [reportData, setReportData] = useState(null);
-  const [originalFileUrl, setOriginalFileUrl] = useState(null);
-  const [originalFileType, setOriginalFileType] = useState(null);
-  const [isViewerOpen, setIsViewerOpen] = useState(false);
-  const [scanningLogs, setScanningLogs] = useState([]);
-
-  const fileInputRef = useRef(null);
-  const cameraInputRef = useRef(null);
   const uploadMenuRef = useRef(null);
 
   let user = null;
@@ -140,37 +139,6 @@ export const Navbar = ({ onLoginClick }) => {
     user = supabaseUser;
   }
 
-  useEffect(() => {
-    let timeoutIds = [];
-    if (isUploading) {
-      setScanningLogs([]);
-      const logs = [
-        "> Initializing Advanced AI Vision Engine...",
-        "> Scanning document structure...",
-        "> Identifying patient demographics...",
-        "> Extracting lab parameters...",
-        "> Processing Hemoglobin, RBC, WBC...",
-        "> Analyzing Lipid Profile...",
-        "> Cross-referencing reference ranges...",
-        "> Detecting abnormal values...",
-        "> Generating medical insights...",
-        "> Finalizing report summary..."
-      ];
-      
-      logs.forEach((log, index) => {
-        const timeout = setTimeout(() => {
-          setScanningLogs(prev => [...prev, log]);
-        }, index * 1300 + 500);
-        timeoutIds.push(timeout);
-      });
-    } else {
-      setScanningLogs([]);
-    }
-
-    return () => {
-      timeoutIds.forEach(id => clearTimeout(id));
-    };
-  }, [isUploading]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -213,48 +181,6 @@ export const Navbar = ({ onLoginClick }) => {
     navigate('/patient?profile=update');
   };
 
-  const handleFileSelect = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    setIsUploadMenuOpen(false);
-    setIsUploading(true);
-    
-    const fileUrl = URL.createObjectURL(file);
-    setOriginalFileUrl(fileUrl);
-    setOriginalFileType(file.type);
-    
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      try {
-        const base64data = reader.result;
-        
-        const res = await apiClient.post('/ocr/analyze-report-public', {
-          image: base64data,
-          mimeType: file.type
-        });
-        
-        setReportData(res.data);
-        setIsUploading(false);
-        setIsViewerOpen(true);
-      } catch (err) {
-        console.error("OCR Analysis Error:", err);
-        alert(err.response?.data?.details || 'Failed to analyze report. Please try again.');
-        setIsUploading(false);
-      }
-    };
-    
-    try {
-      reader.readAsDataURL(file);
-    } catch (err) {
-      console.error("File Read Error:", err);
-      alert('Failed to read file.');
-      setIsUploading(false);
-    }
-    
-    if (fileInputRef.current) fileInputRef.current.value = '';
-    if (cameraInputRef.current) cameraInputRef.current.value = '';
-  };
 
   const handleMyReports = () => {
     setIsProfileOpen(false);
@@ -364,21 +290,6 @@ export const Navbar = ({ onLoginClick }) => {
                       exit={{ opacity: 0, y: 10, scale: 0.96 }}
                       className="absolute right-0 top-full mt-3 w-56 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xl z-[70] p-2"
                     >
-                      <input 
-                        type="file" 
-                        ref={fileInputRef}
-                        onChange={handleFileSelect}
-                        accept="application/pdf, image/*" 
-                        className="hidden" 
-                      />
-                      <input 
-                        type="file" 
-                        ref={cameraInputRef}
-                        onChange={handleFileSelect}
-                        accept="image/*" 
-                        capture="environment"
-                        className="hidden" 
-                      />
                       
                       <button onClick={() => fileInputRef.current?.click()} className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors">
                         <ImageIcon size={18} className="text-[#14453d]" />
@@ -413,77 +324,6 @@ export const Navbar = ({ onLoginClick }) => {
 
       </nav>
 
-      <AnimatePresence>
-        {isUploading && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/80 backdrop-blur-md p-6"
-          >
-            <div className="relative w-full max-w-md h-[70vh] rounded-2xl overflow-hidden border-2 border-[#14453d]/50 bg-gray-900 shadow-2xl">
-              {/* Document Preview */}
-              {originalFileUrl ? (
-                <img src={originalFileUrl} alt="Document to scan" className="w-full h-full object-cover opacity-30" />
-              ) : (
-                <div className="w-full h-full bg-gray-800" />
-              )}
-
-              {/* Terminal Logs */}
-              <div className="absolute inset-0 p-6 pt-10 overflow-hidden z-20 flex flex-col justify-start pointer-events-none">
-                {scanningLogs.map((log, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="font-mono text-[11px] md:text-xs text-green-400 mb-2 drop-shadow-[0_0_2px_rgba(74,222,128,0.8)] tracking-tight"
-                  >
-                    {log}
-                  </motion.div>
-                ))}
-                {scanningLogs.length > 0 && scanningLogs.length < 10 && (
-                  <motion.div
-                    animate={{ opacity: [0, 1, 0] }}
-                    transition={{ repeat: Infinity, duration: 0.8 }}
-                    className="w-2 h-3 bg-green-400 mt-1"
-                  />
-                )}
-              </div>
-              
-              {/* Scanning Line & Glow */}
-              <motion.div
-                animate={{ top: ['0%', '100%', '0%'] }}
-                transition={{ duration: 3, ease: 'linear', repeat: Infinity }}
-                className="absolute left-0 right-0 h-1 bg-green-400 shadow-[0_0_15px_3px_rgba(74,222,128,0.7)]"
-                style={{ zIndex: 10 }}
-              />
-              <motion.div
-                animate={{ top: ['0%', '100%', '0%'] }}
-                transition={{ duration: 3, ease: 'linear', repeat: Infinity }}
-                className="absolute left-0 right-0 h-32 bg-gradient-to-b from-transparent to-green-400/20 -translate-y-full"
-              />
-              
-              {/* Scanning Text */}
-              <div className="absolute bottom-6 left-0 right-0 flex justify-center">
-                <div className="bg-black/50 backdrop-blur-sm px-6 py-2 rounded-full border border-gray-700">
-                  <span className="text-white text-sm font-semibold flex items-center gap-2">
-                    <Loader2 size={16} className="animate-spin text-green-400" />
-                    AI is analyzing your report...
-                  </span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <SmartReportViewer 
-        isOpen={isViewerOpen} 
-        onClose={() => setIsViewerOpen(false)} 
-        originalFileUrl={originalFileUrl} 
-        originalFileType={originalFileType}
-        reportData={reportData} 
-      />
     </>
   );
 };
@@ -626,11 +466,122 @@ const SPECIALISED_DOCTORS = [
 const LandingPage = () => {
   const navigate = useNavigate();
 
+  const [isNavUploadMenuOpen, setIsNavUploadMenuOpen] = useState(false);
+  const [isHeroUploadMenuOpen, setIsHeroUploadMenuOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [reportData, setReportData] = useState(null);
+  const [originalFileUrl, setOriginalFileUrl] = useState(null);
+  const [originalFileType, setOriginalFileType] = useState(null);
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
+  const [scanningLogs, setScanningLogs] = useState([]);
+
+  const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
+  const heroMenuRef = useRef(null);
+
+  useEffect(() => {
+    let timeoutIds = [];
+    if (isUploading) {
+      setScanningLogs([]);
+      const logs = [
+        "> Initializing Advanced AI Vision Engine...",
+        "> Scanning document structure...",
+        "> Identifying patient demographics...",
+        "> Extracting lab parameters...",
+        "> Processing Hemoglobin, RBC, WBC...",
+        "> Analyzing Lipid Profile...",
+        "> Cross-referencing reference ranges...",
+        "> Detecting abnormal values...",
+        "> Generating medical insights...",
+        "> Finalizing report summary..."
+      ];
+      
+      logs.forEach((log, index) => {
+        const timeout = setTimeout(() => {
+          setScanningLogs(prev => [...prev, log]);
+        }, index * 1300 + 500);
+        timeoutIds.push(timeout);
+      });
+    } else {
+      setScanningLogs([]);
+    }
+
+    return () => {
+      timeoutIds.forEach(id => clearTimeout(id));
+    };
+  }, [isUploading]);
+
+  useEffect(() => {
+    const handleClickOutsideHeroMenu = (event) => {
+      if (heroMenuRef.current && !heroMenuRef.current.contains(event.target)) {
+        setIsHeroUploadMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutsideHeroMenu);
+    return () => document.removeEventListener('mousedown', handleClickOutsideHeroMenu);
+  }, []);
+
+  const handleFileSelect = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setIsNavUploadMenuOpen(false);
+    setIsHeroUploadMenuOpen(false);
+    setIsUploading(true);
+    
+    const fileUrl = URL.createObjectURL(file);
+    setOriginalFileUrl(fileUrl);
+    setOriginalFileType(file.type);
+    
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      try {
+        const base64data = reader.result;
+        
+        const res = await apiClient.post('/ocr/analyze-report-public', {
+          image: base64data,
+          mimeType: file.type
+        });
+        
+        setReportData(res.data);
+        setIsUploading(false);
+        setIsViewerOpen(true);
+      } catch (err) {
+        console.error("OCR Analysis Error:", err);
+        alert(err.response?.data?.details || 'Failed to analyze report. Please try again.');
+        setIsUploading(false);
+      }
+    };
+    
+    try {
+      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error("File Read Error:", err);
+      alert('Failed to read file.');
+      setIsUploading(false);
+    }
+    
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (cameraInputRef.current) cameraInputRef.current.value = '';
+  };
+
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-white" style={{ fontFamily: "'Inter', sans-serif" }}>
 
+      {/* ── HIDDEN INPUTS ─────────────────────────────────────────────── */}
+      <input type="file" ref={fileInputRef} onChange={handleFileSelect} accept="application/pdf, image/*" className="hidden" />
+      <input type="file" ref={cameraInputRef} onChange={handleFileSelect} accept="image/*" capture="environment" className="hidden" />
+
       {/* ── NAVBAR ─────────────────────────────────────────────────────── */}
-      <Navbar />
+      <Navbar 
+        isUploading={isUploading} 
+        setIsUploading={setIsUploading}
+        isUploadMenuOpen={isNavUploadMenuOpen}
+        setIsUploadMenuOpen={setIsNavUploadMenuOpen}
+        fileInputRef={fileInputRef}
+        cameraInputRef={cameraInputRef}
+        handleFileSelect={handleFileSelect}
+      />
 
       {/* ── HERO ───────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden" style={{ background: '#f8faf9' }}>
@@ -679,7 +630,7 @@ const LandingPage = () => {
                              px-6 py-3 rounded-full transition-all"
                   style={{ background: P }}
                 >
-                  Book a Test <ArrowRight size={15} />
+                  Demo <ArrowRight size={15} />
                 </motion.button>
 
                 <motion.button
@@ -692,15 +643,41 @@ const LandingPage = () => {
                 >
                   Patient Login
                 </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.04 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => navigate('/reports')}
-                  className="flex items-center gap-2 border border-[#d0e2db] bg-white/90 text-sm font-semibold
-                             px-6 py-3 rounded-full text-gray-700 transition-all shadow-sm"
-                >
-                  Preview AI Report
-                </motion.button>
+                 <div className="relative" ref={heroMenuRef}>
+                  <motion.button
+                    whileHover={{ scale: 1.04 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => setIsHeroUploadMenuOpen(!isHeroUploadMenuOpen)}
+                    className="flex items-center gap-2 border border-[#d0e2db] bg-white/90 text-sm font-semibold
+                               px-6 py-3 rounded-full text-gray-700 transition-all shadow-sm"
+                  >
+                    AI Report
+                  </motion.button>
+
+                  <AnimatePresence>
+                    {isHeroUploadMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.96 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.96 }}
+                        className="absolute left-0 top-full mt-3 w-56 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xl z-[70] p-2"
+                      >
+                        <button onClick={() => fileInputRef.current?.click()} className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors">
+                          <ImageIcon size={18} className="text-[#14453d]" />
+                          <span className="text-sm font-semibold">Upload Image</span>
+                        </button>
+                        <button onClick={() => fileInputRef.current?.click()} className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors">
+                          <FileText size={18} className="text-[#14453d]" />
+                          <span className="text-sm font-semibold">Upload PDF</span>
+                        </button>
+                        <button onClick={() => cameraInputRef.current?.click()} className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors">
+                          <Camera size={18} className="text-[#14453d]" />
+                          <span className="text-sm font-semibold">Camera</span>
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </motion.div>
 
               {/* Trust badges */}
@@ -776,10 +753,10 @@ const LandingPage = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { name: 'Apollo Diagnostics', desc: 'Precision Pathology & Full Body Checkups', tag: 'Core Partner', color: '#16a34a', href: 'https://apollodiagnostics.in' },
-              { name: 'Dr. Lal PathLabs', desc: 'Advanced Molecular Diagnostics & Genetics', tag: 'Specialist', color: '#0ea5e9', href: 'https://www.lalpathlabs.com' },
-              { name: 'Metropolis', desc: 'Specialized Hormonal & Assays', tag: 'NABL Certified', color: '#eab308', href: 'https://www.metropolisindia.com' },
-              { name: 'Thyrocare', desc: 'Preventive Healthcare & Thyroid Profiles', tag: 'Automation', color: '#f43f5e', href: 'https://www.thyrocare.com' },
+              { name: 'City Diagonostics', desc: 'Precision Pathology & Full Body Checkups', tag: 'Core Partner', color: '#16a34a', href: '#' },
+              { name: 'Sunrise Diagonostics', desc: 'Advanced Molecular Diagnostics & Genetics', tag: 'Specialist', color: '#0ea5e9', href: '#' },
+              { name: 'Neurogen Lab', desc: 'Specialized Hormonal & Assays', tag: 'NABL Certified', color: '#eab308', href: '#' },
+              { name: 'Clinical Laboratory', desc: 'Preventive Healthcare & Thyroid Profiles', tag: 'Automation', color: '#f43f5e', href: '#' },
             ].map((lab, i) => (
               <FadeUp key={lab.name} delay={0.1 + i * 0.1}>
                 <motion.a
@@ -1181,6 +1158,77 @@ const LandingPage = () => {
           </p>
         </div>
       </footer>
+      <AnimatePresence>
+        {isUploading && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/80 backdrop-blur-md p-6"
+          >
+            <div className="relative w-full max-w-md h-[70vh] rounded-2xl overflow-hidden border-2 border-[#14453d]/50 bg-gray-900 shadow-2xl">
+              {/* Document Preview */}
+              {originalFileUrl ? (
+                <img src={originalFileUrl} alt="Document to scan" className="w-full h-full object-cover opacity-30" />
+              ) : (
+                <div className="w-full h-full bg-gray-800" />
+              )}
+
+              {/* Terminal Logs */}
+              <div className="absolute inset-0 p-6 pt-10 overflow-hidden z-20 flex flex-col justify-start pointer-events-none">
+                {scanningLogs.map((log, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="font-mono text-[11px] md:text-xs text-green-400 mb-2 drop-shadow-[0_0_2px_rgba(74,222,128,0.8)] tracking-tight"
+                  >
+                    {log}
+                  </motion.div>
+                ))}
+                {scanningLogs.length > 0 && scanningLogs.length < 10 && (
+                  <motion.div
+                    animate={{ opacity: [0, 1, 0] }}
+                    transition={{ repeat: Infinity, duration: 0.8 }}
+                    className="w-2 h-3 bg-green-400 mt-1"
+                  />
+                )}
+              </div>
+              
+              {/* Scanning Line & Glow */}
+              <motion.div
+                animate={{ top: ['0%', '100%', '0%'] }}
+                transition={{ duration: 3, ease: 'linear', repeat: Infinity }}
+                className="absolute left-0 right-0 h-1 bg-green-400 shadow-[0_0_15px_3px_rgba(74,222,128,0.7)]"
+                style={{ zIndex: 10 }}
+              />
+              <motion.div
+                animate={{ top: ['0%', '100%', '0%'] }}
+                transition={{ duration: 3, ease: 'linear', repeat: Infinity }}
+                className="absolute left-0 right-0 h-32 bg-gradient-to-b from-transparent to-green-400/20 -translate-y-full"
+              />
+              
+              {/* Scanning Text */}
+              <div className="absolute bottom-6 left-0 right-0 flex justify-center">
+                <div className="bg-black/50 backdrop-blur-sm px-6 py-2 rounded-full border border-gray-700">
+                  <span className="text-white text-sm font-semibold flex items-center gap-2">
+                    <Loader2 size={16} className="animate-spin text-green-400" />
+                    AI is analyzing your report...
+                  </span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <SmartReportViewer 
+        isOpen={isViewerOpen} 
+        onClose={() => setIsViewerOpen(false)} 
+        originalFileUrl={originalFileUrl} 
+        originalFileType={originalFileType}
+        reportData={reportData} 
+      />
     </div>
   );
 };
