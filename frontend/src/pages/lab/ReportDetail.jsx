@@ -79,11 +79,27 @@ export default function ReportDetail() {
 
   const generatePdfMutation = useMutation({
     mutationFn: () => reportService.generatePdf(id),
-    onSuccess: () => {
-      addToast('PDF generation triggered. Please refresh in a few seconds.', 'info');
-      setTimeout(() => qc.invalidateQueries({ queryKey: ['report', id] }), 5000);
+    onSuccess: async () => {
+      addToast('Generating PDF... Please wait.', 'info');
+      // Wait for backend to complete PDF generation and upload
+      await new Promise(r => setTimeout(r, 3000));
+      // Refetch the report to get the new pdf_url
+      await qc.invalidateQueries({ queryKey: ['report', id] });
+      // Wait for refetch to complete
+      await new Promise(r => setTimeout(r, 1000));
+      // Get fresh data and auto-download
+      const freshData = qc.getQueryData(['report', id]);
+      if (freshData?.data?.pdf_url) {
+        try {
+          const downloadUrl = await reportService.getDownloadUrl(id);
+          window.open(downloadUrl.url, '_blank');
+          addToast('PDF generated and downloading...', 'success');
+        } catch {
+          addToast('PDF generated but download failed. Click Download PDF to view.', 'warning');
+        }
+      }
     },
-    onError: () => addToast('Failed to trigger PDF generation.', 'error'),
+    onError: () => addToast('Failed to generate PDF. Please try again.', 'error'),
   });
 
   const handleDownload = async () => {
