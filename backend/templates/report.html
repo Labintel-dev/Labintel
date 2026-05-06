@@ -3,685 +3,473 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lab Report - {{REPORT_ID}}</title>
+  <title>LabIntel Report - {{REPORT_ID}}</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
     :root {
-      --brand: {{LAB_COLOR}};
-      --brand-deep: #14453d;
-      --ink: #1f2937;
-      --muted: #9ca3af;
-      --line: #e5e7eb;
-      --soft: #f8fafc;
-      --ok: #10b981;
-      --warn: #f59e0b;
-      --bad: #ef4444;
+      --blue-900: #123a75;
+      --blue-800: #1d4f9c;
+      --blue-700: #2f66bd;
+      --blue-200: #dce8fb;
+      --blue-100: #edf4ff;
+      --line: #dbe3ef;
+      --ink: #1b2b4a;
+      --muted: #5f6f8a;
+      --soft: #f7f9fc;
+      --warn: #c43a36;
+      --ok: #136f43;
     }
     body {
-      font-family: Georgia, "Times New Roman", serif;
-      background: #f1f5f9;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #fff;
       color: var(--ink);
-      line-height: 1.35;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
     .page {
       width: 210mm;
       min-height: 297mm;
-      padding: 9mm;
+      padding: 16mm 12mm 10mm;
+      position: relative;
+      overflow: hidden;
+    }
+    .page::before {
+      content: '';
+      position: absolute;
+      top: 10mm;
+      left: 12mm;
+      right: 12mm;
+      height: 12mm;
+      background: linear-gradient(90deg, var(--blue-100), #e7efff 70%, transparent 70%);
+      z-index: 0;
+    }
+    .page::after {
+      content: 'LABINTEL';
+      position: absolute;
+      bottom: 60mm;
+      left: 24mm;
+      font-size: 64px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      color: rgba(29, 79, 156, 0.06);
+      transform: rotate(-37deg);
+      transform-origin: left top;
+      z-index: 0;
+      pointer-events: none;
     }
     .sheet {
-      background: #fff;
-      border: 1px solid #e7ecef;
-      border-radius: 24px;
-      overflow: hidden;
-      box-shadow: 0 16px 50px rgba(20, 69, 61, 0.08);
-      padding: 12mm 10mm;
+      position: relative;
+      z-index: 1;
+      min-height: 100%;
     }
-    .section-gap { margin-top: 10mm; }
-
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding-right: 2mm;
+    }
+    .brand-band {
+      width: 145mm;
+      height: 6mm;
+      background: linear-gradient(90deg, #dbe7fb 0%, #dbe7fb 80%, rgba(255,255,255,0) 100%);
+      position: relative;
+    }
+    .brand-band::after {
+      content: '';
+      position: absolute;
+      right: 14mm;
+      top: 0;
+      width: 16mm;
+      height: 6mm;
+      background: repeating-linear-gradient(60deg, #222 0 3mm, transparent 3mm 4mm);
+      opacity: 0.9;
+    }
+    .site-pill {
+      width: 30mm;
+      height: 6mm;
+      background: var(--blue-900);
+      color: #fff;
+      font-size: 7px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      letter-spacing: 0.04em;
+    }
     .header {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
       gap: 10mm;
+      align-items: flex-start;
+      margin-top: 2mm;
+      padding: 0 2mm;
     }
-    .brand-left { display: flex; gap: 4mm; }
-    .logo-box {
-      width: 17mm;
-      height: 17mm;
-      border-radius: 5mm;
-      border: 1px solid #edf2f7;
+    .brand {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #fff;
-      overflow: hidden;
-    }
-    .logo-box img { width: 100%; height: 100%; object-fit: contain; }
-    .brand-title {
-      font-size: 20px;
-      line-height: 1;
-      letter-spacing: 0.03em;
-      font-weight: 800;
-      color: var(--brand-deep);
-      text-transform: uppercase;
-    }
-    .verified {
-      display: inline-block;
-      margin-left: 4px;
-      padding: 1px 6px;
-      border-radius: 999px;
-      border: 1px solid #d1fae5;
-      background: #ecfdf5;
-      color: #047857;
-      font-size: 8px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      vertical-align: top;
-    }
-    .brand-sub {
-      margin-top: 2px;
-      color: #94a3b8;
-      font-size: 8.5px;
-      font-weight: 700;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      font-style: italic;
-    }
-    .brand-right { text-align: right; }
-    .brand-right h2 {
-      font-size: 8px;
-      letter-spacing: 0.35em;
-      color: var(--brand-deep);
-      text-transform: uppercase;
-      margin-bottom: 2px;
-    }
-    .brand-right .contact {
-      font-size: 8px;
-      color: #64748b;
-      line-height: 1.5;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-    .badge {
-      display: inline-block;
-      margin-top: 5px;
-      border-radius: 999px;
-      background: var(--brand-deep);
-      color: #fff;
-      font-size: 7.5px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.18em;
-      padding: 5px 9px;
-    }
-    .divider {
-      height: 1px;
-      background: #edf2f7;
-      margin-top: 9mm;
-    }
-
-    .dossier {
-      margin-top: 8mm;
-      display: flex;
-      gap: 8mm;
-      align-items: stretch;
-    }
-    .dossier-left {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8mm 5mm;
-    }
-    .meta-label {
-      font-size: 7.8px;
-      color: #c0c6d0;
-      text-transform: uppercase;
-      font-weight: 700;
-      letter-spacing: 0.18em;
-      margin-bottom: 2px;
-    }
-    .patient-name {
-      font-size: 17px;
-      font-weight: 800;
-      color: #0f172a;
-      text-transform: uppercase;
-      line-height: 1.1;
-    }
-    .meta-value {
-      font-size: 11px;
-      font-weight: 800;
-      color: #1f2937;
-      text-transform: uppercase;
-      letter-spacing: 0.01em;
-      line-height: 1.25;
-      word-break: break-word;
-    }
-    .meta-value.soft {
-      font-size: 10px;
-      color: #4b5563;
-    }
-    .specialist {
-      grid-column: 1 / -1;
-      border: 1px solid #fee2e2;
-      background: #fff5f6;
-      border-radius: 12mm;
-      padding: 4mm 5mm;
-      display: flex;
-      align-items: center;
-      gap: 3mm;
-    }
-    .specialist-icon {
-      width: 8mm;
-      height: 8mm;
-      border-radius: 999px;
-      border: 1px solid #fecaca;
-      background: #fff;
-      color: #f43f5e;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 9px;
-      font-weight: 700;
-    }
-    .specialist-title {
-      font-size: 7.4px;
-      color: #fb7185;
-      text-transform: uppercase;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      margin-bottom: 1px;
-    }
-    .specialist-name {
-      font-size: 11px;
-      color: #1f2937;
-      font-weight: 800;
-      text-transform: uppercase;
-    }
-
-    .dossier-right {
-      width: 46mm;
-      border-radius: 9mm;
-      border: 1px solid #e5e7eb;
-      background: #fafafa;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
-      padding: 5mm;
-      display: flex;
-      flex-direction: column;
       gap: 5mm;
+      align-items: flex-start;
     }
-    .ref-value {
-      font-size: 10px;
-      font-weight: 800;
-      color: #1f2937;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      line-height: 1.25;
-      word-break: break-word;
-    }
-    .status-chip {
-      display: inline-block;
-      border-radius: 8px;
-      background: #10b981;
-      color: #fff;
-      text-transform: uppercase;
-      font-size: 7px;
-      font-weight: 800;
-      letter-spacing: 0.14em;
-      padding: 4px 8px;
-    }
-
-    .insights-head {
-      display: flex;
-      align-items: center;
-      gap: 3mm;
-      margin-bottom: 5mm;
-    }
-    .insights-icon {
-      width: 7mm;
-      height: 7mm;
-      border-radius: 2.8mm;
-      border: 1px solid #d1fae5;
-      background: #ecfdf5;
-      color: var(--brand-deep);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 9px;
-      font-weight: 700;
-    }
-    .insights-title {
-      font-size: 9px;
-      color: var(--brand-deep);
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.32em;
-    }
-    .insights-sub {
-      margin-top: 1px;
-      font-size: 7px;
-      color: #9ca3af;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.13em;
-    }
-    .line-grow {
-      flex: 1;
-      height: 1px;
-      background: #edf2f7;
-      margin-left: 2mm;
-    }
-
-    .insights-body {
-      display: flex;
-      gap: 7mm;
-      align-items: stretch;
-      margin-bottom: 8mm;
-    }
-    .summary-card {
-      flex: 1;
-      border-radius: 12mm;
-      border: 1px solid #eef2f7;
-      background: #fff;
-      box-shadow: 0 14px 35px rgba(16, 37, 30, 0.08);
-      padding: 7mm;
-      position: relative;
-      overflow: hidden;
-    }
-    .summary-card::after {
-      content: "";
-      position: absolute;
-      width: 32mm;
-      height: 32mm;
-      border-radius: 0 0 0 16mm;
-      right: -8mm;
-      top: -8mm;
-      background: #f8fafc;
-    }
-    .summary-head {
-      position: relative;
-      z-index: 1;
-      font-size: 7px;
-      color: #10b981;
-      text-transform: uppercase;
-      font-weight: 800;
-      letter-spacing: 0.22em;
-      margin-bottom: 4mm;
-    }
-    .summary-text {
-      position: relative;
-      z-index: 1;
-      font-size: 9.5px;
-      color: #1f2937;
-      line-height: 1.55;
-      min-height: 22mm;
-    }
-    .summary-text .drop {
-      float: left;
-      font-size: 22px;
-      line-height: 0.8;
-      margin-right: 2px;
-      color: var(--brand-deep);
-      font-weight: 800;
-    }
-    .mini-metrics {
-      position: relative;
-      z-index: 1;
-      margin-top: 5mm;
-      padding-top: 4mm;
-      border-top: 1px solid #f1f5f9;
-      display: flex;
-      gap: 8mm;
-    }
-    .mini-metrics .k {
-      font-size: 7px;
-      color: #9ca3af;
-      text-transform: uppercase;
-      letter-spacing: 0.13em;
-      font-weight: 800;
-    }
-    .mini-metrics .v {
-      margin-top: 1px;
-      font-size: 8px;
-      font-weight: 800;
-      text-transform: uppercase;
-      color: #1f2937;
-    }
-    .mini-metrics .warn { color: #dc2626; }
-
-    .score-card {
-      width: 26mm;
-      border-radius: 9mm;
-      background: #1f6458;
-      color: #fff;
-      padding: 6mm 3mm;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 15px 30px rgba(20, 69, 61, 0.22);
-    }
-    .score-ring {
+    .logo-box {
       width: 16mm;
       height: 16mm;
-      border-radius: 999px;
-      border: 2px solid rgba(52, 211, 153, 0.35);
+      border-radius: 5mm;
+      border: 1px solid var(--line);
+      background: #fff;
       display: flex;
       align-items: center;
       justify-content: center;
-      position: relative;
+      overflow: hidden;
+      flex: 0 0 auto;
     }
-    .score-ring::after {
-      content: "";
-      position: absolute;
+    .logo-box img { width: 100%; height: 100%; object-fit: contain; }
+    .logo-fallback {
       width: 100%;
       height: 100%;
-      border-radius: 999px;
-      border-top: 2px solid #facc15;
-      transform: rotate(25deg);
-    }
-    .score-value {
-      font-size: 10.5px;
+      background: linear-gradient(180deg, #2f66bd, #123a75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 14px;
       font-weight: 800;
     }
-    .score-label {
-      margin-top: 3px;
-      font-size: 6.7px;
-      color: rgba(167, 243, 208, 0.86);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      text-align: center;
-      line-height: 1.2;
-    }
-    .score-status {
-      margin-top: 5mm;
-      color: #fcd34d;
-      font-size: 6.5px;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
+    .brand-name {
+      font-size: 18px;
+      line-height: 1;
+      color: var(--blue-900);
       font-weight: 800;
-      text-align: center;
-      line-height: 1.2;
+      letter-spacing: 0.01em;
+      margin-top: 1px;
     }
-
-    .results-wrap {
-      border: 1px solid #e5e7eb;
-      border-radius: 12mm;
-      overflow: hidden;
+    .brand-tag {
+      font-size: 8px;
+      color: #2e5ca8;
+      margin-top: 1.5mm;
+      font-weight: 700;
+    }
+    .brand-meta {
+      margin-top: 2mm;
+      font-size: 7.5px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+    .brand-meta strong { color: var(--blue-800); }
+    .barcode-card {
+      text-align: right;
+      min-width: 52mm;
+    }
+    .barcode {
+      width: 38mm;
+      height: 9mm;
+      margin-left: auto;
+      background: repeating-linear-gradient(90deg, #111 0 1mm, transparent 1mm 1.7mm);
+      border: 1px solid #d2d8e4;
+      margin-bottom: 1mm;
+    }
+    .refcode {
+      font-size: 8px;
+      color: #72819b;
+      letter-spacing: 0.16em;
+      font-family: 'Courier New', monospace;
+    }
+    .lab-title {
+      margin-top: 2mm;
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--blue-900);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .report-blocks {
+      display: grid;
+      grid-template-columns: 1.05fr 1fr 0.95fr;
+      gap: 0;
+      margin-top: 6mm;
+      margin-bottom: 6mm;
+      border: 1px solid var(--line);
       background: #fff;
-      box-shadow: 0 10px 24px rgba(17, 24, 39, 0.05);
+    }
+    .report-block {
+      min-height: 28mm;
+      padding: 4mm 4.5mm;
+      border-right: 1px solid var(--line);
+    }
+    .report-block:last-child { border-right: 0; }
+    .patient-name {
+      font-size: 16px;
+      font-weight: 800;
+      color: #16284d;
+      margin-bottom: 2mm;
+    }
+    .kv {
+      display: grid;
+      grid-template-columns: 18mm 1fr;
+      gap: 1mm 3mm;
+      font-size: 8px;
+      line-height: 1.35;
+      margin-bottom: 1.4mm;
+    }
+    .kv .k {
+      color: #6d7b93;
+      font-weight: 700;
+    }
+    .kv .v {
+      color: var(--ink);
+      font-weight: 700;
+    }
+    .report-title {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--blue-900);
+      margin-top: 4mm;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .report-subtitle {
+      text-align: center;
+      font-size: 7.5px;
+      color: #5f6f8a;
+      margin-top: 1.2mm;
+      line-height: 1.35;
+    }
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 24mm;
+      padding: 2.5mm 4mm;
+      background: var(--blue-700);
+      color: #fff;
+      font-size: 7px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      border-radius: 2mm;
+      margin-top: 2mm;
+    }
+    .section-title {
+      text-align: center;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--blue-900);
+      margin: 4mm 0 2.5mm;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .results-wrap {
+      border: 1px solid var(--line);
+      margin-top: 2mm;
+      background: #fff;
     }
     table {
       width: 100%;
       border-collapse: collapse;
+      table-layout: fixed;
     }
-    thead tr {
-      background: #f8fafc;
-      border-bottom: 1px solid #e5e7eb;
-    }
-    th {
-      text-align: left;
+    thead th {
+      background: var(--blue-100);
+      color: var(--blue-900);
       font-size: 7px;
-      font-weight: 800;
-      color: var(--brand-deep);
       text-transform: uppercase;
-      letter-spacing: 0.23em;
-      padding: 4mm 4.5mm;
+      letter-spacing: 0.1em;
+      text-align: left;
+      padding: 2.6mm 3mm;
+      border-bottom: 1px solid var(--line);
     }
-    td {
-      padding: 4mm 4.5mm;
-      border-top: 1px solid #f1f5f9;
-      vertical-align: top;
+    tbody td {
+      padding: 3mm;
+      border-top: 1px solid #edf2f7;
+      vertical-align: middle;
+      font-size: 8px;
     }
-    .test-name {
-      font-size: 9px;
+    tbody tr.abnormal-row { background: #fff6f6; }
+    .investigation-code {
+      font-size: 6px;
+      color: #5871a5;
       font-weight: 800;
-      color: #111827;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      line-height: 1.2;
+      margin-bottom: 0.8mm;
     }
-    .val {
+    .investigation-name {
+      font-size: 8px;
+      font-weight: 800;
+      color: #1b2b4a;
+      text-transform: capitalize;
+    }
+    .result-value {
       font-size: 10px;
       font-weight: 800;
-      color: #111827;
+      color: #1b2b4a;
+      line-height: 1.2;
     }
-    .unit {
-      font-size: 7px;
-      color: #9ca3af;
-      text-transform: uppercase;
-      font-weight: 700;
-      margin-left: 1px;
-    }
-    .ref {
-      font-size: 8px;
-      color: #6b7280;
-      font-weight: 700;
-    }
-    .flag-pill {
+    .result-flag {
       display: inline-block;
-      border-radius: 7px;
-      padding: 2px 6px;
+      margin-top: 1.2mm;
+      color: var(--ok);
       font-size: 6.8px;
       font-weight: 800;
       text-transform: uppercase;
-      letter-spacing: 0.14em;
-      border: 1px solid #d1fae5;
-      color: #059669;
-      background: #ecfdf5;
+      letter-spacing: 0.08em;
     }
-    .flag-pill.warn {
-      border-color: #fecaca;
-      color: #dc2626;
-      background: #fff1f2;
+    .result-flag.warn { color: var(--warn); }
+    .reference-value, .unit-value {
+      font-size: 8px;
+      color: #4d5d78;
+      font-weight: 700;
     }
-    .ai-row td {
-      padding-top: 2.5mm;
-      padding-bottom: 4.5mm;
+    .note-line {
+      font-size: 7.2px;
+      color: #203457;
+      margin-top: 2.5mm;
+      line-height: 1.5;
     }
-    .ai-pill {
-      border-radius: 999px;
-      border: 1px solid #e2e8f0;
-      background: #f8fafc;
-      padding: 2.5mm 3mm;
-      display: flex;
-      align-items: center;
-      gap: 2mm;
-    }
-    .ai-dot {
-      width: 4px;
-      height: 4px;
-      border-radius: 999px;
-      background: #34d399;
-      flex: 0 0 auto;
-      margin-top: 1px;
-    }
-    .ai-pill.warn .ai-dot { background: #fb7185; }
-    .ai-caption {
-      color: #c0c6d0;
-      font-size: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.18em;
-      font-weight: 800;
-      margin-right: 2mm;
-      white-space: nowrap;
-    }
-    .ai-text {
-      color: #6b7280;
-      font-size: 7px;
-      line-height: 1.35;
+    .note-line strong {
       font-style: italic;
       font-weight: 700;
     }
-
-    .footer {
-      margin-top: 10mm;
-      border-top: 1px solid #f1f5f9;
-      padding-top: 6mm;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      gap: 4mm;
+    .summary-card {
+      margin-top: 4.5mm;
+      border: 1px solid #cdd8ea;
+      border-radius: 3mm;
+      padding: 3.8mm 4mm;
+      background: #fbfdff;
     }
-    .sig-line {
-      width: 44mm;
-      height: 1px;
-      background: #111827;
-      margin-bottom: 2mm;
-    }
-    .sig-name {
+    .summary-card .head {
+      color: var(--blue-900);
       font-size: 8px;
       font-weight: 800;
       text-transform: uppercase;
-      color: #111827;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.05em;
+      margin-bottom: 1.8mm;
     }
-    .sig-role {
-      margin-top: 1px;
-      font-size: 6.8px;
-      color: #9ca3af;
-      text-transform: uppercase;
-      font-weight: 700;
-      letter-spacing: 0.14em;
+    .summary-card .summary-text {
+      font-size: 7.6px;
+      line-height: 1.55;
+      color: #243658;
+      margin-bottom: 2mm;
     }
-    .fingerprint {
+    .summary-card ul {
+      margin: 0;
+      padding-left: 4mm;
+      color: #243658;
+      font-size: 7.3px;
+      line-height: 1.4;
+    }
+    .footer {
+      margin-top: 11mm;
+      padding-top: 6mm;
+      border-top: 1px solid #b9c6da;
+      display: flex;
+      justify-content: space-between;
+      gap: 8mm;
+      align-items: flex-end;
+    }
+    .sig-block {
+      width: 50mm;
+    }
+    .sig-line {
+      width: 100%;
+      height: 1px;
+      background: #445a7f;
+      margin-bottom: 1.6mm;
+    }
+    .sig-title {
+      font-size: 7.5px;
+      color: #18335f;
+      font-weight: 800;
+      margin-bottom: 0.8mm;
+    }
+    .sig-name {
+      font-size: 7px;
+      color: #5f6f8a;
+    }
+    .footer-right {
       text-align: right;
     }
-    .fingerprint .k {
-      font-size: 6.5px;
-      color: #c0c6d0;
-      text-transform: uppercase;
-      letter-spacing: 0.22em;
-      font-weight: 800;
-    }
-    .fingerprint .v {
-      margin-top: 2px;
-      font-family: "Courier New", monospace;
+    .footer-right .small {
       font-size: 7px;
-      color: #6b7280;
-      text-transform: uppercase;
+      color: #6b7c95;
+      line-height: 1.45;
+    }
+    .footer-bar {
+      margin-top: 6mm;
+      background: var(--blue-900);
+      color: #fff;
+      text-align: center;
+      padding: 3mm 0;
+      font-size: 8px;
       font-weight: 800;
-      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
     }
   </style>
 </head>
 <body>
   <div class="page">
     <div class="sheet">
+      <div class="topbar">
+        <div class="brand-band"></div>
+        <div class="site-pill">www.secundlab.com</div>
+      </div>
+
       <div class="header">
-        <div class="brand-left">
-          <div class="logo-box">{{LAB_LOGO}}</div>
-          <div>
-            <div class="brand-title">LabIntel <span class="verified">Verified</span></div>
-            <div class="brand-sub">Precision Diagnostics and AI Analysis</div>
-          </div>
-        </div>
-        <div class="brand-right">
-          <h2>Labintel Diagnostic Systems</h2>
-          <div class="contact">{{LAB_NAME}}</div>
-          <div class="contact">{{LAB_ADDRESS}}</div>
-          <div class="contact">{{LAB_PHONE}}</div>
-          <div class="badge">NABL Accredited Lab</div>
-        </div>
-      </div>
-
-      <div class="divider"></div>
-
-      <div class="dossier">
-        <div class="dossier-left">
-          <div>
-            <div class="meta-label">Patient Name</div>
-            <div class="patient-name">{{PATIENT_NAME}}</div>
+        <div class="brand">
+          <div class="logo-box">
+            {{LAB_LOGO}}
           </div>
           <div>
-            <div class="meta-label">Patient ID (PID)</div>
-            <div class="meta-value">{{PATIENT_ID}}</div>
-          </div>
-          <div>
-            <div class="meta-label">Gender / Age</div>
-            <div class="meta-value soft">{{PATIENT_GENDER}} / {{PATIENT_AGE}} YRS</div>
-          </div>
-          <div>
-            <div class="meta-label">Referring Physician</div>
-            <div class="meta-value">{{REFERRED_BY}}</div>
-          </div>
-          <div>
-            <div class="meta-label">Collection Date</div>
-            <div class="meta-value soft">{{COLLECTED_DATE}}</div>
-          </div>
-          <div>
-            <div class="meta-label">Panel</div>
-            <div class="meta-value soft">{{PANEL_NAME}}</div>
-          </div>
-          <div class="specialist">
-            <div class="specialist-icon">S</div>
-            <div>
-              <div class="specialist-title">Specialist Recommended</div>
-              <div class="specialist-name">{{AI_SPECIALIST}}</div>
+            <div class="brand-name">{{LAB_NAME}}</div>
+            <div class="brand-tag">Accurate | Caring | Instant</div>
+            <div class="brand-meta">
+              <div>+91-22-6789-0123 &nbsp;&nbsp; {{LAB_PHONE}}</div>
+              <div>{{LAB_ADDRESS}}</div>
             </div>
           </div>
         </div>
-        <div class="dossier-right">
-          <div>
-            <div class="meta-label">Report Ref</div>
-            <div class="ref-value">{{REPORT_REF}}</div>
-          </div>
-          <div>
-            <div class="meta-label">Release Date</div>
-            <div class="ref-value">{{REPORTED_DATE}}</div>
-          </div>
-          <div>
-            <div class="meta-label">Status</div>
-            <span class="status-chip">{{REPORT_STATUS}}</span>
-          </div>
+        <div class="barcode-card">
+          <div class="barcode"></div>
+          <div class="refcode">{{REPORT_REF}}</div>
+          <div class="lab-title">{{PANEL_NAME}}</div>
         </div>
       </div>
 
-      <div class="section-gap">
-        <div class="insights-head">
-          <div class="insights-icon">N</div>
-          <div>
-            <div class="insights-title">Neural Clinical Interpretation</div>
-            <div class="insights-sub">Biomarker Correlation Engine v4.0</div>
-          </div>
-          <div class="line-grow"></div>
+      <div class="report-blocks">
+        <div class="report-block">
+          <div class="patient-name">{{PATIENT_NAME}}</div>
+          <div class="kv"><div class="k">Age</div><div class="v">{{PATIENT_AGE}} Years</div></div>
+          <div class="kv"><div class="k">Sex</div><div class="v">{{PATIENT_GENDER}}</div></div>
+          <div class="kv"><div class="k">PID</div><div class="v">{{PATIENT_ID}}</div></div>
+          <div class="kv"><div class="k">Ref. Dr.</div><div class="v">{{REFERRED_BY}}</div></div>
         </div>
-
-        <div class="insights-body">
-          <div class="summary-card">
-            <div class="summary-head">AI Synthesis Summary</div>
-            <div class="summary-text"><span class="drop">A</span>I {{AI_SUMMARY}}</div>
-            <div class="mini-metrics">
-              <div>
-                <div class="k">Confidence</div>
-                <div class="v">{{AI_CONFIDENCE}}</div>
-              </div>
-              <div>
-                <div class="k">Risk Level</div>
-                <div class="v warn">{{AI_RISK_LEVEL}}</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="score-card">
-            <div>
-              <div class="score-ring"><div class="score-value">{{HEALTH_SCORE}}</div></div>
-              <div class="score-label">Vitality<br/>Index</div>
-            </div>
-            <div class="score-status">{{HEALTH_LABEL}}</div>
-          </div>
+        <div class="report-block">
+          <div class="report-title">Lab Diagnostic Report</div>
+          <div class="report-subtitle">{{LAB_ADDRESS}}</div>
+          <div class="report-subtitle" style="margin-top: 2mm;">Registered: {{REGISTERED_DATE}}</div>
+          <div class="report-subtitle">Collected: {{COLLECTED_DATE}}</div>
+          <div class="report-subtitle">Reported: {{REPORTED_DATE}}</div>
+        </div>
+        <div class="report-block" style="text-align: right;">
+          <div class="report-subtitle" style="text-align: left; font-size: 7.6px; font-weight: 700; color: #18335f;">{{LAB_NAME}}</div>
+          <div class="report-subtitle" style="text-align: left;">{{LAB_PHONE}}</div>
+          <div class="report-subtitle" style="text-align: left;">{{LAB_ADDRESS}}</div>
+          <div class="status-chip">{{REPORT_STATUS}}</div>
         </div>
       </div>
+
+      <div class="section-title">{{PANEL_NAME}}</div>
 
       <div class="results-wrap">
         <table>
           <thead>
             <tr>
-              <th style="width:38%;">Investigation</th>
-              <th style="width:20%;">Result</th>
-              <th style="width:25%;">Reference Value</th>
-              <th style="width:17%; text-align:right;">Status</th>
+              <th style="width: 40%;">Investigation</th>
+              <th style="width: 22%;">Result</th>
+              <th style="width: 23%;">Reference Value</th>
+              <th style="width: 15%;">Unit</th>
             </tr>
           </thead>
           <tbody>
@@ -690,18 +478,39 @@
         </table>
       </div>
 
+      <div class="note-line">
+        Instrument: <strong>Automated laboratory analyzer</strong>
+      </div>
+      <div class="note-line">
+        Interpretation: Please consult your doctor to interpret these results.
+      </div>
+
+      <div class="summary-card">
+        <div class="head">Simple AI Summary for Patient Understanding</div>
+        <div class="summary-text">{{AI_SUMMARY}}</div>
+        <ul>
+          {{AI_FINDINGS}}
+        </ul>
+      </div>
+
       <div class="footer">
-        <div>
+        <div class="sig-block">
           <div class="sig-line"></div>
-          <div class="sig-name">{{TECHNICIAN_NAME}}</div>
-          <div class="sig-role">Senior Lab Technologist</div>
+          <div class="sig-title">{{TECHNICIAN_NAME}}</div>
+          <div class="sig-name">Lab Technician</div>
         </div>
-        <div class="fingerprint">
-          <div class="k">Digital Fingerprint</div>
-          <div class="v">{{REPORT_ID}}</div>
-          <div class="sig-role" style="margin-top:3px;">Generated {{GENERATED_AT}}</div>
+        <div class="sig-block">
+          <div class="sig-line"></div>
+          <div class="sig-title">{{AI_SPECIALIST}}</div>
+          <div class="sig-name">Pathologist</div>
+        </div>
+        <div class="footer-right">
+          <div class="small">Generated on {{GENERATED_AT}}</div>
+          <div class="small">Digital report</div>
         </div>
       </div>
+
+      <div class="footer-bar">Lab Diagnostic Report</div>
     </div>
   </div>
 </body>

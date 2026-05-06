@@ -162,6 +162,7 @@ async function generateAndUploadPDF(reportId) {
 
     const confidence = insight?.summary ? '96.8% Match' : '91.2% Match';
     const specialist = inferSpecialist(`${insight?.recommendation || ''} ${insight?.summary || ''}`);
+    const summaryFindings = Array.isArray(insight?.findings) ? insight.findings.filter(Boolean) : [];
 
     const tableRows = sortedValues.map((tv) => {
       const p = tv.test_parameters || {};
@@ -172,22 +173,17 @@ async function generateAndUploadPDF(reportId) {
       const displayFlag = getDisplayFlag(tv.flag);
 
       return `
-        <tr>
-          <td><div class="test-name">${escapeHtml(p.name || 'N/A')}</div></td>
-          <td><span class="val">${escapeHtml(tv.value)}</span><span class="unit">${escapeHtml(p.unit || '')}</span></td>
-          <td><span class="ref">${escapeHtml(refStr)}</span></td>
-          <td style="text-align:right;">
-            <span class="flag-pill ${abnormal ? 'warn' : ''}">${escapeHtml(displayFlag)}</span>
+        <tr class="${abnormal ? 'abnormal-row' : ''}">
+          <td>
+            <div class="investigation-code">${escapeHtml((p.name || 'N/A').toUpperCase())}</div>
+            <div class="investigation-name">${escapeHtml(p.name || 'N/A')}</div>
           </td>
-        </tr>
-        <tr class="ai-row">
-          <td colspan="4">
-            <div class="ai-pill ${abnormal ? 'warn' : ''}">
-              <span class="ai-dot"></span>
-              <span class="ai-caption">AI Clinical Insight:</span>
-              <span class="ai-text">${escapeHtml(getInsightText(p.name, abnormal))}</span>
-            </div>
+          <td>
+            <div class="result-value">${escapeHtml(tv.value)}</div>
+            <div class="result-flag ${abnormal ? 'warn' : ''}">${escapeHtml(displayFlag)}</div>
           </td>
+          <td><div class="reference-value">${escapeHtml(refStr)}</div></td>
+          <td><div class="unit-value">${escapeHtml(p.unit || '—')}</div></td>
         </tr>`;
     }).join('');
 
@@ -195,6 +191,9 @@ async function generateAndUploadPDF(reportId) {
     const reportRef = `#${String(report.id || '').slice(0, 8).toUpperCase()}`;
     const reportStatus = String(report.status || 'final').replace(/_/g, ' ').toUpperCase();
     const aiSummary = insight?.summary || 'AI summary could not be generated at this time.';
+    const aiBulletItems = summaryFindings.length
+      ? summaryFindings.map((finding) => `<li>${escapeHtml(finding)}</li>`).join('')
+      : '<li>AI summary could not be generated at this time.</li>';
 
     const html = templateRaw
       .replace(/{{LAB_COLOR}}/g, escapeHtml(lab?.primary_color || '#1f6458'))
@@ -223,21 +222,15 @@ async function generateAndUploadPDF(reportId) {
       .replace(/{{TECHNICIAN_NAME}}/g, escapeHtml(tech?.full_name || 'Senior Technician'))
       .replace(/{{TEST_VALUES_TABLE}}/g, tableRows || `
         <tr>
-          <td><div class="test-name">No parameters available</div></td>
-          <td><span class="val">-</span></td>
-          <td><span class="ref">-</span></td>
-          <td style="text-align:right;"><span class="flag-pill">Normal</span></td>
+          <td><div class="investigation-code">N/A</div><div class="investigation-name">No parameters available</div></td>
+          <td><div class="result-value">-</div><div class="result-flag">Normal</div></td>
+          <td><div class="reference-value">-</div></td>
+          <td><div class="unit-value">-</div></td>
         </tr>
-        <tr class="ai-row">
-          <td colspan="4">
-            <div class="ai-pill">
-              <span class="ai-dot"></span>
-              <span class="ai-caption">AI Clinical Insight:</span>
-              <span class="ai-text">No marker data found for this report.</span>
-            </div>
-          </td>
-        </tr>`)
+      `)
       .replace(/{{REPORT_ID}}/g, escapeHtml(report.id))
+      .replace(/{{REGISTERED_DATE}}/g, escapeHtml(formatDate(report.created_at || report.collected_at)))
+      .replace(/{{AI_FINDINGS}}/g, aiBulletItems)
       .replace(/{{GENERATED_AT}}/g, escapeHtml(new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })));
 
     browser = await puppeteer.launch({

@@ -7,7 +7,7 @@ export const reportService = {
   updateStatus: (id, status) => api.patch(`/reports/${id}/status`, { status }).then(r => r.data),
   getDownloadUrl: (id) => api.get(`/reports/${id}/download`).then(r => r.data),
   regenerateInsights: (id) => api.post(`/reports/${id}/insights`).then(r => r.data),
-  generatePdf: (id) => api.post(`/reports/${id}/generate-pdf`).then(r => r.data),
+  generatePdf: (id) => api.post(`/reports/${id}/generate-pdf`, null, { timeout: 120000 }).then(r => r.data),
   getShare: (token) => api.get(`/reports/share/${token}`).then(r => r.data),
 };
 
