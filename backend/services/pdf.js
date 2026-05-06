@@ -241,18 +241,29 @@ async function generateAndUploadPDF(reportId) {
       .replace(/{{GENERATED_AT}}/g, escapeHtml(new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })));
 
     browser = await puppeteer.launch({
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--disable-translate',
+        '--disable-extensions',
+      ],
+      headless: 'new',
+      timeout: 30000,
     });
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'load', timeout: 30000 });
+    await page.goto('about:blank');
+    await page.setContent(html, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
       margin: { top: '0mm', bottom: '0mm', left: '0mm', right: '0mm' },
+      timeout: 30000,
     });
 
+    await page.close();
     await browser.close();
     browser = null;
 
