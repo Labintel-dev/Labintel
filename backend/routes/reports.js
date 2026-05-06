@@ -25,7 +25,7 @@ router.patch('/:id/status',
 router.post('/:id/insights',
             checkRole('administrator', 'technician'),         ctrl.regenerateInsights);
 router.post('/:id/generate-pdf',
-            checkRole('administrator', 'technician', 'receptionist'),         ctrl.generatePdf);
+            checkRole('administrator', 'manager', 'technician', 'receptionist'),         ctrl.generatePdf);
 router.get('/:id/download',                                  ctrl.downloadReport);
 
 module.exports = router;
