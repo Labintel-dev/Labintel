@@ -16,11 +16,11 @@ function AdminLayout({ onLogout }) {
       <AdminSidebar onLogout={onLogout} />
       <Routes>
         <Route path="/" element={<AdminDashboard />} />
-        <Route path="/labs" element={<AdminAllLabs />} />
-        <Route path="/live-users" element={<AdminLiveUsers />} />
-        <Route path="/reports" element={<AdminReportsLogs />} />
-        <Route path="/activity" element={<AdminActivityLog />} />
-        <Route path="/settings" element={<AdminSettings />} />
+        <Route path="labs" element={<AdminAllLabs />} />
+        <Route path="live-users" element={<AdminLiveUsers />} />
+        <Route path="reports" element={<AdminReportsLogs />} />
+        <Route path="activity" element={<AdminActivityLog />} />
+        <Route path="settings" element={<AdminSettings />} />
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Routes>
     </div>

@@ -23,47 +23,47 @@ export default function LabApp({ slug }) {
   return (
     <Routes>
       {/* Role selection page — shown first */}
-      <Route path="/login" element={<RoleSelect slug={slug} />} />
+      <Route path="login" element={<RoleSelect slug={slug} />} />
 
       {/* Role-specific login — after selecting a role */}
-      <Route path="/login/:role" element={<LabLogin slug={slug} />} />
+      <Route path="login/:role" element={<LabLogin slug={slug} />} />
 
-      <Route path="/dashboard" element={<RequireAuth><LabDashboard /></RequireAuth>} />
+      <Route path="dashboard" element={<RequireAuth><LabDashboard /></RequireAuth>} />
 
-      <Route path="/patients"     element={<RequireAuth><Patients /></RequireAuth>} />
-      <Route path="/patients/new" element={<RequireAuth><Patients /></RequireAuth>} />
-      <Route path="/patients/:id" element={<RequireAuth><PatientDetail /></RequireAuth>} />
+      <Route path="patients"     element={<RequireAuth><Patients /></RequireAuth>} />
+      <Route path="patients/new" element={<RequireAuth><Patients /></RequireAuth>} />
+      <Route path="patients/:id" element={<RequireAuth><PatientDetail /></RequireAuth>} />
 
-      <Route path="/reports"      element={<RequireAuth><Reports /></RequireAuth>} />
-      <Route path="/reports/new"  element={
+      <Route path="reports"      element={<RequireAuth><Reports /></RequireAuth>} />
+      <Route path="reports/new"  element={
         <RequireAuth><RequireRole roles={['administrator','manager','technician']}><NewReport /></RequireRole></RequireAuth>
       } />
-      <Route path="/reports/:id"  element={<RequireAuth><ReportDetail /></RequireAuth>} />
+      <Route path="reports/:id"  element={<RequireAuth><ReportDetail /></RequireAuth>} />
 
-      <Route path="/analytics" element={
+      <Route path="analytics" element={
         <RequireAuth><RequireRole roles={ADMIN}><Analytics /></RequireRole></RequireAuth>
       } />
-      <Route path="/alerts" element={
+      <Route path="alerts" element={
         <RequireAuth><RequireRole roles={ADMIN}><Alerts /></RequireRole></RequireAuth>
       } />
-      <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
+      <Route path="settings" element={<RequireAuth><Settings /></RequireAuth>} />
 
       {/* Manager-only pages */}
-      <Route path="/staff" element={
+      <Route path="staff" element={
         <RequireAuth><RequireRole roles={ADMIN}><StaffManagement /></RequireRole></RequireAuth>
       } />
-      <Route path="/staff-tracking" element={
+      <Route path="staff-tracking" element={
         <RequireAuth><RequireRole roles={ADMIN}><StaffTracking /></RequireRole></RequireAuth>
       } />
-      <Route path="/test-panels" element={
+      <Route path="test-panels" element={
         <RequireAuth><RequireRole roles={ADMIN}><TestPanels /></RequireRole></RequireAuth>
       } />
-      <Route path="/lab-settings" element={
+      <Route path="lab-settings" element={
         <RequireAuth><RequireRole roles={ADMIN}><LabSettings /></RequireRole></RequireAuth>
       } />
 
       {/* Release report — redirect to reports filtered by in_review */}
-      <Route path="/release" element={
+      <Route path="release" element={
         <RequireAuth><RequireRole roles={ADMIN}><Reports defaultStatus="in_review" /></RequireRole></RequireAuth>
       } />
 
