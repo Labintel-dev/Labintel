@@ -143,7 +143,8 @@ async function getLabBySlug(req, res) {
 // ─── Patient: Send OTP ────────────────────────────────────────────────────
 async function sendOtpHandler(req, res) {
   const { phone } = req.body;
-  const isDev = process.env.NODE_ENV !== 'production';
+  // Temporarily force dev mode to always use 123456 as requested
+  const isDev = true; 
 
   // In dev mode, always use fixed OTP '123456' — no SMS sent
   const otp = isDev ? '123456' : String(Math.floor(100000 + Math.random() * 900000));
