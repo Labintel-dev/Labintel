@@ -1,8 +1,16 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
+
+// Debug log for production troubleshooting
+console.log('API baseURL configured as:', baseURL);
+if (baseURL.includes('localhost') && window.location.hostname !== 'localhost') {
+  console.warn('⚠️ WARNING: Frontend is deployed but API is pointing to localhost. You must set VITE_API_URL in your Vercel project environment variables to point to your Render backend.');
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1',
+  baseURL,
   timeout: 15000,
   headers: { 'Content-Type': 'application/json' },
 });

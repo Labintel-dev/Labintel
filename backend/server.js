@@ -28,8 +28,11 @@ const PORT = process.env.PORT || 3001;
 app.use(helmet());
 
 // 2. CORS — allow configured frontend origins (Vercel URL + local dev)
+const rawFrontendUrl = process.env.FRONTEND_URL || '';
+const frontendUrl = rawFrontendUrl.endsWith('/') ? rawFrontendUrl.slice(0, -1) : rawFrontendUrl;
+
 const ALLOWED_ORIGINS = [
-  process.env.FRONTEND_URL,       // e.g. https://labintel.vercel.app
+  frontendUrl,                     // e.g. https://labintel.vercel.app
   'http://localhost:5173',         // local dev (standard)
   'http://localhost:5174',         // local dev (alternative)
 ].filter(Boolean);
@@ -37,7 +40,18 @@ const ALLOWED_ORIGINS = [
 app.use(cors({
   origin: (origin, cb) => {
     // Allow requests with no Origin header (curl, Render health checks)
-    if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+    if (!origin) return cb(null, true);
+    
+    // Check if origin matches allowed origins
+    if (ALLOWED_ORIGINS.includes(origin)) {
+      return cb(null, true);
+    }
+    
+    // Allow any Vercel preview URL dynamically if desired, or exact match
+    if (origin.endsWith('.vercel.app')) {
+      return cb(null, true);
+    }
+
     cb(new Error(`CORS: origin '${origin}' is not allowed`));
   },
   credentials: true,
