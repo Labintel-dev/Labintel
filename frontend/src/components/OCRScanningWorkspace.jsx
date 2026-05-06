@@ -58,7 +58,7 @@ const normalizeAnalysis = (payload = {}) => {
       age: patientInfo.age || '--',
       gender: patientInfo.gender || '--',
       date: patientInfo.date || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '/'),
-      doctor: patientInfo.doctor || '',
+      doctor: patientInfo.doctor || 'Certified Physician',
     },
     results: {
       ...results,

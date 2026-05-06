@@ -286,12 +286,12 @@ async function analyzeReportImage(base64Image, mimeType = 'image/jpeg') {
       advice: [],
     };
   }
-
+ 
   try {
     const prompt = `CRITICAL MANDATE: Analyze this medical report image and extract EVERY SINGLE test result, biomarker, and medication found.
 DO NOT SUMMARIZE. Zero data loss is mandatory. If the report has 100 markers, extract all 100.
-For every parameter, you MUST provide a unique 'insight', 'creativeSolution', 'suggestedMedicine', and 'suggestedSpecialist'.
-
+Identify the patient name, age, and gender with absolute precision. Look for institutional headers and footers.
+ 
 Structure:
 {
   "type": "Lab Report" | "Prescription" | "Other",

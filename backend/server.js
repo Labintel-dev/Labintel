@@ -28,7 +28,8 @@ app.use(helmet());
 // 2. CORS — allow configured frontend origins (Vercel URL + local dev)
 const ALLOWED_ORIGINS = [
   process.env.FRONTEND_URL,       // e.g. https://labintel.vercel.app
-  'http://localhost:5173',         // local dev
+  'http://localhost:5173',         // local dev (standard)
+  'http://localhost:5174',         // local dev (alternative)
 ].filter(Boolean);
 
 app.use(cors({
