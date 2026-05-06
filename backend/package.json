@@ -9,7 +9,7 @@
     "seed": "node db/seed.js",
     "seed:enterprise": "node db/seedEnterprise.js",
     "migrate": "node db/runMigrations.js",
-    "test": "vitest run"
+    "test": "vitest run --config vitest.config.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.2.1",
