@@ -1,77 +1,110 @@
 'use strict';
-/**
- * sms.js — Fast2SMS India SMS integration.
- * All functions are fire-and-forget.
- * A failed SMS must NEVER crash the main request or cause a 500.
- */
-require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
-const axios  = require('axios');
+const twilio = require('twilio');
 const logger = require('../logger');
 
-const FAST2SMS_URL = 'https://www.fast2sms.com/dev/bulkV2';
+const TWILIO_ACCOUNT_SID = String(process.env.TWILIO_ACCOUNT_SID || '').trim();
+const TWILIO_AUTH_TOKEN = String(process.env.TWILIO_AUTH_TOKEN || '').trim();
+const FROM_NUMBER = String(process.env.TWILIO_PHONE_NUMBER || '').trim();
+
+// Initialize Twilio client once — reused across all calls
+const client = TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN
+  ? twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+  : null;
 
 /**
- * Base SMS sender — strips +91 prefix that Fast2SMS doesn't accept.
- * @param {string} phone   - +91XXXXXXXXXX format
- * @param {string} message - SMS body text
+ * Core SMS sender — all other functions call this
  */
-async function sendSMS(phone, message) {
-  const apiKey = process.env.FAST2SMS_API_KEY;
-
-  if (!apiKey || apiKey.startsWith('REPLACE')) {
-    logger.warn(`SMS skipped (no API key configured): would send to ${phone}`);
-    return;
+async function sendSMS(to, body) {
+  if (!client || !FROM_NUMBER) {
+    logger.error('SMS configuration is missing. Check TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_PHONE_NUMBER.');
+    throw new Error('SMS service is not configured.');
   }
 
-  // Fast2SMS requires the number without country code
-  const number = phone.replace(/^\+91/, '').replace(/\s/g, '');
+  // Format Indian numbers to E.164 (+91XXXXXXXXXX)
+  // Twilio requires international format
+  let toFormatted = to.toString().trim();
+  if (!toFormatted.startsWith('+')) {
+    // Remove leading 0 if present, then prepend +91 for India
+    toFormatted = '+91' + toFormatted.replace(/^0/, '');
+  }
 
   try {
-    const response = await axios.post(
-      FAST2SMS_URL,
-      {
-        route:    'q',
-        message,
-        language: 'english',
-        flash:    0,
-        numbers:  number,
-      },
-      {
-        headers:        { authorization: apiKey },
-        timeout:        8000,
-      }
-    );
+    const message = await client.messages.create({
+      body: body,
+      from: FROM_NUMBER,
+      to: toFormatted,
+    });
 
-    if (response.data?.return === false) {
-      logger.error(`SMS rejected by Fast2SMS for ${phone}: ${JSON.stringify(response.data)}`);
-    } else {
-      logger.info(`SMS sent to ${phone}`);
-    }
+    logger.info('SMS sent', { sid: message.sid, to: toFormatted });
+    return message;
   } catch (err) {
-    // Log but NEVER throw — failed SMS must not crash anything
-    logger.error(`SMS send failed for ${phone}: ${err.message}`);
+    logger.error(`SMS send failed for ${toFormatted}: ${err.message}`);
+    throw err;
   }
 }
 
 /**
- * Send a 6-digit OTP to a patient's phone.
- * @param {string} phone - +91XXXXXXXXXX
- * @param {string} otp   - 6-digit code (as string)
+ * Called when manager/receptionist releases a report
+ * Sends direct signed PDF URL for immediate download/view
+ * @param {string} phone - Patient phone number
+ * @param {object} options - { patientName, labName, pdfUrl }
+ * @returns {Promise} Twilio message object
  */
-const sendOTP = (phone, otp) =>
-  sendSMS(phone, `Your LabIntel OTP is ${otp}. Valid for 5 minutes. Do not share this code.`);
+// 
+async function sendReportReady(phone, {
+  patientName,
+  labName,
+}) {
+
+  const reportLink =
+    'https://labintelorg.vercel.app/patient';
+
+  const body =
+    `Hi ${patientName}, your lab report from ${labName} is now ready.\n\n` +
+    `View Report:\n${reportLink}\n\n` +
+    `For any queries, contact your lab directly.`;
+
+  logger.info(`Sending report ready SMS to ${phone}`);
+
+  return sendSMS(phone, body);
+}
+// async function sendReportReady(phone, {
+//   patientName,
+//   labName,
+//   reportLink,
+// }) {
+
+//   const body =
+//     `Hi ${patientName}, your lab report from ${labName} is now ready.\n\n` +
+//     `View Report:\n${reportLink}`;
+
+//   logger.info(`Sending SMS to ${phone}`);
+
+//   return sendSMS(phone, body);
+// }
+/**
+ * OTP for patient portal login (existing feature)
+ */
+async function sendOTP(phone, otp) {
+  const body = `Your LabIntel OTP is: ${otp}. Valid for 10 minutes. Do not share this with anyone.`;
+  return sendSMS(phone, body);
+}
 
 /**
- * Notify a patient that their lab report is ready.
- * @param {string} phone   - +91XXXXXXXXXX
- * @param {string} name    - Patient's first name
- * @param {string} lab     - Lab name
- * @param {string} pdfUrl  - Signed PDF URL (or portal URL)
+ * Appointment confirmation (if you add booking system)
  */
-const sendReportReady = (phone, name, lab, pdfUrl) =>
-  sendSMS(
-    phone,
-    `Dear ${name}, your ${lab} lab report is ready. Download it here: ${pdfUrl}. - LabIntel`
-  );
+async function sendAppointmentConfirmation(phone, { name, ref, date, time }) {
+  const body =
+    `Hi ${name}, your appointment is confirmed! ` +
+    `Ref: ${ref} | Date: ${date} | Time: ${time}. ` +
+    `Please arrive 10 minutes early.`;
 
-module.exports = { sendSMS, sendOTP, sendReportReady };
+  return sendSMS(phone, body);
+}
+
+module.exports = {
+  sendSMS,
+  sendReportReady,
+  sendOTP,
+  sendAppointmentConfirmation,
+};

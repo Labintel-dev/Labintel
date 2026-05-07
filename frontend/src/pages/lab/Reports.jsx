@@ -7,7 +7,7 @@ import { Card, Button, Skeleton, EmptyState, StatusBadge, Badge } from '../../co
 import { formatDate, timeAgo } from '../../utils/formatDate';
 import { usePermission } from '../../hooks/useAuth';
 import { useLabPath } from '../../hooks/useLabPath';
-import { Search, Filter, Plus, Download, ChevronRight, X } from 'lucide-react';
+import { Search, Filter, Plus, Eye, ChevronRight, X } from 'lucide-react';
 
 const STATUS_OPTS = ['', 'draft', 'in_review', 'released'];
 
@@ -29,10 +29,12 @@ export default function Reports() {
   const total    = data?.pagination?.total || 0;
   const totalPages = Math.ceil(total / 20);
 
-  const handleDownload = async (id) => {
+  const handleViewPdf = async (id) => {
     try {
       const r = await reportService.getDownloadUrl(id);
-      window.open(r.url, '_blank');
+      if (r?.url) {
+        window.open(r.url, '_blank', 'noopener,noreferrer');
+      }
     } catch { /* silent */ }
   };
 
@@ -107,8 +109,12 @@ export default function Reports() {
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-2 justify-end">
                           {r.pdf_url && (
-                            <button onClick={() => handleDownload(r.id)} className="text-slate-400 hover:text-teal-600 transition-colors">
-                              <Download size={14} />
+                            <button
+                              onClick={() => handleViewPdf(r.id)}
+                              className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-teal-600 transition-colors"
+                            >
+                              <Eye size={14} />
+                              View PDF
                             </button>
                           )}
                           <Link to={lp(`reports/${r.id}`)} className="text-xs font-medium text-teal-600 hover:text-teal-700 flex items-center gap-1">

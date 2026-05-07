@@ -1,15 +1,15 @@
 'use strict';
 const supabase = require('../db/supabase');
-const { computeFlag }            = require('../services/flagService');
+const { computeFlag } = require('../services/flagService');
 const aiService = require('../services/aiService');
-const { generateAndUploadPDF }   = require('../services/pdf');
-const { getSignedUrl }           = require('../services/storage');
-const { sendReportReady }        = require('../services/sms');
+const { generateAndUploadPDF } = require('../services/pdf');
+const { getSignedUrl } = require('../services/storage');
+const { sendReportReady } = require('../services/sms');
 const logger = require('../logger');
 
 // Status transition rules (forward only)
 const VALID_TRANSITIONS = {
-  draft:     'in_review',
+  draft: 'in_review',
   in_review: 'released',
 };
 
@@ -44,7 +44,7 @@ async function listReports(req, res) {
 
 // ─── Create report (synchronous) + trigger AI + PDF (async) ──────────────
 async function createReport(req, res) {
-  const lab_id     = req.user.lab_id;
+  const lab_id = req.user.lab_id;
   const created_by = req.user.id;
   const { panel_id, patient_id, collected_at, values } = req.body;
 
@@ -110,10 +110,10 @@ async function createReport(req, res) {
 
   // ── Compute flags + build test_values rows ─────────────────────────────────
   const testValuesRows = values.map(v => ({
-    report_id:    report.id,
+    report_id: report.id,
     parameter_id: v.parameter_id,
-    value:        v.value,
-    flag:         paramMap[v.parameter_id]
+    value: v.value,
+    flag: paramMap[v.parameter_id]
       ? computeFlag(v.value, patient.gender, paramMap[v.parameter_id])
       : 'normal',
   }));
@@ -130,7 +130,7 @@ async function createReport(req, res) {
 
   // ── Return 201 immediately ─────────────────────────────────────────────────
   res.status(201).json({
-    data:    report,
+    data: report,
     message: 'Report created. AI analysis and PDF generation are in progress.',
   });
 
@@ -146,12 +146,12 @@ async function createReport(req, res) {
         const p = paramMap[v.parameter_id];
         const isFemale = patient.gender === 'female';
         return {
-          name:    p?.name   || 'Unknown',
-          value:   v.value,
-          unit:    p?.unit   || '',
+          name: p?.name || 'Unknown',
+          value: v.value,
+          unit: p?.unit || '',
           ref_min: isFemale ? p?.ref_min_female : p?.ref_min_male,
           ref_max: isFemale ? p?.ref_max_female : p?.ref_max_male,
-          flag:    testValuesRows.find(r => r.parameter_id === v.parameter_id)?.flag || 'normal',
+          flag: testValuesRows.find(r => r.parameter_id === v.parameter_id)?.flag || 'normal',
         };
       });
 
@@ -162,11 +162,11 @@ async function createReport(req, res) {
       );
 
       await supabase.from('report_insights').upsert({
-        report_id:      report.id,
-        summary:        insight.summary,
-        findings:       insight.findings,
+        report_id: report.id,
+        summary: insight.summary,
+        findings: insight.findings,
         recommendation: insight.recommendation,
-        model_used:     'llama-3.3-70b',
+        model_used: 'llama-3.3-70b',
       }, { onConflict: 'report_id' });
 
       logger.info(`AI insight saved for report ${report.id}`);
@@ -174,13 +174,11 @@ async function createReport(req, res) {
       logger.error(`AI insight generation failed for report ${report.id}: ${err.message}`);
     }
   })();
-
-  // Async: Generate PDF is removed from here. PDF will be generated upon release.
 }
 
 // ─── Get single report (full data) ────────────────────────────────────────
 async function getReport(req, res) {
-  const lab_id    = req.user.lab_id;
+  const lab_id = req.user.lab_id;
   const report_id = req.params.id;
 
   const { data: report, error } = await supabase
@@ -204,7 +202,6 @@ async function getReport(req, res) {
     return res.status(404).json({ error: 'Report not found.' });
   }
 
-  // Sort values by parameter sort_order
   if (report.test_values) {
     report.test_values.sort((a, b) =>
       (a.test_parameters?.sort_order || 0) - (b.test_parameters?.sort_order || 0)
@@ -216,13 +213,14 @@ async function getReport(req, res) {
 
 // ─── Update report status (state machine) ─────────────────────────────────
 async function updateStatus(req, res) {
-  const lab_id    = req.user.lab_id;
+  const lab_id = req.user.lab_id;
   const report_id = req.params.id;
   const { status: newStatus } = req.body;
 
+  // ── Fetch current report ───────────────────────────────────────────────────
   const { data: report, error } = await supabase
     .from('reports')
-    .select('id, status, patient_id, lab_id, test_panels ( name )')
+    .select('id, status, patient_id, lab_id, share_token, test_panels ( name )')
     .eq('id', report_id)
     .eq('lab_id', lab_id)
     .single();
@@ -231,7 +229,7 @@ async function updateStatus(req, res) {
     return res.status(404).json({ error: 'Report not found.' });
   }
 
-  // Enforce forward-only state machine
+  // ── Enforce forward-only state machine ────────────────────────────────────
   const expectedNextStatus = VALID_TRANSITIONS[report.status];
   if (newStatus !== expectedNextStatus) {
     return res.status(400).json({
@@ -239,64 +237,72 @@ async function updateStatus(req, res) {
     });
   }
 
-  // Only managers and administrators can release reports.
+  // ── Only managers/administrators can release ───────────────────────────────
   if (newStatus === 'released' && !['administrator', 'manager'].includes(req.user.role)) {
     return res.status(403).json({ error: 'Only a manager or administrator can release reports.' });
   }
 
-  const update = { status: newStatus };
+  const updatePayload = { status: newStatus };
   if (newStatus === 'released') {
-    update.reported_at = new Date().toISOString();
+    updatePayload.reported_at = new Date().toISOString();
   }
 
   const { data: updated, error: updateError } = await supabase
     .from('reports')
-    .update(update)
+    .update(updatePayload)
     .eq('id', report_id)
     .select()
     .single();
 
   if (updateError) return res.status(500).json({ error: updateError.message });
 
+  // ── Respond immediately — don't make manager wait for PDF + SMS ───────────
   res.json({ data: updated });
 
-  // ── Async: Generate PDF & Send SMS on release ─────────────────────────────
+  // ── Async post-release tasks: PDF generation + SMS ────────────────────────
   if (newStatus === 'released') {
     (async () => {
       try {
-        // 1. Generate the final PDF synchronously
+        // Step 1: Generate and upload the PDF
+        logger.info(`Generating PDF for report ${report_id}...`);
         await generateAndUploadPDF(report_id);
+        logger.info(`PDF generated successfully for report ${report_id}`);
 
-        // 2. Fetch the fresh PDF URL
-        const { data: freshReport } = await supabase
-          .from('reports')
-          .select('pdf_url')
-          .eq('id', report_id)
-          .single();
-
-        // 3. Send the SMS/WhatsApp
+        // Step 2: Fetch patient details for the SMS
         const { data: patient } = await supabase
           .from('patients')
           .select('full_name, phone')
           .eq('id', report.patient_id)
           .single();
 
+        // Step 3: Fetch lab name for the SMS
         const { data: lab } = await supabase
           .from('labs')
           .select('name')
           .eq('id', lab_id)
           .single();
 
+        // Step 4: Send SMS if patient has a phone number
         if (patient?.phone) {
-          const portalUrl = `${process.env.FRONTEND_URL}/reports`;
-          sendReportReady(
-            patient.phone,
-            patient.full_name?.split(' ')[0] || 'Patient',
-            lab?.name || 'Lab',
-            freshReport?.pdf_url || portalUrl
-          );
+          // Use share_token for a clean public link (no login required)
+          // Falls back to the patient portal if share_token is missing
+          const reportLink = report.share_token
+            ? `${process.env.FRONTEND_URL}/report/share/${report.share_token}`
+            : `${process.env.FRONTEND_URL}/reports`;
+          // const reportLink =
+          //   `${process.env.BACKEND_URL}/report/${report_id}`;
+
+          await sendReportReady(patient.phone, {
+            patientName: patient.full_name?.split(' ')[0] || 'Patient',
+            labName: lab?.name || 'Your Lab',
+          });
+
+          logger.info(`SMS sent to ${patient.phone} for report ${report_id}`);
+        } else {
+          logger.warn(`No phone number found for patient ${report.patient_id}, SMS skipped`);
         }
       } catch (err) {
+        // Log the error but don't crash — report is already released successfully
         logger.error(`Post-release tasks failed for report ${report_id}: ${err.message}`);
       }
     })();
@@ -305,7 +311,7 @@ async function updateStatus(req, res) {
 
 // ─── Manually retrigger AI insight ────────────────────────────────────────
 async function regenerateInsights(req, res) {
-  const lab_id    = req.user.lab_id;
+  const lab_id = req.user.lab_id;
   const report_id = req.params.id;
 
   const { data: report } = await supabase
@@ -327,7 +333,6 @@ async function regenerateInsights(req, res) {
 
   res.json({ message: 'Insight regeneration triggered.' });
 
-  // Run async
   (async () => {
     try {
       const patient = report.patients;
@@ -337,9 +342,9 @@ async function regenerateInsights(req, res) {
         : 'Unknown';
 
       const insightInput = report.test_values.map(tv => ({
-        name:    tv.test_parameters?.name  || '',
-        value:   tv.value,
-        unit:    tv.test_parameters?.unit  || '',
+        name: tv.test_parameters?.name || '',
+        value: tv.value,
+        unit: tv.test_parameters?.unit || '',
         ref_min: patient?.gender === 'female'
           ? tv.test_parameters?.ref_min_female
           : tv.test_parameters?.ref_min_male,
@@ -357,10 +362,10 @@ async function regenerateInsights(req, res) {
 
       await supabase.from('report_insights').upsert({
         report_id,
-        summary:        insight.summary,
-        findings:       insight.findings,
+        summary: insight.summary,
+        findings: insight.findings,
         recommendation: insight.recommendation,
-        model_used:     'llama-3.3-70b',
+        model_used: 'llama-3.3-70b',
       }, { onConflict: 'report_id' });
 
       logger.info(`Insight regenerated for report ${report_id}`);
@@ -372,7 +377,7 @@ async function regenerateInsights(req, res) {
 
 // ─── Manually retrigger PDF generation ───────────────────────────────────
 async function generatePdf(req, res) {
-  const lab_id    = req.user.lab_id;
+  const lab_id = req.user.lab_id;
   const report_id = req.params.id;
 
   const { data: report } = await supabase
@@ -398,7 +403,7 @@ async function generatePdf(req, res) {
 
 // ─── Get fresh signed PDF URL ─────────────────────────────────────────────
 async function downloadReport(req, res) {
-  const lab_id    = req.user.lab_id;
+  const lab_id = req.user.lab_id;
   const report_id = req.params.id;
 
   const { data: report, error } = await supabase
@@ -414,7 +419,6 @@ async function downloadReport(req, res) {
   try {
     const fileName = `${report_id}.pdf`;
     const freshUrl = await getSignedUrl(fileName);
-    // Update the stored URL with fresh expiry
     await supabase.from('reports').update({ pdf_url: freshUrl }).eq('id', report_id);
     return res.json({ url: freshUrl });
   } catch (err) {

@@ -84,10 +84,14 @@ const getDisplayFlag = (flag) => {
 
 /**
  * Generate and upload the PDF for a report.
+ * Generates a fresh signed URL for the PDF valid for 7 days.
+ * Saves the signed URL to reports.pdf_url column.
  * @param {string} reportId - UUID of the report
+ * @returns {Promise<string>} Signed URL for direct PDF access
  */
 async function generateAndUploadPDF(reportId) {
   let browser;
+  logger.info(`[${reportId}] PDF generation started`);
   try {
     const { data: report, error: reportError } = await supabase
       .from('reports')
@@ -120,8 +124,12 @@ async function generateAndUploadPDF(reportId) {
       .single();
 
     if (reportError || !report) {
-      throw new Error(`Report not found: ${reportError?.message}`);
+      const errMsg = reportError?.message || 'Report not found';
+      logger.error(`[${reportId}] Failed to fetch report data: ${errMsg}`);
+      throw new Error(`Report not found: ${errMsg}`);
     }
+
+    logger.debug(`[${reportId}] Report data fetched successfully for PDF generation`);
 
     const lab = report.labs || {};
     const patient = report.patients || {};
@@ -245,9 +253,12 @@ async function generateAndUploadPDF(reportId) {
       headless: 'new',
       timeout: 30000,
     });
+    logger.debug(`[${reportId}] Browser instance launched for Puppeteer`);
+    
     const page = await browser.newPage();
     await page.goto('about:blank');
     await page.setContent(html, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    logger.debug(`[${reportId}] HTML rendered in Puppeteer page`);
 
     const pdfBuffer = await page.pdf({
       format: 'A4',
@@ -255,23 +266,36 @@ async function generateAndUploadPDF(reportId) {
       margin: { top: '0mm', bottom: '0mm', left: '0mm', right: '0mm' },
       timeout: 30000,
     });
+    logger.debug(`[${reportId}] PDF generated (${pdfBuffer.length} bytes)`);
 
     await page.close();
     await browser.close();
     browser = null;
 
     const fileName = `${report.id}.pdf`;
+    logger.info(`Uploading PDF to storage: ${fileName}`);
     const signedUrl = await uploadPDF(fileName, pdfBuffer);
+    
+    if (!signedUrl) {
+      throw new Error('uploadPDF returned no signed URL');
+    }
 
-    await supabase
+    // Save the signed URL to the database
+    const { error: updateError } = await supabase
       .from('reports')
       .update({ pdf_url: signedUrl })
       .eq('id', reportId);
 
-    logger.info(`PDF generated and uploaded for report ${reportId}`);
+    if (updateError) {
+      logger.error(`Failed to update pdf_url in database for report ${reportId}: ${updateError.message}`);
+      throw updateError;
+    }
+
+    logger.info(`PDF successfully generated, uploaded, and signed URL saved for report ${reportId}`);
+    logger.debug(`Signed URL: ${signedUrl?.substring(0, 100)}...`);
     return signedUrl;
   } catch (err) {
-    logger.error(`PDF generation failed for report ${reportId}: ${err.message}`);
+    logger.error(`[${reportId}] PDF generation failed: ${err.message}`, { stack: err.stack });
   } finally {
     if (browser) {
       try { await browser.close(); } catch (_) { /* ignore */ }

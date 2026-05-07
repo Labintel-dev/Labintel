@@ -8,7 +8,7 @@ import { formatDate } from '../../utils/formatDate';
 import { usePermission } from '../../hooks/useAuth';
 import { useUIStore } from '../../store/uiStore';
 import { useLabPath } from '../../hooks/useLabPath';
-import { ArrowLeft, Download, Share2, Brain, RefreshCw, CheckCircle, AlertCircle, Copy } from 'lucide-react';
+import { ArrowLeft, Eye, Share2, Brain, RefreshCw, CheckCircle, AlertCircle, Copy } from 'lucide-react';
 
 /* ── Status stepper ───────────────────────────────────────────────────── */
 function StatusStepper({ status }) {
@@ -78,29 +78,29 @@ export default function ReportDetail() {
     onSuccess: () => addToast('Insight generation started…', 'info'),
   });
 
-  const generatePdfMutation = useMutation({
-    mutationFn: () => reportService.generatePdf(id),
-    onSuccess: (response) => {
-      if (response?.url) {
-        qc.setQueryData(['report', id], (current) => (
-          current
-            ? { ...current, data: { ...current.data, pdf_url: response.url } }
-            : current
-        ));
-        window.open(response.url, '_blank', 'noopener,noreferrer');
-      } else {
-        qc.invalidateQueries({ queryKey: ['report', id] });
-      }
-      addToast('PDF generated successfully. Opening PDF...', 'success');
-    },
-    onError: () => addToast('Failed to generate PDF. Please try again.', 'error'),
-  });
-
   const handleViewPdf = async () => {
     try {
-      const r = hasPdf ? { url: report.pdf_url } : await reportService.getDownloadUrl(id);
-      window.open(r.url, '_blank', 'noopener,noreferrer');
-    } catch { addToast('Unable to open PDF.', 'error'); }
+      if (!hasPdf) {
+        addToast('PDF is still being generated. Please try again in a moment.', 'info');
+        qc.invalidateQueries({ queryKey: ['report', id] });
+        return;
+      }
+
+      const r = await reportService.getDownloadUrl(id);
+      if (r?.url) {
+        qc.setQueryData(['report', id], (current) => (
+          current
+            ? { ...current, data: { ...current.data, pdf_url: r.url } }
+            : current
+        ));
+        window.open(r.url, '_blank', 'noopener,noreferrer');
+        return;
+      }
+
+      throw new Error('No PDF URL returned');
+    } catch {
+      addToast('Unable to open PDF.', 'error');
+    }
   };
 
   const copyShareLink = () => {
@@ -134,12 +134,11 @@ export default function ReportDetail() {
               <Button
                 size="sm"
                 variant="secondary"
-                onClick={hasPdf ? handleViewPdf : () => generatePdfMutation.mutate()}
-                isLoading={!hasPdf && generatePdfMutation.isPending}
-                disabled={!hasPdf && generatePdfMutation.isPending}
+                onClick={handleViewPdf}
+                disabled={!hasPdf}
               >
-                {hasPdf ? <Download size={14} /> : <RefreshCw size={14} />}
-                {hasPdf ? 'View PDF' : 'Generate PDF'}
+                <Eye size={14} />
+                View PDF
               </Button>
             )}
             {report.share_token && (
