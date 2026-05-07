@@ -11,7 +11,7 @@ import {
   Stethoscope, Sparkles, Camera, ChevronRight, FolderOpen, ArrowLeft,
   Mail, Settings, Phone, Calendar, Droplet, Droplets, RefreshCw, Check,
   Printer, Heart, FlaskConical, Brain, Loader2, Zap, Cpu, Shield, Database,
-  Minus
+  Minus, Volume2
 } from 'lucide-react';
 
 const PRINT_STYLES = `
@@ -204,11 +204,25 @@ const SearchBar = ({ value, onChange, placeholder = 'Search…' }) => (
 
 const getPublicUrl = (path) => {
   if (!path) return null;
-  if (path.startsWith('http') || path.startsWith('/')) return path;
-  // Use the environment variable for the Supabase project URL
+  const value = String(path).trim();
+  if (!value) return null;
+  if (/^https?:\/\//i.test(value)) return value;
+
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-  if (!supabaseUrl) return path;
-  return `${supabaseUrl}/storage/v1/object/public/reports/${path}`;
+  const pdfBucket = import.meta.env.VITE_PDF_STORAGE_BUCKET || 'pdfs';
+
+  // Supabase signed URLs may be returned as relative paths (e.g. /storage/v1/object/sign/...)
+  if (value.startsWith('/')) {
+    if (supabaseUrl && value.startsWith('/storage/')) return `${supabaseUrl}${value}`;
+    return value;
+  }
+
+  if (supabaseUrl && value.startsWith('storage/')) {
+    return `${supabaseUrl}/${value}`;
+  }
+
+  if (!supabaseUrl) return value;
+  return `${supabaseUrl}/storage/v1/object/public/${pdfBucket}/${value}`;
 };
 
 const resolveReportPdfUrl = (reportLike) => {
@@ -1645,9 +1659,17 @@ function ReportTracking({ report }) {
   );
 }
 
-const ReportCard = ({ report, onView, index }) => {
+const ReportCard = ({
+  report,
+  onView,
+  onVoiceSummary,
+  onSourcePdf,
+  isVoiceLoading = false,
+  isVoicePlaying = false,
+  isSourcePdfLoading = false,
+  index
+}) => {
   const isReady = report.status === 'Ready';
-  const sourcePdfUrl = resolveReportPdfUrl(report);
 
   return (
     <motion.div
@@ -1684,17 +1706,22 @@ const ReportCard = ({ report, onView, index }) => {
           >
             <Sparkles size={16} className="text-emerald-400 group-hover:animate-pulse" /> AI DETAILED ANALYSIS
           </button>
-          <a
-            href={sourcePdfUrl || '#'}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => {
-              if (!sourcePdfUrl) e.preventDefault();
-            }}
-            className="flex-1 max-w-md flex items-center justify-center gap-2.5 py-4 bg-white text-gray-400 border border-gray-200 rounded-2xl text-[12px] font-black uppercase tracking-[0.2em] hover:bg-gray-50 hover:text-gray-600 transition-all active:scale-95"
+          <button
+            type="button"
+            onClick={() => onVoiceSummary(report)}
+            disabled={isVoiceLoading}
+            className={`flex-1 max-w-md flex items-center justify-center gap-2.5 py-4 bg-white text-emerald-600 border border-emerald-100 rounded-2xl text-[12px] font-black uppercase tracking-[0.2em] transition-all active:scale-95 group ${isVoiceLoading ? 'opacity-70 cursor-wait' : 'hover:bg-emerald-50 hover:text-emerald-700'} ${isVoicePlaying ? 'bg-emerald-50 text-emerald-700' : ''}`}
           >
-            <Download size={16} /> SOURCE PDF
-          </a>
+            <Volume2 size={16} className={isVoicePlaying ? 'animate-pulse' : 'group-hover:animate-pulse'} /> {isVoiceLoading ? 'PREPARING...' : (isVoicePlaying ? 'STOP VOICE' : 'VOICE SUMMARY')}
+          </button>
+          <button
+            type="button"
+            onClick={() => onSourcePdf(report)}
+            disabled={isSourcePdfLoading}
+            className={`flex-1 max-w-md flex items-center justify-center gap-2.5 py-4 bg-white border border-gray-200 rounded-2xl text-[12px] font-black uppercase tracking-[0.2em] transition-all active:scale-95 ${isSourcePdfLoading ? 'text-gray-500 opacity-80 cursor-wait' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600'}`}
+          >
+            <Download size={16} /> {isSourcePdfLoading ? 'OPENING PDF...' : 'SOURCE PDF'}
+          </button>
         </div>
       ) : (
         <ReportTracking report={report} />
@@ -1730,6 +1757,188 @@ const PatientReports = ({ user, onAnalyze }) => {
   const [activeReport, setActiveReport] = useState(null);
   const [modalView, setModalView] = useState('list');
   const [analyzingReport, setAnalyzingReport] = useState(null);
+  const [voiceLoadingReportId, setVoiceLoadingReportId] = useState(null);
+  const [voicePlayingReportId, setVoicePlayingReportId] = useState(null);
+  const [sourcePdfLoadingReportId, setSourcePdfLoadingReportId] = useState(null);
+  const voiceSummaryCacheRef = useRef({});
+
+  const buildVoiceSummaryText = (report, detailedReport = null) => {
+    const reportInsights = Array.isArray(detailedReport?.report_insights)
+      ? (detailedReport.report_insights[0] || {})
+      : (detailedReport?.report_insights || {});
+    const summary =
+      detailedReport?.ai_analysis?.summary ||
+      reportInsights?.summary ||
+      report?.ai_analysis?.summary ||
+      report?.insights?.summary;
+
+    if (typeof summary === 'string' && summary.trim()) {
+      return summary.replace(/\s+/g, ' ').trim();
+    }
+
+    const values = detailedReport?.test_values || [];
+    const outOfRange = values.filter(v => (v?.flag || '').toLowerCase() !== 'normal');
+
+    if (outOfRange.length > 0) {
+      const highlighted = outOfRange
+        .slice(0, 3)
+        .map(v => v?.test_parameters?.name || 'an indicator')
+        .join(', ');
+      const extra = outOfRange.length > 3 ? ` और ${outOfRange.length - 3} अन्य` : '';
+      const plural = outOfRange.length > 1 ? 'पैरामीटर' : 'पैरामीटर';
+      return `${report.labName} की ${report.testName} रिपोर्ट में ${outOfRange.length} ${plural} सामान्य सीमा से बाहर हैं, जिनमें ${highlighted}${extra} शामिल हैं। कृपया मेडिकल सलाह के लिए विस्तृत AI विश्लेषण देखें।`;
+    }
+
+    return `${report.labName} की ${report.testName} रिपोर्ट, दिनांक ${report.date}, तैयार है। पूरी बायोमार्कर व्याख्या और सुझाव देखने के लिए AI detailed analysis खोलें।`;
+  };
+
+  const selectHindiVoice = () => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return null;
+    const voices = window.speechSynthesis.getVoices() || [];
+    if (!voices.length) return null;
+
+    return (
+      voices.find(v => /^hi(-|_)?/i.test(v.lang || '')) ||
+      voices.find(v => /hindi/i.test(v.name || '')) ||
+      voices.find(v => /india/i.test(v.lang || '')) ||
+      null
+    );
+  };
+
+  const speakSummary = (text, reportId) => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) {
+      alert('Voice summary is not supported in this browser.');
+      return;
+    }
+
+    const cleanText = String(text || '').replace(/\s+/g, ' ').trim();
+    if (!cleanText) {
+      alert('No summary text is available for this report yet.');
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = 'hi-IN';
+    utterance.rate = 0.92;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+
+    const hindiVoice = selectHindiVoice();
+    if (hindiVoice) {
+      utterance.voice = hindiVoice;
+    }
+
+    utterance.onstart = () => setVoicePlayingReportId(reportId);
+    utterance.onend = () => setVoicePlayingReportId(null);
+    utterance.onerror = () => {
+      setVoicePlayingReportId(null);
+      alert('Could not play voice summary. Please try again.');
+    };
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const handleVoiceSummary = async (report) => {
+    if (!report?.id) return;
+    if (typeof window === 'undefined' || !window.speechSynthesis) {
+      alert('Voice summary is not supported in this browser.');
+      return;
+    }
+
+    if (voicePlayingReportId === report.id && window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+      setVoicePlayingReportId(null);
+      return;
+    }
+
+    if (voiceLoadingReportId === report.id) return;
+
+    setVoiceLoadingReportId(report.id);
+    try {
+      const cacheKey = `${report.id}:hi`;
+      let summaryText = voiceSummaryCacheRef.current[cacheKey];
+
+      if (!summaryText) {
+        const response = await apiClient.get(`/patient/reports/${report.id}`, {
+          params: { lang: 'hi' },
+        });
+        const detailedReport = response.data?.data;
+        summaryText = buildVoiceSummaryText(report, detailedReport);
+        voiceSummaryCacheRef.current[cacheKey] = summaryText;
+      }
+
+      speakSummary(summaryText, report.id);
+    } catch (err) {
+      console.error('Voice summary fetch failed:', err);
+      speakSummary(buildVoiceSummaryText(report), report.id);
+    } finally {
+      setVoiceLoadingReportId(null);
+    }
+  };
+
+  const handleOpenSourcePdf = async (report) => {
+    if (!report?.id) return;
+    if (sourcePdfLoadingReportId === report.id) return;
+
+    let popupWindow = null;
+    try {
+      popupWindow = window.open('about:blank', '_blank');
+      if (popupWindow) {
+        popupWindow.opener = null;
+        popupWindow.document.title = 'Opening report PDF...';
+      }
+    } catch (_) {
+      popupWindow = null;
+    }
+
+    setSourcePdfLoadingReportId(report.id);
+    try {
+      const response = await apiClient.get(`/patient/reports/${report.id}/download`);
+      const freshUrl = getPublicUrl(response.data?.url);
+      const fallbackUrl = resolveReportPdfUrl(report);
+      const targetUrl = freshUrl || fallbackUrl;
+
+      if (!targetUrl) {
+        throw new Error('No PDF URL available');
+      }
+
+      if (popupWindow) {
+        popupWindow.location.assign(targetUrl);
+      } else {
+        // Fallback if popup blockers deny new tabs after async work.
+        window.location.assign(targetUrl);
+      }
+    } catch (err) {
+      console.error('Open source PDF failed:', err);
+      if (popupWindow) {
+        popupWindow.close();
+      }
+      let fallbackUrl = resolveReportPdfUrl(report);
+      if (!fallbackUrl) {
+        try {
+          const detailRes = await apiClient.get(`/patient/reports/${report.id}`);
+          fallbackUrl = resolveReportPdfUrl(detailRes.data?.data || report);
+        } catch (_) {
+          // Ignore detail fallback error
+        }
+      }
+      if (fallbackUrl) {
+        window.location.assign(fallbackUrl);
+      } else {
+        alert('PDF is not ready yet. Please try again in a moment.');
+      }
+    } finally {
+      setSourcePdfLoadingReportId(null);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
 
   const handleViewReport = async (report) => {
     setAnalyzingReport(report);
@@ -1924,7 +2133,17 @@ const PatientReports = ({ user, onAnalyze }) => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {reports.filter(r => r.status !== 'Ready').map((r, i) => (
-                <ReportCard key={r.id} report={r} onView={handleViewReport} index={i} />
+                <ReportCard
+                  key={r.id}
+                  report={r}
+                  onView={handleViewReport}
+                  onVoiceSummary={handleVoiceSummary}
+                  onSourcePdf={handleOpenSourcePdf}
+                  isVoiceLoading={voiceLoadingReportId === r.id}
+                  isVoicePlaying={voicePlayingReportId === r.id}
+                  isSourcePdfLoading={sourcePdfLoadingReportId === r.id}
+                  index={i}
+                />
               ))}
             </div>
           </div>
@@ -1939,7 +2158,17 @@ const PatientReports = ({ user, onAnalyze }) => {
           <div className="grid grid-cols-1 gap-3">
             {visible.filter(r => r.status === 'Ready').length > 0
               ? visible.filter(r => r.status === 'Ready').map((r, i) => (
-                <ReportCard key={r.id} report={r} onView={handleViewReport} index={i} />
+                <ReportCard
+                  key={r.id}
+                  report={r}
+                  onView={handleViewReport}
+                  onVoiceSummary={handleVoiceSummary}
+                  onSourcePdf={handleOpenSourcePdf}
+                  isVoiceLoading={voiceLoadingReportId === r.id}
+                  isVoicePlaying={voicePlayingReportId === r.id}
+                  isSourcePdfLoading={sourcePdfLoadingReportId === r.id}
+                  index={i}
+                />
               ))
               : (
                 <div className="flex flex-col items-center justify-center py-16 text-center bg-white

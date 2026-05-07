@@ -10,6 +10,7 @@ router.use(authenticatePatientJWT);
 
 router.get('/reports',         ctrl.getMyReports);
 router.get('/reports/:id',     ctrl.getMyReport);
+router.get('/reports/:id/download', ctrl.downloadMyReport);
 router.get('/trends',          ctrl.getMyTrends);
 router.get('/profile',         ctrl.getMyProfile);
 router.put('/profile',         validateBody(updatePatientSchema), ctrl.updateMyProfile);

@@ -28,8 +28,8 @@ async function ensureDefaultLab() {
     .insert({
       slug: 'city-diagnostics',
       name: 'City Diagnostics',
-      phone: '+91-0000-000000',
-      address: 'Default branch',
+      phone: '+918597236321',
+      address: 'Haldia, Purba Medinipur, West Bengal',
       is_active: true,
     })
     .select('id, slug, name')

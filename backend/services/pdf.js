@@ -206,7 +206,7 @@ async function generateAndUploadPDF(reportId) {
     const html = templateRaw
       .replace(/{{LAB_COLOR}}/g, escapeHtml(lab?.primary_color || '#1f6458'))
       .replace(/{{LAB_NAME}}/g, escapeHtml(lab?.name || 'LabIntel Diagnostics'))
-      .replace(/{{LAB_ADDRESS}}/g, escapeHtml(lab?.address || 'Regional Diagnostics Hub, Kolkata - 700037'))
+      .replace(/{{LAB_ADDRESS}}/g, escapeHtml(lab?.address || 'Haldia, Purba Medinipur, West Bengal'))
       .replace(/{{LAB_PHONE}}/g, escapeHtml(lab?.phone || 'contact.labintel@gmail.com'))
       .replace(/{{LAB_LOGO}}/g, lab?.logo_url
         ? `<img src="${escapeHtml(lab.logo_url)}" alt="Lab Logo" />`

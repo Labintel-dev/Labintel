@@ -3,7 +3,9 @@ const supabase = require('../db/supabase');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { sendOTP } = require('../services/sms');
-const { generateDetailedInsight } = require('../services/aiService');
+const { generateDetailedInsight, translateTextToHindi } = require('../services/aiService');
+const { getSignedUrl } = require('../services/storage');
+const { generateAndUploadPDF } = require('../services/pdf');
 const logger = require('../logger');
 
 async function getPatientLabMap(patient_id) {
@@ -59,6 +61,7 @@ async function getMyReports(req, res) {
 async function getMyReport(req, res) {
   const patient_id = req.user.patient_id;
   const report_id  = req.params.id;
+  const requestedLang = String(req.query?.lang || '').toLowerCase();
 
   const { data: report, error } = await supabase
     .from('reports')
@@ -134,11 +137,81 @@ async function getMyReport(req, res) {
         recommendation: existingInsight.recommendation,
       }
     );
+
+    if (['hi', 'hindi', 'hi-in'].includes(requestedLang)) {
+      if (report.ai_analysis?.summary) {
+        report.ai_analysis.summary = await translateTextToHindi(report.ai_analysis.summary);
+      }
+
+      const firstInsight = Array.isArray(report.report_insights)
+        ? (report.report_insights[0] || null)
+        : (report.report_insights || null);
+
+      if (firstInsight && firstInsight.summary) {
+        firstInsight.summary = await translateTextToHindi(firstInsight.summary);
+      }
+    }
   } catch (err) {
     logger.error(`Detailed AI analysis failed for report ${report_id}: ${err.message}`);
   }
 
   return res.json({ data: report });
+}
+
+async function downloadMyReport(req, res) {
+  const patient_id = req.user.patient_id;
+  const report_id = req.params.id;
+
+  const { data: report, error } = await supabase
+    .from('reports')
+    .select('id, pdf_url, status')
+    .eq('id', report_id)
+    .eq('patient_id', patient_id)
+    .single();
+
+  if (error || !report) {
+    return res.status(404).json({ error: 'Report not found.' });
+  }
+
+  const toAbsoluteUrl = (url) => {
+    if (!url) return null;
+    if (/^https?:\/\//i.test(url)) return url;
+    const base = process.env.SUPABASE_URL || '';
+    if (url.startsWith('/')) {
+      if (base && url.startsWith('/object/')) return `${base}/storage/v1${url}`;
+      return base ? `${base}${url}` : url;
+    }
+    if (base && url.startsWith('object/')) return `${base}/storage/v1/${url}`;
+    if (base && url.startsWith('storage/')) return `${base}/${url}`;
+    return url;
+  };
+
+  try {
+    const fileName = `${report_id}.pdf`;
+    const freshUrl = await getSignedUrl(fileName);
+    const absoluteFreshUrl = toAbsoluteUrl(freshUrl);
+    await supabase.from('reports').update({ pdf_url: absoluteFreshUrl }).eq('id', report_id);
+    return res.json({ url: absoluteFreshUrl });
+  } catch (err) {
+    try {
+      // If URL is missing/expired or object is absent, generate PDF on demand.
+      const generatedUrl = await generateAndUploadPDF(report_id);
+      const absoluteGeneratedUrl = toAbsoluteUrl(generatedUrl);
+      if (absoluteGeneratedUrl) {
+        await supabase.from('reports').update({ pdf_url: absoluteGeneratedUrl }).eq('id', report_id);
+        return res.json({ url: absoluteGeneratedUrl });
+      }
+    } catch (_) {
+      // Fall through to legacy fallback below.
+    }
+
+    const fallbackUrl = toAbsoluteUrl(report.pdf_url);
+    if (fallbackUrl && /^https?:\/\//i.test(fallbackUrl)) {
+      return res.json({ url: fallbackUrl });
+    }
+
+    return res.status(404).json({ error: 'PDF not yet generated.' });
+  }
 }
 
 async function getMyTrends(req, res) {
@@ -326,6 +399,7 @@ async function verifyLinkPhoneOtp(req, res) {
 module.exports = {
   getMyReports,
   getMyReport,
+  downloadMyReport,
   getMyTrends,
   getMyProfile,
   updateMyProfile,
