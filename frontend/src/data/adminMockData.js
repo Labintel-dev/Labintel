@@ -38,7 +38,7 @@ export const stats = [
 export const labs = [
   {
     id: '1',
-    name: 'Apollo Diagnostics',
+    name: 'City Diagonostics',
     code: 'AP',
     subdomain: 'apollolab.labintel.in',
     status: 'ACTIVE',
@@ -50,7 +50,7 @@ export const labs = [
   },
   {
     id: '2',
-    name: 'Sunrise Diagnostics',
+    name: 'Sunrise Diagonostics',
     code: 'SR',
     subdomain: 'sunrise.labintel.in',
     status: 'ACTIVE',
@@ -62,7 +62,7 @@ export const labs = [
   },
   {
     id: '3',
-    name: 'City Lab Mumbai',
+    name: 'Neurogen Lab',
     code: 'CL',
     subdomain: 'citylab.labintel.in',
     status: 'TRIAL',
@@ -74,7 +74,7 @@ export const labs = [
   },
   {
     id: '4',
-    name: 'NovaCare Labs',
+    name: 'Clinical Laboratory',
     code: 'NL',
     subdomain: 'novacare.labintel.in',
     status: 'INACTIVE',
@@ -135,9 +135,9 @@ export const labs = [
 ];
 
 export const liveSessions = [
-  { lab: 'Apollo Diagnostics', subdomain: 'apollolab.labintel.in', count: 34, max: 50, color: '#00d4aa' },
-  { lab: 'Sunrise Diagnostics', subdomain: 'sunrise.labintel.in', count: 22, max: 50, color: '#06b6d4' },
-  { lab: 'City Lab Mumbai', subdomain: 'citylab.labintel.in', count: 16, max: 50, color: '#3b82f6' },
+  { lab: 'City Diagonostics', subdomain: 'city.labintel.in', count: 34, max: 50, color: '#00d4aa' },
+  { lab: 'Sunrise Diagonostics', subdomain: 'sunrise.labintel.in', count: 22, max: 50, color: '#06b6d4' },
+  { lab: 'Neurogen Lab', subdomain: 'neurogen.labintel.in', count: 16, max: 50, color: '#3b82f6' },
   { lab: 'MedCare Pathology', subdomain: 'medcare.labintel.in', count: 18, max: 50, color: '#6366f1' },
   { lab: 'HealthFirst Labs', subdomain: 'healthfirst.labintel.in', count: 7, max: 50, color: '#8b5cf6' },
 ];
