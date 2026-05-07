@@ -1684,7 +1684,12 @@ const ReportCard = ({
             <FileText size={24} className="text-[#14453d]" />
           </div>
           <div className="min-w-0">
-            <div className="text-lg font-black text-gray-800 tracking-tight leading-tight mb-1 truncate">{report.testName}</div>
+            <div
+              className="text-lg font-black text-gray-800 tracking-tight leading-tight mb-1 line-clamp-2 break-words"
+              title={report.testName}
+            >
+              {report.testName}
+            </div>
             <div className="flex items-center gap-3">
               <span className="text-[11px] font-black text-[#14453d]/60 uppercase tracking-widest">{report.labName}</span>
               <div className="w-1 h-1 rounded-full bg-gray-300" />
@@ -1766,9 +1771,14 @@ const PatientReports = ({ user, onAnalyze }) => {
     const reportInsights = Array.isArray(detailedReport?.report_insights)
       ? (detailedReport.report_insights[0] || {})
       : (detailedReport?.report_insights || {});
+    
+    // Prioritize voice_summary for voice narration (Hindi)
     const summary =
+      detailedReport?.ai_analysis?.voice_summary ||
+      reportInsights?.voice_summary ||
       detailedReport?.ai_analysis?.summary ||
       reportInsights?.summary ||
+      report?.ai_analysis?.voice_summary ||
       report?.ai_analysis?.summary ||
       report?.insights?.summary;
 
@@ -2649,8 +2659,8 @@ const LabAllReports = ({ user, search }) => {
                   <div className="font-semibold text-gray-800 text-sm">{r.patientName}</div>
                   <div className="text-[10px] text-gray-400">ID: {r.patientId}</div>
                 </td>
-                <td className="px-4 py-3 text-gray-600 text-xs max-w-[180px]">
-                  <div className="truncate">{r.testName}</div>
+                <td className="px-4 py-3 text-gray-600 text-xs max-w-[220px]">
+                  <div className="line-clamp-2 break-words leading-tight" title={r.testName}>{r.testName}</div>
                 </td>
                 <td className="px-4 py-3">
                   <CategoryChip label={r.category} />
@@ -2876,7 +2886,7 @@ const AdminReports = ({ search }) => {
                 className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-all">
                 <td className="px-4 py-3 font-semibold text-gray-800 text-sm">{r.patientName}</td>
                 <td className="px-4 py-3 text-gray-600 text-xs">
-                  <div className="truncate max-w-[160px]">{r.testName}</div>
+                  <div className="line-clamp-2 break-words leading-tight max-w-[220px]" title={r.testName}>{r.testName}</div>
                 </td>
                 <td className="px-4 py-3"><CategoryChip label={r.category} /></td>
                 <td className="px-4 py-3 text-gray-400 text-xs">{r.date}</td>
@@ -2962,7 +2972,7 @@ const DoctorReports = ({ search }) => {
                 className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-all">
                 <td className="px-4 py-3 font-semibold text-gray-800 text-sm">{r.patientName}</td>
                 <td className="px-4 py-3 text-gray-600 text-xs">
-                  <div className="truncate max-w-[160px]">{r.testName}</div>
+                  <div className="line-clamp-2 break-words leading-tight max-w-[220px]" title={r.testName}>{r.testName}</div>
                 </td>
                 <td className="px-4 py-3"><CategoryChip label={r.category} /></td>
                 <td className="px-4 py-3 text-gray-400 text-xs">{r.date}</td>

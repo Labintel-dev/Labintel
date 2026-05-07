@@ -6,7 +6,6 @@ import PatientDashboard from '../pages/patient/Dashboard';
 import PatientReportView from '../pages/patient/ReportView';
 import PatientTrends from '../pages/patient/Trends';
 import PatientProfile from '../pages/patient/Profile';
-import GoogleCallback from '../pages/patient/GoogleCallback';
 import LinkPhone from '../pages/patient/LinkPhone';
 import Landing from '../pages/Landing';
 
@@ -16,7 +15,6 @@ export default function PatientApp() {
       <Route path="/"         element={<Landing />} />
       <Route path="/login"    element={<PatientLogin />} />
       <Route path="/register" element={<PatientRegister />} />
-      <Route path="/auth/callback" element={<GoogleCallback />} />
       <Route path="/dashboard" element={<RequireAuth><PatientDashboard /></RequireAuth>} />
       <Route path="/reports/:id" element={<RequireAuth><PatientReportView /></RequireAuth>} />
       <Route path="/trends"   element={<RequireAuth><PatientTrends /></RequireAuth>} />

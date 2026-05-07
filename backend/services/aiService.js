@@ -927,7 +927,7 @@ Results:
 ${valuesText}
 
 Rules:
-- Language: Use natural "Desi Hindi" (Hinglish). Talk like a helpful doctor. Avoid hard words like 'चिकित्सा' or 'विश्लेषण'. Use 'ilaaj', 'report', 'badlav' instead.
+- Language: Use clear, simple English. Talk like a helpful doctor. Avoid medical jargon.
 - Summary Content: Briefly touch upon every marker. If something is high or low, explain what it means simply.
 - Tips: Include 2-3 simple lifestyle tips (diet/exercise) to improve these levels.
 - Do not diagnose or prescribe specific medicines.
@@ -935,7 +935,7 @@ Rules:
 
 Return:
 {
-  "summary": "Short summary in Desi Hindi including all details and health tips",
+  "summary": "Short summary in English including all details and health tips",
   "findings": [],
   "recommendation": "Final advice (e.g., see a specialist)"
 }
@@ -998,7 +998,7 @@ Results:
 ${valuesText}
 
 Strict Rules for "summary":
-1. Use "Desi Hindi" (natural, conversational Hindi/Hinglish). 
+1. Use clear, simple English. Avoid medical jargon.
 2. Summarize EVERY detail mentioned in the results briefly.
 3. Include clear tips/remedies (lifestyle, food, habits) to overcome any abnormal levels.
 4. Keep it encouraging but realistic.
@@ -1010,7 +1010,7 @@ Other Rules:
 
 JSON FORMAT:
 {
-  "summary": "Full detailed summary in Desi Hindi with tips included",
+  "summary": "Full detailed summary in English with tips included",
   "findings": ["Point 1", "Point 2"],
   "recommendation": "Consultation advice",
   "risk_level": "Low/Medium/High",
@@ -1020,7 +1020,7 @@ JSON FORMAT:
       "name": "Marker Name",
       "value": "Value",
       "status": "High/Low",
-      "explanation": "Desi Hindi explanation",
+      "explanation": "English explanation",
       "solution": "How to fix this level (lifestyle/diet)"
     }
   ]
@@ -1061,6 +1061,7 @@ async function analyzeReportImage(base64Image, mimeType = 'image/jpeg') {
     return {
       type: 'Lab Report',
       summary: 'OCR unavailable.',
+      voice_summary: 'OCR unavailable',
       patientInfo: {},
       labDetails: {},
       results: { parameters: [], medicines: [] },
@@ -1081,9 +1082,10 @@ async function analyzeReportImage(base64Image, mimeType = 'image/jpeg') {
           content: [
             {
               type: 'text',
-              text: `Extract complete structured medical report data.
+              text: `Extract complete structured medical report data in clear, simple English.
 Return ONLY valid JSON with keys:
-type, patientInfo, labDetails, results.parameters, results.medicines, summary, advice, riskLevel.`,
+type, patientInfo, labDetails, results.parameters, results.medicines, summary, advice, riskLevel.
+Make sure the summary is in clear English, not Hindi or any other language.`,
             },
             {
               type: 'image_url',
@@ -1098,6 +1100,19 @@ type, patientInfo, labDetails, results.parameters, results.medicines, summary, a
     });
 
     const parsed = extractJsonObject(response?.choices?.[0]?.message?.content || '{}');
+    const summary = parsed.summary || 'Medical report analyzed.';
+    
+    // Generate Hindi voice summary for voice narration
+    let voiceSummary = summary;
+    if (client && summary && summary !== 'Medical report analyzed.') {
+      try {
+        voiceSummary = await translateTextToHindi(summary);
+      } catch (err) {
+        logger.warn(`Hindi translation for OCR failed: ${err.message}`);
+        voiceSummary = summary; // Fall back to English if translation fails
+      }
+    }
+
     return {
       type: parsed.type || 'Lab Report',
       patientInfo: parsed.patientInfo || {},
@@ -1106,7 +1121,8 @@ type, patientInfo, labDetails, results.parameters, results.medicines, summary, a
         parameters: Array.isArray(parsed?.results?.parameters) ? parsed.results.parameters : [],
         medicines: Array.isArray(parsed?.results?.medicines) ? parsed.results.medicines : [],
       },
-      summary: parsed.summary || 'Medical report analyzed.',
+      summary: summary,
+      voice_summary: voiceSummary,
       advice: Array.isArray(parsed.advice) ? parsed.advice : [],
       riskLevel: parsed.riskLevel || 'Medium',
     };
@@ -1115,6 +1131,7 @@ type, patientInfo, labDetails, results.parameters, results.medicines, summary, a
     return {
       type: 'Lab Report',
       summary: 'OCR failed. Please upload a clearer image.',
+      voice_summary: 'OCR failed. Please upload a clearer image.',
       patientInfo: {},
       labDetails: {},
       results: { parameters: [], medicines: [] },

@@ -138,18 +138,18 @@ async function getMyReport(req, res) {
       }
     );
 
-    if (['hi', 'hindi', 'hi-in'].includes(requestedLang)) {
-      if (report.ai_analysis?.summary) {
-        report.ai_analysis.summary = await translateTextToHindi(report.ai_analysis.summary);
-      }
+    // Generate Hindi voice summary for voice narration only
+    if (report.ai_analysis?.summary) {
+      report.ai_analysis.voice_summary = await translateTextToHindi(report.ai_analysis.summary);
+    }
 
-      const firstInsight = Array.isArray(report.report_insights)
-        ? (report.report_insights[0] || null)
-        : (report.report_insights || null);
+    // Also generate Hindi voice summary for report insights if needed
+    const firstInsight = Array.isArray(report.report_insights)
+      ? (report.report_insights[0] || null)
+      : (report.report_insights || null);
 
-      if (firstInsight && firstInsight.summary) {
-        firstInsight.summary = await translateTextToHindi(firstInsight.summary);
-      }
+    if (firstInsight && firstInsight.summary) {
+      firstInsight.voice_summary = await translateTextToHindi(firstInsight.summary);
     }
   } catch (err) {
     logger.error(`Detailed AI analysis failed for report ${report_id}: ${err.message}`);

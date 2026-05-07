@@ -143,13 +143,20 @@ const SmartReportViewer = ({ isOpen, onClose, originalFileUrl, originalFileType,
                       <tbody className="divide-y divide-slate-100">
                         {reportData?.results?.parameters?.length > 0 ? (
                           reportData.results.parameters.map((param, idx) => {
+                            const displayName =
+                              param?.name ||
+                              param?.parameter ||
+                              param?.test ||
+                              param?.testName ||
+                              param?.description ||
+                              'Unknown Test';
                             const isAbnormal = param.status?.toLowerCase().includes('abnormal') || 
                                              param.status?.toLowerCase().includes('high') || 
                                              param.status?.toLowerCase().includes('low');
                             
                             return (
                               <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                                <td className="px-6 py-4 font-semibold text-slate-800">{param.name}</td>
+                                <td className="px-6 py-4 font-semibold text-slate-800 break-words">{displayName}</td>
                                 <td className="px-6 py-4">
                                   <span className={`font-bold ${isAbnormal ? 'text-rose-600' : 'text-slate-800'}`}>
                                     {param.value} <span className="text-[11px] font-medium text-slate-400">{param.unit}</span>

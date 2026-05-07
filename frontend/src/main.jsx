@@ -12,7 +12,6 @@ import ReportsPage from './pages/ReportsPage';
 import { AboutUsPage, TermsPage, RefundPolicyPage } from './pages/PolicyPages';
 import { AuthProvider } from './context/AuthContext';
 import { ToastContainer } from './components/common';
-import OAuthCallback from './pages/OAuthCallback';
 import AdminApp from './pages/admin/AdminApp';
 import './index.css';
 
@@ -76,7 +75,6 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<LandingPage />} />
-              <Route path="/auth/callback" element={<OAuthCallback />} />
               <Route path="/lab/:slug/*" element={<LabAppWrapper />} />
               <Route path="/patient" element={<PatientPortal />} />
               <Route path="/select-role" element={<RoleSelectPage />} />

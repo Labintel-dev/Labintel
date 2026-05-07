@@ -17,7 +17,6 @@ export const authService = {
   getLabBySlug: (slug) => api.get(`/auth/lab/${slug}`).then(r => r.data),
   sendOtp: (phone) => api.post('/auth/patient/send-otp', { phone }).then(r => r.data),
   verifyOtp: (phone, otp) => api.post('/auth/patient/verify-otp', { phone, otp }).then(r => r.data),
-  verifyGoogle: (access_token) => api.post('/auth/patient/google/verify', { access_token }).then(r => r.data),
 };
 
 export const settingsService = {

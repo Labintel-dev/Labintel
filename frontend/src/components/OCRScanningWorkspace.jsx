@@ -908,8 +908,25 @@ const OCRScanningWorkspace = ({ user }) => {
   const handleVoice = () => {
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(result.summary);
-    utterance.rate = 0.9;
+    // Use voice_summary for Hindi narration if available, otherwise fall back to summary
+    const textToSpeak = result.voice_summary || result.summary;
+    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+    utterance.lang = 'hi-IN';
+    utterance.rate = 0.92;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+    
+    // Try to use Hindi voice
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      const voices = window.speechSynthesis.getVoices() || [];
+      const hindiVoice = voices.find(v => /^hi(-|_)?/i.test(v.lang || '')) ||
+                        voices.find(v => /hindi/i.test(v.name || '')) ||
+                        voices.find(v => /india/i.test(v.lang || ''));
+      if (hindiVoice) {
+        utterance.voice = hindiVoice;
+      }
+    }
+    
     window.speechSynthesis.speak(utterance);
   };
 

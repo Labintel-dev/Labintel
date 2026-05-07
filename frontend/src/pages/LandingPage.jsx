@@ -521,6 +521,65 @@ const LandingPage = () => {
     return () => document.removeEventListener('mousedown', handleClickOutsideHeroMenu);
   }, []);
 
+  const compressImageDataUrl = (dataUrl) => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = dataUrl;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_DIM = 2200;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height && width > MAX_DIM) {
+          height *= MAX_DIM / width;
+          width = MAX_DIM;
+        } else if (height > MAX_DIM) {
+          width *= MAX_DIM / height;
+          height = MAX_DIM;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.72));
+      };
+      img.onerror = () => resolve(dataUrl);
+    });
+  };
+
+  const convertPdfToImageDataUrl = async (file) => {
+    if (!window.pdfjsLib) {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js';
+        script.onload = resolve;
+        script.onerror = () => reject(new Error('Failed to load PDF processor.'));
+        document.body.appendChild(script);
+      });
+    }
+
+    const pdfjsLib = window.pdfjsLib || window['pdfjs-dist/build/pdf'];
+    if (!pdfjsLib) {
+      throw new Error('PDF processor unavailable.');
+    }
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const page = await pdf.getPage(1);
+    const viewport = page.getViewport({ scale: 2.0 });
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    await page.render({ canvasContext: context, viewport }).promise;
+    return canvas.toDataURL('image/jpeg', 0.85);
+  };
+
   const handleFileSelect = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -532,37 +591,38 @@ const LandingPage = () => {
     const fileUrl = URL.createObjectURL(file);
     setOriginalFileUrl(fileUrl);
     setOriginalFileType(file.type);
-    
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      try {
-        const base64data = reader.result;
-        
-        const res = await apiClient.post('/ocr/analyze-report-public', {
-          image: base64data,
-          mimeType: file.type
-        });
-        
-        setReportData(res.data);
-        setIsUploading(false);
-        setIsViewerOpen(true);
-      } catch (err) {
-        console.error("OCR Analysis Error:", err);
-        alert(err.response?.data?.details || 'Failed to analyze report. Please try again.');
-        setIsUploading(false);
-      }
-    };
-    
+
     try {
-      reader.readAsDataURL(file);
+      const isPdf = file.type === 'application/pdf' || file.name?.toLowerCase().endsWith('.pdf');
+
+      let imageDataUrl;
+      if (isPdf) {
+        imageDataUrl = await convertPdfToImageDataUrl(file);
+      } else {
+        const reader = new FileReader();
+        imageDataUrl = await new Promise((resolve, reject) => {
+          reader.onload = (event) => resolve(event.target?.result);
+          reader.onerror = () => reject(new Error('Failed to read file.'));
+          reader.readAsDataURL(file);
+        });
+        imageDataUrl = await compressImageDataUrl(String(imageDataUrl));
+      }
+
+      const res = await apiClient.post('/ocr/analyze-report-public', {
+        image: imageDataUrl,
+        mimeType: 'image/jpeg',
+      });
+
+      setReportData(res.data);
+      setIsViewerOpen(true);
     } catch (err) {
-      console.error("File Read Error:", err);
-      alert('Failed to read file.');
+      console.error('OCR Analysis Error:', err);
+      alert(err.response?.data?.details || 'Failed to analyze report. Please try a clear image or PDF.');
+    } finally {
       setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      if (cameraInputRef.current) cameraInputRef.current.value = '';
     }
-    
-    if (fileInputRef.current) fileInputRef.current.value = '';
-    if (cameraInputRef.current) cameraInputRef.current.value = '';
   };
 
   return (
