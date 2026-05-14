@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../../store/authStore';
+import { usePatientAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
 import { patientService } from '../../services/patientService';
 import { PatientLayout } from '../../components/patient/PatientLayout';
@@ -20,8 +20,8 @@ const otpSchema = z.object({
 
 export default function LinkPhone() {
   const navigate = useNavigate();
-  const setAuth = useAuthStore((s) => s.setAuth);
-  const { user } = useAuthStore((s) => s);
+  const setAuth = usePatientAuthStore((s) => s.setAuth);
+  const { user } = usePatientAuthStore((s) => s);
   const { addToast } = useUIStore();
   const [step, setStep] = useState(1); // 1: Phone, 2: OTP
   const [phoneToVerify, setPhoneToVerify] = useState('');

@@ -7,7 +7,7 @@ import { Card, Button, Skeleton, FlagBadge, Badge } from '../../components/commo
 import { formatDate, formatDateTime, calcAge } from '../../utils/formatDate';
 import { getFlagConfig } from '../../utils/flagColor';
 import { useUIStore } from '../../store/uiStore';
-import { useAuthStore } from '../../store/authStore';
+import { usePatientAuthStore } from '../../store/authStore';
 import { Download, FlaskConical, Brain, ArrowLeft, AlertTriangle } from 'lucide-react';
 
 /* ── Value bar indicator ─────────────────────────────────────────────── */
@@ -34,7 +34,7 @@ function ValueBar({ value, refMin, refMax, flag }) {
 export default function PatientReportView() {
   const { id } = useParams();
   const { addToast } = useUIStore();
-  const user = useAuthStore((s) => s.user);
+  const user = usePatientAuthStore((s) => s.user);
 
   const { data, isLoading } = useQuery({
     queryKey: ['patient-report', id],

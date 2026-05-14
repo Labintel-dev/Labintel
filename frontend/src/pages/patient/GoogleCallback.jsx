@@ -1,14 +1,15 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../../store/authStore';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { usePatientAuthStore } from '../../store/authStore';
 import { authService } from '../../services/reportService';
 import { useUIStore } from '../../store/uiStore';
 import { Skeleton } from '../../components/common';
 import { PatientLayout } from '../../components/patient/PatientLayout';
 
 export default function GoogleCallback() {
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const setAuth = useAuthStore((s) => s.setAuth);
+  const setAuth = usePatientAuthStore((s) => s.setAuth);
   const addToast = useUIStore((s) => s.addToast);
 
   useEffect(() => {

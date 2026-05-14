@@ -1113,9 +1113,9 @@ const Shell = ({ navItems, showSearch = false, renderContent, isPatient = false 
       }
 
       // If patient, fetch fresh data from the server to sync any changes
-      if (authStoreUser.role === 'patient') {
+      if (authStoreUser.role === 'patient' || isPatient) {
         const { data: { session } } = await supabase.auth.getSession();
-        const token = session?.access_token || useAuthStore.getState().token;
+        const token = session?.access_token || usePatientAuthStore.getState().token;
         if (token) {
           try {
             const profileRes = await getServerProfile(token);
@@ -1128,10 +1128,9 @@ const Shell = ({ navItems, showSearch = false, renderContent, isPatient = false 
                 authStoreUser.date_of_birth !== freshData.date_of_birth;
 
               if (hasChanged) {
-                useAuthStore.getState().setAuth(
+                usePatientAuthStore.getState().setAuth(
                   token,
-                  { ...authStoreUser, ...freshData },
-                  useAuthStore.getState().lab
+                  { ...authStoreUser, ...freshData }
                 );
               }
             }
@@ -1142,7 +1141,8 @@ const Shell = ({ navItems, showSearch = false, renderContent, isPatient = false 
       }
 
       // Always use the freshest state from the store
-      const latestUser = useAuthStore.getState().user || authStoreUser;
+      const storeState = isPatient ? usePatientAuthStore.getState() : useAuthStore.getState();
+      const latestUser = storeState.user || authStoreUser;
 
       setUserState({
         id: latestUser.id,

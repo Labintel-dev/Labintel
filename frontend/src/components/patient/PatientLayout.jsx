@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../../store/authStore';
+import { usePatientAuthStore } from '../../store/authStore';
 import {
   LayoutDashboard, FileText, TrendingUp, User, LogOut, FlaskConical,
 } from 'lucide-react';
@@ -13,7 +13,7 @@ const navItems = [
 ];
 
 export function PatientLayout({ children }) {
-  const { clearAuth, user } = useAuthStore();
+  const { clearAuth, user } = usePatientAuthStore();
   const navigate = useNavigate();
   const handleLogout = () => { clearAuth(); navigate('/login'); };
 
