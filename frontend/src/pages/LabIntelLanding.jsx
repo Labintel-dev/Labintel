@@ -536,7 +536,7 @@ const LabIntelLanding = () => {
       </nav>
 
       {/* ── SECTION 1: HERO ── */}
-      <section className="relative pt-12 sm:pt-20 lg:pt-32 pb-20 sm:pb-32 lg:pb-48 overflow-hidden">
+      <section className="relative pt-6 sm:pt-10 lg:pt-12 pb-20 sm:pb-32 lg:pb-48 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-24 items-center">
             {/* Left Column */}
