@@ -80,18 +80,18 @@ const LandingProfileDropdown = ({ user, onClose, onUpdateProfile, onMyReports, o
       </div>
 
       <div className="p-2">
-        <button onClick={onUpdateProfile} className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-gray-600 transition-all hover:bg-gray-50 group">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100 transition-all group-hover:bg-white">
-            <Settings size={16} />
-          </div>
-          <span className="text-sm font-semibold">Update Profile</span>
-        </button>
-
         <button onClick={onMyReports} className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-gray-600 transition-all hover:bg-gray-50 group">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#e8f5f0] text-[#14453d] transition-all group-hover:bg-white">
             <FileText size={16} />
           </div>
-          <span className="text-sm font-semibold">My Reports</span>
+          <span className="text-sm font-semibold">Dashboard</span>
+        </button>
+
+        <button onClick={onUpdateProfile} className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-gray-600 transition-all hover:bg-gray-50 group">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100 transition-all group-hover:bg-white">
+            <Settings size={16} />
+          </div>
+          <span className="text-sm font-semibold">Settings</span>
         </button>
 
         <div className="mx-2 my-2 h-px bg-gray-50" />
