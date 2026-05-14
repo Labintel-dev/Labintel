@@ -35,7 +35,7 @@ export const useAuthStore = create(
           registerPatient:   ['administrator', 'manager', 'receptionist'],
           createReport:      ['administrator', 'manager', 'technician'],
           editTestValues:    ['administrator', 'manager', 'technician'],
-          releaseReport:     ['administrator', 'manager'],
+          releaseReport:     ['administrator', 'manager', 'technician'],
           viewAnalytics:     ['administrator', 'manager'],
           viewAlerts:        ['administrator', 'manager'],
           manageStaff:       ['administrator', 'manager'],

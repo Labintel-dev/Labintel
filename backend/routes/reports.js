@@ -22,7 +22,7 @@ router.post('/',   checkRole('administrator', 'technician'),
 
 router.get('/:id',                                           ctrl.getReport);
 router.patch('/:id/status',
-             checkRole('administrator', 'technician', 'receptionist'),
+             checkRole('administrator', 'manager', 'technician', 'receptionist'),
              validateBody(updateStatusSchema),                ctrl.updateStatus);
 
 router.post('/:id/insights',

@@ -12,7 +12,7 @@ import { Card, Button, Select, Skeleton } from '../../components/common';
 import { useUIStore } from '../../store/uiStore';
 import { useLabPath } from '../../hooks/useLabPath';
 import { getFlagConfig } from '../../utils/flagColor';
-import { ArrowLeft, ArrowRight, Send } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Send, ChevronDown, Search } from 'lucide-react';
 
 const schema = z.object({
   patient_id:   z.string().uuid('Required'),
@@ -23,6 +23,77 @@ const schema = z.object({
     value:        z.string().min(1, 'Required'),
   })),
 });
+
+const SearchDropdown = ({
+  label,
+  value,
+  selectedLabel,
+  placeholder,
+  options,
+  onSelect,
+  error,
+}) => {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+
+  const normalizedQuery = query.trim().toLowerCase();
+  const filtered = normalizedQuery
+    ? options.filter((opt) => opt.search.toLowerCase().includes(normalizedQuery))
+    : options;
+
+  return (
+    <div className="relative">
+      <label className="text-sm font-medium text-slate-700 block mb-1">{label} *</label>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-left focus:outline-none focus:ring-2 focus:ring-teal-500"
+      >
+        <span className={value ? 'text-slate-900' : 'text-slate-400'}>
+          {value ? selectedLabel : placeholder}
+        </span>
+        <ChevronDown size={16} className="text-slate-400" />
+      </button>
+      {open && (
+        <div className="absolute z-20 mt-2 w-full rounded-lg border border-slate-200 bg-white shadow-lg">
+          <div className="p-2 border-b border-slate-100">
+            <div className="relative">
+              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search..."
+                className="w-full rounded-md border border-slate-200 pl-8 pr-2 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500"
+              />
+            </div>
+          </div>
+          <div className="max-h-56 overflow-auto">
+            {filtered.length === 0 ? (
+              <div className="px-3 py-3 text-xs text-slate-500">No matches</div>
+            ) : (
+              filtered.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => {
+                    onSelect(opt.value);
+                    setOpen(false);
+                    setQuery('');
+                  }}
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50"
+                >
+                  {opt.label}
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+      {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
+    </div>
+  );
+};
 
 export default function NewReport() {
   const [step, setStep]         = useState(1); // 1: select, 2: values, 3: review
@@ -71,6 +142,25 @@ export default function NewReport() {
   const patient = patients.find(lp => lp.patients?.id === patientId)?.patients;
   const isFemale = patient?.gender === 'female';
 
+  const patientOptions = patients.map(lp => {
+    const name = lp.patients?.full_name || 'Unknown';
+    const code = lp.lab_patient_code || lp.patients?.phone || '';
+    return {
+      value: lp.patients?.id,
+      label: `${name} (${code})`,
+      search: `${name} ${code}`,
+    };
+  }).filter(opt => opt.value);
+
+  const panelOptions = panels.map(p => ({
+    value: p.id,
+    label: `${p.name} (${p.short_code})`,
+    search: `${p.name} ${p.short_code}`,
+  }));
+
+  const selectedPatientLabel = patientOptions.find(opt => opt.value === patientId)?.label;
+  const selectedPanelLabel = panelOptions.find(opt => opt.value === watchPanel)?.label;
+
   const previewValues = watchValues.map((v, i) => {
     const p = params[i];
     if (!p || !v.value) return null;
@@ -111,31 +201,24 @@ export default function NewReport() {
           {step === 1 && (
             <Card className="p-6 space-y-4">
               <h2 className="font-semibold text-slate-800">Step 1: Patient & Panel</h2>
-              <div>
-                <label className="text-sm font-medium text-slate-700 block mb-1">Patient *</label>
-                <select
-                  {...register('patient_id')}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-                >
-                  <option value="">Select patient…</option>
-                  {patients.map(lp => (
-                    <option key={lp.patients?.id} value={lp.patients?.id}>{lp.patients?.full_name} ({lp.lab_patient_code || lp.patients?.phone})</option>
-                  ))}
-                </select>
-                {errors.patient_id && <p className="text-xs text-red-600 mt-1">{errors.patient_id.message}</p>}
-              </div>
-              <div>
-                <label className="text-sm font-medium text-slate-700 block mb-1">Test Panel *</label>
-                <select
-                  value={watchPanel}
-                  onChange={e => handlePanelChange(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-                >
-                  <option value="">Select panel…</option>
-                  {panels.map(p => <option key={p.id} value={p.id}>{p.name} ({p.short_code})</option>)}
-                </select>
-                {errors.panel_id && <p className="text-xs text-red-600 mt-1">{errors.panel_id.message}</p>}
-              </div>
+              <SearchDropdown
+                label="Patient"
+                value={patientId}
+                selectedLabel={selectedPatientLabel}
+                placeholder="Select patient..."
+                options={patientOptions}
+                onSelect={(id) => setValue('patient_id', id)}
+                error={errors.patient_id?.message}
+              />
+              <SearchDropdown
+                label="Test Panel"
+                value={watchPanel}
+                selectedLabel={selectedPanelLabel}
+                placeholder="Select panel..."
+                options={panelOptions}
+                onSelect={handlePanelChange}
+                error={errors.panel_id?.message}
+              />
               <div>
                 <label className="text-sm font-medium text-slate-700 block mb-1">Collection Date & Time *</label>
                 <input type="datetime-local" {...register('collected_at')}

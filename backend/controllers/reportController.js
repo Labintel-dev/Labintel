@@ -237,9 +237,9 @@ async function updateStatus(req, res) {
     });
   }
 
-  // ── Only managers/administrators can release ───────────────────────────────
-  if (newStatus === 'released' && !['administrator', 'manager'].includes(req.user.role)) {
-    return res.status(403).json({ error: 'Only a manager or administrator can release reports.' });
+  // ── Only authorized staff can release ─────────────────────────────────────
+  if (newStatus === 'released' && !['administrator', 'manager', 'technician'].includes(req.user.role)) {
+    return res.status(403).json({ error: 'Only authorized staff can release reports.' });
   }
 
   const updatePayload = { status: newStatus };
