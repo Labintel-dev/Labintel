@@ -644,12 +644,7 @@ const LabIntelLanding = () => {
                     )}
                   </AnimatePresence>
                 </div>
-                <button
-                  onClick={() => navigate('/reports')}
-                  className="border-2 border-gray-200 text-[#0f172a] font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded-full flex items-center gap-2 sm:gap-3 btn-hover text-base sm:text-lg bg-white w-full sm:w-auto justify-center"
-                >
-                  <Microscope size={18} /> AI Report
-                </button>
+
                 <button
                   onClick={() => scrollToSection('demo')}
                   className="bg-[#14453d] text-white font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded-full flex items-center gap-2 sm:gap-3 btn-hover shadow-xl shadow-[#14453d]/20 text-base sm:text-lg w-full sm:w-auto justify-center"
