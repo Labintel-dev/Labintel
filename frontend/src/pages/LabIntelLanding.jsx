@@ -39,6 +39,7 @@ import { useAuth } from '../context/AuthContext';
 import { useAuthStore } from '../store/authStore';
 import apiClient from '../services/apiClient';
 import SmartReportViewer from '../components/SmartReportViewer';
+import ProfileUpdateModal from '../components/ProfileUpdateModal';
 
 const LabIntelLanding = () => {
   const navigate = useNavigate();
@@ -48,6 +49,7 @@ const LabIntelLanding = () => {
 
   const [activeFeature, setActiveFeature] = useState(0);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isUpdateProfileOpen, setIsUpdateProfileOpen] = useState(false);
   const [isUploadDropdownOpen, setIsUploadDropdownOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [scanningLogs, setScanningLogs] = useState([]);
@@ -410,7 +412,10 @@ const LabIntelLanding = () => {
                             </button>
 
                             <button
-                              onClick={() => { setIsProfileOpen(false); navigate('/patient?profile=update'); }}
+                              onClick={() => { 
+                                setIsProfileOpen(false); 
+                                setIsUpdateProfileOpen(true);
+                              }}
                               className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-gray-600 transition-all hover:bg-gray-50 group"
                             >
                               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100 transition-all group-hover:bg-white">
@@ -1436,6 +1441,18 @@ const LabIntelLanding = () => {
         originalFileType={originalFileType}
         reportData={reportData} 
       />
+
+      <AnimatePresence>
+        {isUpdateProfileOpen && user && (
+          <ProfileUpdateModal
+            user={user}
+            onClose={() => setIsUpdateProfileOpen(false)}
+            onUpdated={() => {
+              setIsUpdateProfileOpen(false);
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
