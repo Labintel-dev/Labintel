@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LabIntel Report - {{REPORT_ID}}</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    :root {
+      --blue-900: #123a75;
+      --blue-800: #1d4f9c;
+      --blue-700: #2f66bd;
+      --blue-200: #dce8fb;
+      --blue-100: #edf4ff;
+      --line: #dbe3ef;
+      --ink: #1b2b4a;
+      --muted: #5f6f8a;
+      --soft: #f7f9fc;
+      --warn: #c43a36;
+      --ok: #136f43;
+    }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #fff;
+      color: var(--ink);
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 16mm 12mm 10mm;
+      position: relative;
+      overflow: hidden;
+    }
+    .page::before {
+      content: '';
+      position: absolute;
+      top: 10mm;
+      left: 12mm;
+      right: 12mm;
+      height: 12mm;
+      background: linear-gradient(90deg, var(--blue-100), #e7efff 70%, transparent 70%);
+      z-index: 0;
+    }
+    .page::after {
+      content: 'LABINTEL';
+      position: absolute;
+      bottom: 60mm;
+      left: 24mm;
+      font-size: 64px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      color: rgba(29, 79, 156, 0.06);
+      transform: rotate(-37deg);
+      transform-origin: left top;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .sheet {
+      position: relative;
+      z-index: 1;
+      min-height: 100%;
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding-right: 2mm;
+    }
+    .brand-band {
+      width: 145mm;
+      height: 6mm;
+      background: linear-gradient(90deg, #dbe7fb 0%, #dbe7fb 80%, rgba(255,255,255,0) 100%);
+      position: relative;
+    }
+    .brand-band::after {
+      content: '';
+      position: absolute;
+      right: 14mm;
+      top: 0;
+      width: 16mm;
+      height: 6mm;
+      background: repeating-linear-gradient(60deg, #222 0 3mm, transparent 3mm 4mm);
+      opacity: 0.9;
+    }
+    .site-pill {
+      width: 30mm;
+      height: 6mm;
+      background: var(--blue-900);
+      color: #fff;
+      font-size: 7px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      letter-spacing: 0.04em;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      gap: 10mm;
+      align-items: flex-start;
+      margin-top: 2mm;
+      padding: 0 2mm;
+    }
+    .brand {
+      display: flex;
+      gap: 5mm;
+      align-items: flex-start;
+    }
+    .logo-box {
+      width: 16mm;
+      height: 16mm;
+      border-radius: 5mm;
+      border: 1px solid var(--line);
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex: 0 0 auto;
+    }
+    .logo-box img { width: 100%; height: 100%; object-fit: contain; }
+    .logo-fallback {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, #2f66bd, #123a75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
+    }
+    .brand-name {
+      font-size: 18px;
+      line-height: 1;
+      color: var(--blue-900);
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      margin-top: 1px;
+    }
+    .brand-tag {
+      font-size: 8px;
+      color: #2e5ca8;
+      margin-top: 1.5mm;
+      font-weight: 700;
+    }
+    .brand-meta {
+      margin-top: 2mm;
+      font-size: 7.5px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+    .brand-meta strong { color: var(--blue-800); }
+    .barcode-card {
+      text-align: right;
+      min-width: 52mm;
+    }
+    .barcode {
+      width: 38mm;
+      height: 9mm;
+      margin-left: auto;
+      background: repeating-linear-gradient(90deg, #111 0 1mm, transparent 1mm 1.7mm);
+      border: 1px solid #d2d8e4;
+      margin-bottom: 1mm;
+    }
+    .refcode {
+      font-size: 8px;
+      color: #72819b;
+      letter-spacing: 0.16em;
+      font-family: 'Courier New', monospace;
+    }
+    .lab-title {
+      margin-top: 2mm;
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--blue-900);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .report-blocks {
+      display: grid;
+      grid-template-columns: 1.05fr 1fr 0.95fr;
+      gap: 0;
+      margin-top: 6mm;
+      margin-bottom: 6mm;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+    .report-block {
+      min-height: 28mm;
+      padding: 4mm 4.5mm;
+      border-right: 1px solid var(--line);
+    }
+    .report-block:last-child { border-right: 0; }
+    .patient-name {
+      font-size: 16px;
+      font-weight: 800;
+      color: #16284d;
+      margin-bottom: 2mm;
+    }
+    .kv {
+      display: grid;
+      grid-template-columns: 18mm 1fr;
+      gap: 1mm 3mm;
+      font-size: 8px;
+      line-height: 1.35;
+      margin-bottom: 1.4mm;
+    }
+    .kv .k {
+      color: #6d7b93;
+      font-weight: 700;
+    }
+    .kv .v {
+      color: var(--ink);
+      font-weight: 700;
+    }
+    .report-title {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--blue-900);
+      margin-top: 4mm;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .report-subtitle {
+      text-align: center;
+      font-size: 7.5px;
+      color: #5f6f8a;
+      margin-top: 1.2mm;
+      line-height: 1.35;
+    }
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 24mm;
+      padding: 2.5mm 4mm;
+      background: var(--blue-700);
+      color: #fff;
+      font-size: 7px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      border-radius: 2mm;
+      margin-top: 2mm;
+    }
+    .section-title {
+      text-align: center;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--blue-900);
+      margin: 4mm 0 2.5mm;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .results-wrap {
+      border: 1px solid var(--line);
+      margin-top: 2mm;
+      background: #fff;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    thead th {
+      background: var(--blue-100);
+      color: var(--blue-900);
+      font-size: 7px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      text-align: left;
+      padding: 2.6mm 3mm;
+      border-bottom: 1px solid var(--line);
+    }
+    tbody td {
+      padding: 3mm;
+      border-top: 1px solid #edf2f7;
+      vertical-align: middle;
+      font-size: 8px;
+    }
+    tbody tr.abnormal-row { background: #fff6f6; }
+    .investigation-code {
+      font-size: 6px;
+      color: #5871a5;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 0.8mm;
+    }
+    .investigation-name {
+      font-size: 8px;
+      font-weight: 800;
+      color: #1b2b4a;
+      text-transform: capitalize;
+    }
+    .result-value {
+      font-size: 10px;
+      font-weight: 800;
+      color: #1b2b4a;
+      line-height: 1.2;
+    }
+    .result-flag {
+      display: inline-block;
+      margin-top: 1.2mm;
+      color: var(--ok);
+      font-size: 6.8px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .result-flag.warn { color: var(--warn); }
+    .reference-value, .unit-value {
+      font-size: 8px;
+      color: #4d5d78;
+      font-weight: 700;
+    }
+    .note-line {
+      font-size: 7.2px;
+      color: #203457;
+      margin-top: 2.5mm;
+      line-height: 1.5;
+    }
+    .note-line strong {
+      font-style: italic;
+      font-weight: 700;
+    }
+    .summary-card {
+      margin-top: 4.5mm;
+      border: 1px solid #cdd8ea;
+      border-radius: 3mm;
+      padding: 3.8mm 4mm;
+      background: #fbfdff;
+    }
+    .summary-card .head {
+      color: var(--blue-900);
+      font-size: 8px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1.8mm;
+    }
+    .summary-card .summary-text {
+      font-size: 7.6px;
+      line-height: 1.55;
+      color: #243658;
+      margin-bottom: 2mm;
+    }
+    .summary-card ul {
+      margin: 0;
+      padding-left: 4mm;
+      color: #243658;
+      font-size: 7.3px;
+      line-height: 1.4;
+    }
+    .footer {
+      margin-top: 11mm;
+      padding-top: 6mm;
+      border-top: 1px solid #b9c6da;
+      display: flex;
+      justify-content: space-between;
+      gap: 8mm;
+      align-items: flex-end;
+    }
+    .sig-block {
+      width: 50mm;
+    }
+    .sig-line {
+      width: 100%;
+      height: 1px;
+      background: #445a7f;
+      margin-bottom: 1.6mm;
+    }
+    .sig-title {
+      font-size: 7.5px;
+      color: #18335f;
+      font-weight: 800;
+      margin-bottom: 0.8mm;
+    }
+    .sig-name {
+      font-size: 7px;
+      color: #5f6f8a;
+    }
+    .footer-right {
+      text-align: right;
+    }
+    .footer-right .small {
+      font-size: 7px;
+      color: #6b7c95;
+      line-height: 1.45;
+    }
+    .footer-bar {
+      margin-top: 6mm;
+      background: var(--blue-900);
+      color: #fff;
+      text-align: center;
+      padding: 3mm 0;
+      font-size: 8px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="sheet">
+      <div class="topbar">
+        <div class="brand-band"></div>
+        <div class="site-pill">www.secundlab.com</div>
+      </div>
+
+      <div class="header">
+        <div class="brand">
+          <div class="logo-box">
+            {{LAB_LOGO}}
+          </div>
+          <div>
+            <div class="brand-name">{{LAB_NAME}}</div>
+            <div class="brand-tag">Accurate | Caring | Instant</div>
+            <div class="brand-meta">
+              <div>+91-22-6789-0123 &nbsp;&nbsp; {{LAB_PHONE}}</div>
+              <div>{{LAB_ADDRESS}}</div>
+            </div>
+          </div>
+        </div>
+        <div class="barcode-card">
+          <div class="barcode"></div>
+          <div class="refcode">{{REPORT_REF}}</div>
+          <div class="lab-title">{{PANEL_NAME}}</div>
+        </div>
+      </div>
+
+      <div class="report-blocks">
+        <div class="report-block">
+          <div class="patient-name">{{PATIENT_NAME}}</div>
+          <div class="kv"><div class="k">Age</div><div class="v">{{PATIENT_AGE}} Years</div></div>
+          <div class="kv"><div class="k">Sex</div><div class="v">{{PATIENT_GENDER}}</div></div>
+          <div class="kv"><div class="k">PID</div><div class="v">{{PATIENT_ID}}</div></div>
+          <div class="kv"><div class="k">Ref. Dr.</div><div class="v">{{REFERRED_BY}}</div></div>
+        </div>
+        <div class="report-block">
+          <div class="report-title">Lab Diagnostic Report</div>
+          <div class="report-subtitle">{{LAB_ADDRESS}}</div>
+          <div class="report-subtitle" style="margin-top: 2mm;">Registered: {{REGISTERED_DATE}}</div>
+          <div class="report-subtitle">Collected: {{COLLECTED_DATE}}</div>
+          <div class="report-subtitle">Reported: {{REPORTED_DATE}}</div>
+        </div>
+        <div class="report-block" style="text-align: right;">
+          <div class="report-subtitle" style="text-align: left; font-size: 7.6px; font-weight: 700; color: #18335f;">{{LAB_NAME}}</div>
+          <div class="report-subtitle" style="text-align: left;">{{LAB_PHONE}}</div>
+          <div class="report-subtitle" style="text-align: left;">{{LAB_ADDRESS}}</div>
+          <div class="status-chip">{{REPORT_STATUS}}</div>
+        </div>
+      </div>
+
+      <div class="section-title">{{PANEL_NAME}}</div>
+
+      <div class="results-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 40%;">Investigation</th>
+              <th style="width: 22%;">Result</th>
+              <th style="width: 23%;">Reference Value</th>
+              <th style="width: 15%;">Unit</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{TEST_VALUES_TABLE}}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note-line">
+        Instrument: <strong>Automated laboratory analyzer</strong>
+      </div>
+      <div class="note-line">
+        Interpretation: Please consult your doctor to interpret these results.
+      </div>
+
+      <div class="summary-card">
+        <div class="head">Simple AI Summary for Patient Understanding</div>
+        <div class="summary-text">{{AI_SUMMARY}}</div>
+        <ul>
+          {{AI_FINDINGS}}
+        </ul>
+      </div>
+
+      <div class="footer">
+        <div class="sig-block">
+          <div class="sig-line"></div>
+          <div class="sig-title">{{TECHNICIAN_NAME}}</div>
+          <div class="sig-name">Lab Technician</div>
+        </div>
+        <div class="sig-block">
+          <div class="sig-line"></div>
+          <div class="sig-title">{{AI_SPECIALIST}}</div>
+          <div class="sig-name">Pathologist</div>
+        </div>
+        <div class="footer-right">
+          <div class="small">Generated on {{GENERATED_AT}}</div>
+          <div class="small">Digital report</div>
+        </div>
+      </div>
+
+      <div class="footer-bar">Lab Diagnostic Report</div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,536 @@
+'use strict';
+const supabase = require('../db/supabase');
+const { computeFlag } = require('../services/flagService');
+const aiService = require('../services/aiService');
+const { generateAndUploadPDF } = require('../services/pdf');
+const { getSignedUrl } = require('../services/storage');
+const { sendReportReady } = require('../services/sms');
+const logger = require('../logger');
+
+// Status transition rules (forward only)
+const VALID_TRANSITIONS = {
+  draft: 'in_review',
+  in_review: 'released',
+};
+
+// ─── List all reports for this lab ────────────────────────────────────────
+async function listReports(req, res) {
+  const lab_id = req.user.lab_id;
+  const { status, page = 1, limit = 20 } = req.query;
+  const offset = (parseInt(page) - 1) * parseInt(limit);
+
+  let query = supabase
+    .from('reports')
+    .select(`
+      id, status, collected_at, reported_at, pdf_url, created_at,
+      patients ( full_name, phone ),
+      test_panels ( name, short_code ),
+      lab_staff!reports_created_by_fkey ( full_name )
+    `, { count: 'exact' })
+    .eq('lab_id', lab_id)
+    .order('created_at', { ascending: false })
+    .range(offset, offset + parseInt(limit) - 1);
+
+  if (status) query = query.eq('status', status);
+
+  const { data, error, count } = await query;
+  if (error) return res.status(500).json({ error: error.message });
+
+  return res.json({
+    data,
+    pagination: { total: count, page: parseInt(page), limit: parseInt(limit) },
+  });
+}
+
+// ─── Create report (synchronous) + trigger AI + PDF (async) ──────────────
+async function createReport(req, res) {
+  const lab_id = req.user.lab_id;
+  const created_by = req.user.id;
+  const { panel_id, patient_id, collected_at, values } = req.body;
+
+  // ── Verify panel belongs to THIS lab ──────────────────────────────────────
+  const { data: panel, error: panelError } = await supabase
+    .from('test_panels')
+    .select('id, name, short_code')
+    .eq('id', panel_id)
+    .eq('lab_id', lab_id)
+    .single();
+
+  if (panelError || !panel) {
+    return res.status(404).json({ error: 'Test panel not found or does not belong to this lab.' });
+  }
+
+  // ── Verify patient is registered at this lab ───────────────────────────────
+  const { data: labPatient } = await supabase
+    .from('lab_patients')
+    .select('patient_id')
+    .eq('lab_id', lab_id)
+    .eq('patient_id', patient_id)
+    .single();
+
+  if (!labPatient) {
+    return res.status(404).json({ error: 'Patient is not registered at this lab.' });
+  }
+
+  // ── Get patient demographics for flag calculation ──────────────────────────
+  const { data: patient, error: patientError } = await supabase
+    .from('patients')
+    .select('id, full_name, gender, date_of_birth, phone')
+    .eq('id', patient_id)
+    .single();
+
+  if (patientError || !patient) {
+    return res.status(404).json({ error: 'Patient record not found.' });
+  }
+
+  // ── Fetch parameter definitions for flag computation ──────────────────────
+  const paramIds = values.map(v => v.parameter_id);
+  const { data: parameters, error: paramError } = await supabase
+    .from('test_parameters')
+    .select('*')
+    .in('id', paramIds);
+
+  if (paramError) {
+    return res.status(500).json({ error: `Failed to fetch parameters: ${paramError.message}` });
+  }
+
+  const paramMap = {};
+  parameters.forEach(p => { paramMap[p.id] = p; });
+
+  // ── Insert report row ──────────────────────────────────────────────────────
+  const { data: report, error: reportError } = await supabase
+    .from('reports')
+    .insert({ lab_id, patient_id, panel_id, collected_at, created_by, status: 'draft' })
+    .select()
+    .single();
+
+  if (reportError) {
+    return res.status(500).json({ error: `Failed to create report: ${reportError.message}` });
+  }
+
+  // ── Compute flags + build test_values rows ─────────────────────────────────
+  const testValuesRows = values.map(v => ({
+    report_id: report.id,
+    parameter_id: v.parameter_id,
+    value: v.value,
+    flag: paramMap[v.parameter_id]
+      ? computeFlag(v.value, patient.gender, paramMap[v.parameter_id])
+      : 'normal',
+  }));
+
+  const { error: valuesError } = await supabase
+    .from('test_values')
+    .insert(testValuesRows);
+
+  if (valuesError) {
+    // Rollback: delete the orphan report
+    await supabase.from('reports').delete().eq('id', report.id);
+    return res.status(500).json({ error: `Failed to save test values: ${valuesError.message}` });
+  }
+
+  // ── Return 201 immediately ─────────────────────────────────────────────────
+  res.status(201).json({
+    data: report,
+    message: 'Report created. AI analysis and PDF generation are in progress.',
+  });
+
+  // ── Async: Generate AI insight ─────────────────────────────────────────────
+  (async () => {
+    try {
+      const dob = patient.date_of_birth ? new Date(patient.date_of_birth) : null;
+      const age = dob
+        ? Math.floor((Date.now() - dob.getTime()) / (365.25 * 24 * 3600 * 1000))
+        : 'Unknown';
+
+      const insightInput = values.map(v => {
+        const p = paramMap[v.parameter_id];
+        const isFemale = patient.gender === 'female';
+        return {
+          name: p?.name || 'Unknown',
+          value: v.value,
+          unit: p?.unit || '',
+          ref_min: isFemale ? p?.ref_min_female : p?.ref_min_male,
+          ref_max: isFemale ? p?.ref_max_female : p?.ref_max_male,
+          flag: testValuesRows.find(r => r.parameter_id === v.parameter_id)?.flag || 'normal',
+        };
+      });
+
+      const insight = await aiService.generateInsight(
+        { age, gender: patient.gender || 'unknown' },
+        panel,
+        insightInput
+      );
+
+      await supabase.from('report_insights').upsert({
+        report_id: report.id,
+        summary: insight.summary,
+        findings: insight.findings,
+        recommendation: insight.recommendation,
+        model_used: 'llama-3.3-70b',
+      }, { onConflict: 'report_id' });
+
+      logger.info(`AI insight saved for report ${report.id}`);
+    } catch (err) {
+      logger.error(`AI insight generation failed for report ${report.id}: ${err.message}`);
+    }
+  })();
+}
+
+// ─── Get single report (full data) ────────────────────────────────────────
+async function getReport(req, res) {
+  const lab_id = req.user.lab_id;
+  const report_id = req.params.id;
+
+  const { data: report, error } = await supabase
+    .from('reports')
+    .select(`
+      id, status, collected_at, reported_at, pdf_url, share_token, created_at,
+      patients ( id, full_name, phone, date_of_birth, gender ),
+      test_panels ( id, name, short_code ),
+      lab_staff!reports_created_by_fkey ( full_name ),
+      test_values (
+        id, value, flag,
+        test_parameters ( id, name, unit, ref_min_male, ref_max_male, ref_min_female, ref_max_female, sort_order )
+      ),
+      report_insights ( summary, findings, recommendation, model_used, generated_at )
+    `)
+    .eq('id', report_id)
+    .eq('lab_id', lab_id)
+    .single();
+
+  if (error || !report) {
+    return res.status(404).json({ error: 'Report not found.' });
+  }
+
+  if (report.test_values) {
+    report.test_values.sort((a, b) =>
+      (a.test_parameters?.sort_order || 0) - (b.test_parameters?.sort_order || 0)
+    );
+  }
+
+  return res.json({ data: report });
+}
+
+// ─── Update report status (state machine) ─────────────────────────────────
+async function updateStatus(req, res) {
+  const lab_id = req.user.lab_id;
+  const report_id = req.params.id;
+  const { status: newStatus } = req.body;
+
+  // ── Fetch current report ───────────────────────────────────────────────────
+  const { data: report, error } = await supabase
+    .from('reports')
+    .select('id, status, patient_id, lab_id, share_token, test_panels ( name )')
+    .eq('id', report_id)
+    .eq('lab_id', lab_id)
+    .single();
+
+  if (error || !report) {
+    return res.status(404).json({ error: 'Report not found.' });
+  }
+
+  // ── Enforce forward-only state machine ────────────────────────────────────
+  const expectedNextStatus = VALID_TRANSITIONS[report.status];
+  if (newStatus !== expectedNextStatus) {
+    return res.status(400).json({
+      error: `Invalid status transition. Current: '${report.status}'. Next allowed: '${expectedNextStatus}'.`,
+    });
+  }
+
+  // ── Only authorized staff can release ─────────────────────────────────────
+  if (newStatus === 'released' && !['administrator', 'manager', 'technician'].includes(req.user.role)) {
+    return res.status(403).json({ error: 'Only authorized staff can release reports.' });
+  }
+
+  const updatePayload = { status: newStatus };
+  if (newStatus === 'released') {
+    updatePayload.reported_at = new Date().toISOString();
+  }
+
+  const { data: updated, error: updateError } = await supabase
+    .from('reports')
+    .update(updatePayload)
+    .eq('id', report_id)
+    .select()
+    .single();
+
+  if (updateError) return res.status(500).json({ error: updateError.message });
+
+  // ── Respond immediately — don't make manager wait for PDF + SMS ───────────
+  res.json({ data: updated });
+
+  // ── Async post-release tasks: PDF generation + SMS ────────────────────────
+  if (newStatus === 'released') {
+    (async () => {
+      try {
+        // Step 1: Generate and upload the PDF
+        logger.info(`Generating PDF for report ${report_id}...`);
+        await generateAndUploadPDF(report_id);
+        logger.info(`PDF generated successfully for report ${report_id}`);
+
+        // Step 2: Fetch patient details for the SMS
+        const { data: patient } = await supabase
+          .from('patients')
+          .select('full_name, phone')
+          .eq('id', report.patient_id)
+          .single();
+
+        // Step 3: Fetch lab name for the SMS
+        const { data: lab } = await supabase
+          .from('labs')
+          .select('name')
+          .eq('id', lab_id)
+          .single();
+
+        // Step 4: Send SMS if patient has a phone number
+        if (patient?.phone) {
+          // Use share_token for a clean public link (no login required)
+          // Falls back to the patient portal if share_token is missing
+          const reportLink = report.share_token
+            ? `${process.env.FRONTEND_URL}/report/share/${report.share_token}`
+            : `${process.env.FRONTEND_URL}/reports`;
+          // const reportLink =
+          //   `${process.env.BACKEND_URL}/report/${report_id}`;
+
+          await sendReportReady(patient.phone, {
+            patientName: patient.full_name?.split(' ')[0] || 'Patient',
+            labName: lab?.name || 'Your Lab',
+          });
+
+          logger.info(`SMS sent to ${patient.phone} for report ${report_id}`);
+        } else {
+          logger.warn(`No phone number found for patient ${report.patient_id}, SMS skipped`);
+        }
+      } catch (err) {
+        // Log the error but don't crash — report is already released successfully
+        logger.error(`Post-release tasks failed for report ${report_id}: ${err.message}`);
+      }
+    })();
+  }
+}
+
+// ─── Manually retrigger AI insight ────────────────────────────────────────
+async function regenerateInsights(req, res) {
+  const lab_id = req.user.lab_id;
+  const report_id = req.params.id;
+
+  const { data: report } = await supabase
+    .from('reports')
+    .select(`
+      id,
+      patients ( full_name, gender, date_of_birth ),
+      test_panels ( name ),
+      test_values (
+        value, flag,
+        test_parameters ( name, unit, ref_min_male, ref_max_male, ref_min_female, ref_max_female )
+      )
+    `)
+    .eq('id', report_id)
+    .eq('lab_id', lab_id)
+    .single();
+
+  if (!report) return res.status(404).json({ error: 'Report not found.' });
+
+  res.json({ message: 'Insight regeneration triggered.' });
+
+  (async () => {
+    try {
+      const patient = report.patients;
+      const dob = patient?.date_of_birth ? new Date(patient.date_of_birth) : null;
+      const age = dob
+        ? Math.floor((Date.now() - dob.getTime()) / (365.25 * 24 * 3600 * 1000))
+        : 'Unknown';
+
+      const insightInput = report.test_values.map(tv => ({
+        name: tv.test_parameters?.name || '',
+        value: tv.value,
+        unit: tv.test_parameters?.unit || '',
+        ref_min: patient?.gender === 'female'
+          ? tv.test_parameters?.ref_min_female
+          : tv.test_parameters?.ref_min_male,
+        ref_max: patient?.gender === 'female'
+          ? tv.test_parameters?.ref_max_female
+          : tv.test_parameters?.ref_max_male,
+        flag: tv.flag,
+      }));
+
+      const insight = await aiService.generateInsight(
+        { age, gender: patient?.gender || 'unknown' },
+        report.test_panels,
+        insightInput
+      );
+
+      await supabase.from('report_insights').upsert({
+        report_id,
+        summary: insight.summary,
+        findings: insight.findings,
+        recommendation: insight.recommendation,
+        model_used: 'llama-3.3-70b',
+      }, { onConflict: 'report_id' });
+
+      logger.info(`Insight regenerated for report ${report_id}`);
+    } catch (err) {
+      logger.error(`Insight regeneration failed for ${report_id}: ${err.message}`);
+    }
+  })();
+}
+
+// ─── Manually retrigger PDF generation ───────────────────────────────────
+async function generatePdf(req, res) {
+  const lab_id = req.user.lab_id;
+  const report_id = req.params.id;
+
+  const { data: report } = await supabase
+    .from('reports')
+    .select('id')
+    .eq('id', report_id)
+    .eq('lab_id', lab_id)
+    .single();
+
+  if (!report) return res.status(404).json({ error: 'Report not found.' });
+
+  const pdfUrl = await generateAndUploadPDF(report_id);
+
+  if (!pdfUrl) {
+    return res.status(500).json({ error: 'PDF generation failed.' });
+  }
+
+  return res.json({
+    message: 'PDF generated successfully.',
+    url: pdfUrl,
+  });
+}
+
+// ─── Get fresh signed PDF URL ─────────────────────────────────────────────
+async function downloadReport(req, res) {
+  const lab_id = req.user.lab_id;
+  const report_id = req.params.id;
+
+  const { data: report, error } = await supabase
+    .from('reports')
+    .select('id, pdf_url')
+    .eq('id', report_id)
+    .eq('lab_id', lab_id)
+    .single();
+
+  if (error || !report) return res.status(404).json({ error: 'Report not found.' });
+  if (!report.pdf_url) return res.status(404).json({ error: 'PDF not yet generated.' });
+
+  try {
+    const fileName = `${report_id}.pdf`;
+    const freshUrl = await getSignedUrl(fileName);
+    await supabase.from('reports').update({ pdf_url: freshUrl }).eq('id', report_id);
+    return res.json({ url: freshUrl });
+  } catch (err) {
+    return res.status(500).json({ error: 'Could not generate download URL.' });
+  }
+}
+
+// ─── Public share link for doctors (no auth) ─────────────────────────────
+async function shareReport(req, res) {
+  const { token } = req.params;
+
+  const { data: report, error } = await supabase
+    .from('reports')
+    .select(`
+      id, status, collected_at, reported_at, pdf_url,
+      patients ( full_name, date_of_birth, gender ),
+      labs ( name, logo_url, primary_color, address, phone ),
+      test_panels ( name, short_code ),
+      test_values (
+        value, flag,
+        test_parameters ( name, unit, ref_min_male, ref_max_male, ref_min_female, ref_max_female, sort_order )
+      ),
+      report_insights ( summary, findings, recommendation )
+    `)
+    .eq('share_token', token)
+    .eq('status', 'released')
+    .single();
+
+  if (error || !report) {
+    return res.status(404).json({ error: 'Report not found or not yet released.' });
+  }
+
+  return res.json({ data: report });
+}
+
+// ─── Dummy sample report for public landing page ──────────────────────────
+async function getSampleReport(req, res) {
+  const sampleReport = {
+    id: 'sample-123',
+    status: 'released',
+    collectedAt: new Date(Date.now() - 48 * 3600000).toISOString(),
+    generatedAt: new Date(Date.now() - 24 * 3600000).toISOString(),
+    patient: {
+      name: 'Priya Sharma',
+      gender: 'Female',
+      age: 34
+    },
+    panelName: 'Complete Blood Count (CBC)',
+    overview: {
+      reviewedBy: 'Dr. A. Gupta',
+      abnormalMarkers: 2,
+      turnaroundHours: 12
+    },
+    lab: {
+      name: 'Sunrise Diagnostics',
+      location: 'Siliguri, West Bengal',
+    },
+    clinicianNote: 'Referred by Dr. S. Chatterjee for routine checkup.',
+    results: [
+      {
+        name: 'Hemoglobin',
+        value: '9.4 g/dL',
+        status: 'low',
+        interpretation: 'Below normal range (12.0 - 15.5 g/dL). Indicates potential anemia.'
+      },
+      {
+        name: 'WBC Count',
+        value: '7.2 x 10³/μL',
+        status: 'normal',
+        interpretation: 'Within normal limits (4.5 - 11.0 x 10³/μL). Good immune response.'
+      },
+      {
+        name: 'Platelets',
+        value: '240 x 10³/μL',
+        status: 'normal',
+        interpretation: 'Within normal limits (150 - 450 x 10³/μL). Healthy clotting ability.'
+      },
+      {
+        name: 'MCV',
+        value: '71 fL',
+        status: 'critical',
+        interpretation: 'Significantly below normal range (80 - 100 fL). Highly indicative of microcytic anemia, often caused by iron deficiency.'
+      }
+    ],
+    aiAnalysis: {
+      headline: 'Mild Anemia Detected',
+      riskLevel: 'moderate',
+      summary: 'Your blood work shows a lower than normal hemoglobin level combined with a low Mean Corpuscular Volume (MCV). This pattern is most commonly associated with iron deficiency anemia. Your white blood cells and platelets are healthy, meaning your immune system and clotting functions are working normally.',
+      recommendations: [
+        'Increase intake of iron-rich foods such as spinach, lentils, and red meat.',
+        'Pair iron-rich foods with Vitamin C (like citrus fruits) to boost absorption.',
+        'Consider an iron supplement if recommended by your physician.'
+      ],
+      nextSteps: [
+        'Consult your primary care physician to discuss these results.',
+        'A serum ferritin test may be required to confirm iron deficiency.',
+        'Follow up with another CBC in 3 months after starting any recommended dietary changes or supplements.'
+      ]
+    }
+  };
+
+  return res.json({ data: sampleReport });
+}
+
+module.exports = {
+  listReports,
+  createReport,
+  getReport,
+  updateStatus,
+  regenerateInsights,
+  generatePdf,
+  downloadReport,
+  shareReport,
+  getSampleReport,
+};
