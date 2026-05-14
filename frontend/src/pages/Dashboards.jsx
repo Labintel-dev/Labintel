@@ -2104,8 +2104,8 @@ const LandscapeReportTracking = ({ report, index, isPlaceholder = false }) => {
     <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}
       className={`bg-white rounded-[2rem] ${isPlaceholder ? '' : 'shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100'} p-6 md:p-10 w-full`}>
       <h3 className="text-xl font-bold text-black mb-12 px-1 tracking-tight text-center md:text-left">{report.testName}</h3>
-      <div className="relative w-full">
-        <div className="flex items-start justify-between w-full relative">
+      <div className="relative w-full overflow-x-auto pb-4 custom-scrollbar">
+        <div className="flex items-start justify-between min-w-[500px] w-full relative">
           {steps.map((step, i) => {
             const Icon = step.icon;
             const isNextCompleted = i < steps.length - 1 && steps[i + 1].completed;
@@ -2354,7 +2354,7 @@ const LabUpload = ({ user }) => {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-5" style={{ height: 'calc(100% - 80px)' }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5" style={{ height: 'calc(100% - 80px)' }}>
 
         {/* Drop zone */}
         <div className="flex flex-col gap-3">
@@ -2483,12 +2483,12 @@ const LabAllReports = ({ user, search }) => {
 
   return (
     <>
-      <div className="flex items-start justify-between mb-5">
+      <div className="flex flex-col sm:flex-row items-start justify-between gap-4 mb-5">
         <div>
           <h1 className="text-xl font-bold text-gray-800">All Reports</h1>
           <p className="text-sm text-gray-400 mt-0.5">Manage and update report statuses.</p>
         </div>
-        <div className="flex gap-2 text-xs">
+        <div className="flex flex-wrap gap-2 text-xs w-full sm:w-auto">
           {[
             { label: 'Total', value: stats.total, bg: 'bg-white', color: 'text-gray-700' },
             { label: 'Ready', value: stats.ready, bg: 'bg-emerald-50', color: 'text-emerald-700' },
@@ -2614,7 +2614,7 @@ const AdminOverview = () => {
       </div>
 
       {/* Stat grid */}
-      <div className="grid grid-cols-3 gap-3 mb-5">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-5">
         {stats.map(s => (
           <div key={s.label}
             className={`${s.bg} ${s.border} border rounded-2xl px-4 py-3.5`}>
