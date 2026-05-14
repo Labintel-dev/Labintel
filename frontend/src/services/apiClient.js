@@ -9,12 +9,13 @@ const apiClient = axios.create({
   timeout: 180000, // Increased for AI processing retries
 });
 
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore, usePatientAuthStore } from '../store/authStore';
 
 // Automatically attach Supabase session token OR authStore token
 apiClient.interceptors.request.use(async (config) => {
   const { data: { session } } = await supabase.auth.getSession();
-  const token = session?.access_token || useAuthStore.getState().token;
+  // Check patient token first, then staff token
+  const token = session?.access_token || usePatientAuthStore.getState().token || useAuthStore.getState().token;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

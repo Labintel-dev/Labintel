@@ -1,16 +1,19 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+/**
+ * STAFF / ADMIN AUTH STORE
+ * Persists to 'labintel-auth'
+ */
 export const useAuthStore = create(
   persist(
     (set, get) => ({
       token: null,
       user: null,   // { id, full_name, email/phone, role }
-      lab: null,    // { id, slug, name, logo_url, primary_color } — null for patient
-      slug: null,   // shorthand for lab.slug — used for URL routing in api.js
+      lab: null,    // { id, slug, name, logo_url, primary_color }
+      slug: null,
 
       setAuth: (token, user, lab = null) => {
-        // Normalize role for consistency: 'manager' -> 'administrator'
         const normalizedUser = user ? {
           ...user,
           role: (user.role === 'manager' ? 'administrator' : user.role) || 'receptionist'
@@ -19,15 +22,9 @@ export const useAuthStore = create(
       },
 
       clearAuth: () => set({ token: null, user: null, lab: null, slug: null }),
-
       isLoggedIn: () => !!get().token,
-
       isPatient: () => get().user?.role === 'patient',
-
-      hasRole: (...roles) => {
-        const role = get().user?.role;
-        return roles.includes(role);
-      },
+      hasRole: (...roles) => roles.includes(get().user?.role),
 
       canDo: (action) => {
         const role = get().user?.role;
@@ -47,8 +44,29 @@ export const useAuthStore = create(
     }),
     {
       name: 'labintel-auth',
-      // Persist token, user, lab branding, and slug for routing
       partialize: (state) => ({ token: state.token, user: state.user, lab: state.lab, slug: state.slug }),
+    }
+  )
+);
+
+/**
+ * PATIENT AUTH STORE
+ * Persists to 'labintel-patient-auth'
+ * Completely separate from staff/admin session.
+ */
+export const usePatientAuthStore = create(
+  persist(
+    (set, get) => ({
+      token: null,
+      user: null,   // { id, full_name, phone, role: 'patient' }
+      
+      setAuth: (token, user) => set({ token, user }),
+      clearAuth: () => set({ token: null, user: null }),
+      isLoggedIn: () => !!get().token,
+    }),
+    {
+      name: 'labintel-patient-auth',
+      partialize: (state) => ({ token: state.token, user: state.user }),
     }
   )
 );

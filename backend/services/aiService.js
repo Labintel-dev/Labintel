@@ -927,17 +927,18 @@ Results:
 ${valuesText}
 
 Rules:
-- Language: Use clear, simple ENGLISH only. Talk like a helpful doctor.
-- Summary Content: Briefly touch upon every marker. If something is high or low, explain what it means simply.
-- Tips: Include 2-3 simple lifestyle tips (diet/exercise) to improve these levels.
-- Do not diagnose or prescribe specific medicines.
+- Language: Use clear, simple ENGLISH. Talk like a helpful, friendly doctor.
+- Summary Content: Briefly explain what the results indicate about the patient's health condition (e.g., "Signs of iron deficiency" or "High blood sugar indicators").
+- Recommendations: Provide specific Food and Lifestyle tips (Diet, Exercise, Sleep).
+- DO'S and DON'TS: List 1-2 important things to do and what to avoid for this condition.
+- STRICT RULE: NEVER recommend specific medicines or dosages. Focus ONLY on food and habits.
 - Return ONLY JSON.
 
 Return:
 {
-  "summary": "Short summary in English including all details and health tips",
+  "summary": "Friendly summary in English focusing on condition, food tips, and lifestyle changes",
   "findings": [],
-  "recommendation": "Final advice (e.g., see a specialist)"
+  "recommendation": "Final professional advice (e.g., consult a specialist)"
 }
 `;
 
@@ -990,7 +991,7 @@ Status: ${v.flag}
       .join('\n');
 
     const prompt = `
-You are an advanced medical AI assistant. Generate a detailed report in ENGLISH only.
+You are an advanced medical AI assistant. Generate a detailed report in ENGLISH.
 
 Patient: Age ${patient.age}, ${patient.gender}
 Test: ${panel.name}
@@ -998,31 +999,30 @@ Results:
 ${valuesText}
 
 Strict Rules for "summary":
-1. Use clear, simple ENGLISH only. Never use Hindi or Hinglish.
-2. Summarize EVERY detail mentioned in the results briefly.
-3. Include clear tips/remedies (lifestyle, food, habits) to overcome any abnormal levels.
-4. Keep it encouraging but realistic.
+1. Use clear, simple ENGLISH. Talk like a reassuring health coach.
+2. Explain what condition these markers suggest (e.g., "Indicators of Vitamin B12 deficiency").
+3. Include clear tips/remedies focusing on FOOD (diet) and LIFESTYLE habits to improve abnormal levels.
+4. Provide clear "What to Do" and "What to Avoid" (Do's and Don'ts).
+5. STRICT RULE: NEVER suggest medicines or drugs. Only suggest natural foods and healthy habits.
 
 Other Rules:
-- Never diagnose a specific disease name.
-- Never give exact medicine dosages.
 - Return ONLY valid JSON.
-- ALL CONTENT MUST BE IN ENGLISH - no Hindi, Hindi-English mix, or any other language.
+- ALL CONTENT MUST BE IN ENGLISH for this step.
 
 JSON FORMAT:
 {
-  "summary": "Full detailed summary in English with tips included",
-  "findings": ["Point 1 in English", "Point 2 in English"],
+  "summary": "Full detailed summary in English including condition explanation, food tips, and Do's/Don'ts",
+  "findings": ["Finding 1 in English", "Finding 2 in English"],
   "recommendation": "Consultation advice in English",
   "risk_level": "Low/Medium/High",
-  "recommendations": ["Tip 1 in English", "Tip 2 in English"],
+  "recommendations": ["Food tip 1", "Lifestyle habit 2", "Avoid this X"],
   "abnormal_markers": [
     {
       "name": "Marker Name",
       "value": "Value",
       "status": "High/Low",
-      "explanation": "Explanation in English",
-      "solution": "How to fix this level in English (lifestyle/diet)"
+      "explanation": "What this abnormality means for your health",
+      "solution": "Diet and lifestyle steps to improve this level"
     }
   ]
 }
@@ -1075,14 +1075,21 @@ async function analyzeReportImage(base64Image, mimeType = 'image/jpeg') {
       ? String(base64Image)
       : `data:${mimeType};base64,${base64Image}`;
 
-    const response = await client.chat.completions.create({
-      messages: [
-        {
-          role: 'user',
-          content: [
+    // Attempt primary model, fallback to secondary if decommissioned or unavailable
+    const models = ['llama-3.2-11b-vision-instant', 'llama-3.2-90b-vision-instant'];
+    let response;
+    let lastError;
+
+    for (const model of models) {
+      try {
+        response = await client.chat.completions.create({
+          messages: [
             {
-              type: 'text',
-              text: `Extract complete structured medical report data from this image. 
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: `Extract complete structured medical report data from this image. 
 For the "summary" field, provide a detailed 3-4 sentence plain-language clinical summary.
 Return ONLY valid JSON following this schema:
 {
@@ -1099,20 +1106,34 @@ Return ONLY valid JSON following this schema:
   "advice": string[],
   "riskLevel": "Low"|"Medium"|"High"
 }`,
-            },
-            {
-              type: 'image_url',
-              image_url: { url: cleanBase64 },
+                },
+                {
+                  type: 'image_url',
+                  image_url: { url: cleanBase64 },
+                },
+              ],
             },
           ],
-        },
-      ],
-      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-      temperature: 0.1,
-      max_completion_tokens: 8192,
-    });
+          model,
+          temperature: 0.1,
+          max_tokens: 8192,
+        });
+        // Success!
+        break;
+      } catch (err) {
+        lastError = err;
+        logger.warn(`OCR attempt with ${model} failed, trying next...`, { error: err.message });
+      }
+    }
 
-    const parsed = extractJsonObject(response?.choices?.[0]?.message?.content || '{}');
+    if (!response) {
+      throw lastError || new Error('All OCR models failed.');
+    }
+
+    const content = response?.choices?.[0]?.message?.content || '';
+    logger.info('OCR Content received from AI', { contentLength: content.length });
+    
+    const parsed = extractJsonObject(content || '{}');
     return {
       type: parsed.type || 'Lab Report',
       patientInfo: parsed.patientInfo || {},
@@ -1126,6 +1147,10 @@ Return ONLY valid JSON following this schema:
       riskLevel: parsed.riskLevel || 'Medium',
     };
   } catch (err) {
+    console.error('CRITICAL OCR ERROR:', err);
+    if (err.response) {
+      console.error('Groq API Error Response:', JSON.stringify(err.response.data, null, 2));
+    }
     logger.error(`OCR analysis failed: ${err.message}`);
     return {
       type: 'Lab Report',
@@ -1152,10 +1177,16 @@ async function translateTextToHindi(text) {
 
   try {
     const prompt = `
-Tum ek helpful medical assistant ho.
-Neeche diye gaye text ko simple aur natural Hindi (Devanagari) me translate karo.
-Meaning same rehna chahiye. Extra info mat add karo.
-Sirf translated text return karo.
+Tum ek helpful desi medical assistant ho jo patients ko unki report simple bhasha me samjhata hai.
+Neeche diye gaye text ko **Natural Conversational Hindi (Hinglish)** me translate karo, jaise log aapas me baat karte hain.
+
+Rules:
+- Language: Use simple, everyday Hindi + common English words (Hinglish). For example, use "Diet", "Report", "Level", "Healthy" instead of heavy Hindi words.
+- Tone: Friendly, reassuring, and clear.
+- Content: Explain what the condition looks like (e.g., "Aapki report me iron ki kami lag rahi hai").
+- Recommendations: Focus on **Food (Khana-peena)** and **What to do/not to do (Kya karein aur kya nahi)**.
+- **MANDATORY**: NEVER mention or recommend any MEDICINE (Dawai). Strictly talk about food and lifestyle only.
+- Return ONLY the translated Hindi text.
 
 Text:
 ${source}

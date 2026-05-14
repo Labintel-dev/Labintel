@@ -136,7 +136,7 @@ import {
 } from '../lib/supabase';
 import { getServerHealth, getServerProfile, upsertServerProfile } from '../lib/serverApi';
 import apiClient from '../services/apiClient';
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore, usePatientAuthStore } from '../store/authStore';
 import AIEngine from '../components/AIEngine';
 import TrendsView from '../components/TrendsView';
 import ProfileUpdateModal from '../components/ProfileUpdateModal';
@@ -1074,7 +1074,7 @@ const TopBar = ({ showSearch, search, setSearch, user, onProfileClick, onBackHom
 );
 
 /** Master layout shell used by all 3 portals */
-const Shell = ({ navItems, showSearch = false, renderContent }) => {
+const Shell = ({ navItems, showSearch = false, renderContent, isPatient = false }) => {
   const [activeIdx, setActiveIdx] = useState(0);
   const [user, setUserState] = useState(null);
   const [search, setSearch] = useState('');
@@ -1097,8 +1097,13 @@ const Shell = ({ navItems, showSearch = false, renderContent }) => {
 
   const navigate = useNavigate();
 
-  const authStoreUser = useAuthStore((s) => s.user);
-  const clearAuth = useAuthStore((s) => s.clearAuth);
+  const staffUser = useAuthStore((s) => s.user);
+  const staffClear = useAuthStore((s) => s.clearAuth);
+  const patientUser = usePatientAuthStore((s) => s.user);
+  const patientClear = usePatientAuthStore((s) => s.clearAuth);
+
+  const authStoreUser = isPatient ? patientUser : staffUser;
+  const clearAuth = isPatient ? patientClear : staffClear;
 
   const fetchFullProfile = async () => {
     try {
@@ -1251,7 +1256,7 @@ const Shell = ({ navItems, showSearch = false, renderContent }) => {
         initial={{ opacity: 0, y: 20, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-        className="dashboard-shell relative z-10 flex min-h-screen w-full overflow-hidden bg-white"
+        className="dashboard-shell relative z-10 flex h-screen w-full overflow-hidden bg-white"
         style={{
           boxShadow: 'none',
         }}
@@ -1314,7 +1319,7 @@ const Shell = ({ navItems, showSearch = false, renderContent }) => {
               />
             ))}
           </AnimatePresence>
-          <div className="dashboard-scroll flex-1 relative" style={{ background: '#f8faf9' }}>
+          <div className="dashboard-scroll flex-1 relative flex flex-col min-h-0" style={{ background: '#f8faf9' }}>
             {showAiEngine ? (
               <AIEngine
                 patientId={user.id}
@@ -1395,7 +1400,7 @@ const Shell = ({ navItems, showSearch = false, renderContent }) => {
                 </div>
               </div>
             ) : (
-              <div className="h-full overflow-auto p-4 md:p-6 pb-24 md:pb-6">
+              <div className="flex-1 overflow-y-auto p-4 md:p-6 pb-32 md:pb-12 custom-report-scroll">
                 {renderContent(activeIdx, user, search, (data) => {
                   setAiAnalysis(data);
                   // Also provide a handle for nuclear printing
@@ -1595,6 +1600,9 @@ const PatientReports = ({ user, onAnalyze }) => {
   };
 
   const stopVoice = () => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
     if (audioElements.length > 0) {
       audioElements.forEach(audio => {
         audio.pause();
@@ -1636,13 +1644,46 @@ const PatientReports = ({ user, onAnalyze }) => {
         return;
       }
 
-      // Call backend to translate and generate Hindi TTS
+      // Call backend to translate
       const ttsResponse = await apiClient.post('/ai/voice-summary', {
         text: summaryText
       });
 
-      const { audioData } = ttsResponse.data;
+      const { hindiText, audioData } = ttsResponse.data;
       
+      // Try Browser Speech Synthesis first (much smoother "Neural" girl voices)
+      if (typeof window !== 'undefined' && window.speechSynthesis && hindiText) {
+        const utterance = new SpeechSynthesisUtterance(hindiText);
+        utterance.lang = 'hi-IN';
+        
+        // Find a smooth female voice
+        const voices = window.speechSynthesis.getVoices();
+        const bestVoice = voices.find(v => 
+          v.lang.startsWith('hi') && 
+          (v.name.includes('Neural') || v.name.includes('Natural') || v.name.includes('Online')) && 
+          (v.name.includes('Female') || v.name.includes('Heera') || v.name.includes('Swara') || v.name.includes('Google'))
+        ) || voices.find(v => v.lang.startsWith('hi') && (v.name.includes('Female') || v.name.includes('Heera'))) || voices.find(v => v.lang.startsWith('hi'));
+
+        if (bestVoice) {
+          utterance.voice = bestVoice;
+          utterance.pitch = 1.1; // Slightly higher for a younger/clearer girl voice
+          utterance.rate = 0.95; // Slightly slower for better clarity and "smoothness"
+          
+          utterance.onstart = () => setVoicePlayingReportId(report.id);
+          utterance.onend = () => setVoicePlayingReportId(null);
+          utterance.onerror = (e) => {
+            console.error("Speech synthesis error:", e);
+            // If synthesis fails, we don't fallback here to avoid overlapping, 
+            // but we reset state.
+            setVoicePlayingReportId(null);
+          };
+
+          window.speechSynthesis.speak(utterance);
+          return; // Success with browser voice
+        }
+      }
+
+      // Fallback to Backend Audio (if browser synthesis unavailable or no Hindi voice found)
       if (audioData && audioData.length > 0) {
         setVoicePlayingReportId(report.id);
         const audios = audioData.map(base64 => new Audio(`data:audio/mp3;base64,${base64}`));
@@ -2188,6 +2229,7 @@ const PatientTimeline = ({ user }) => {
 
 export const PatientPortal = () => (
   <Shell
+    isPatient={true}
     navItems={[
       { icon: FileText, label: 'My Reports' },
       { icon: Activity, label: 'Track your report' },
@@ -2493,6 +2535,7 @@ const LabAllReports = ({ user, search }) => {
 
 export const LabPortal = () => (
   <Shell
+    isPatient={false}
     navItems={[
       { icon: Upload, label: 'Upload' },
       { icon: FileText, label: 'All Reports' },
@@ -2700,6 +2743,7 @@ const AdminReports = ({ search }) => {
 
 export const AdminPortal = () => (
   <Shell
+    isPatient={false}
     navItems={[
       { icon: TrendingUp, label: 'Overview' },
       { icon: Users, label: 'Users' },
@@ -2786,6 +2830,7 @@ const DoctorReports = ({ search }) => {
 
 export const DoctorPortal = () => (
   <Shell
+    isPatient={false}
     navItems={[
       { icon: Activity, label: 'Patient Reports' },
     ]}

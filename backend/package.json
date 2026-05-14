@@ -9,7 +9,8 @@
     "seed": "node db/seed.js",
     "seed:enterprise": "node db/seedEnterprise.js",
     "migrate": "node db/runMigrations.js",
-    "test": "vitest run"
+    "test": "vitest run",
+    "fix:port": "taskkill /F /IM node.exe /T"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -21,7 +22,7 @@
     "express": "^4.18.2",
     "express-rate-limit": "^7.1.5",
     "google-tts-api": "^2.0.2",
-    "groq-sdk": "^1.1.2",
+    "groq-sdk": "^1.2.0",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "node-cron": "^4.2.1",

@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
+import { usePatientAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
 import api from '../../services/api';
 import { FlaskConical, Mail, Lock, User, Phone, Calendar } from 'lucide-react';
@@ -20,6 +21,7 @@ const schema = z.object({
 export default function PatientRegister() {
   const navigate = useNavigate();
   const { addToast } = useUIStore();
+  const setAuth = usePatientAuthStore((s) => s.setAuth);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {

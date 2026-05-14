@@ -36,7 +36,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore, usePatientAuthStore } from '../store/authStore';
 import apiClient from '../services/apiClient';
 import SmartReportViewer from '../components/SmartReportViewer';
 import ProfileUpdateModal from '../components/ProfileUpdateModal';
@@ -44,8 +44,13 @@ import ProfileUpdateModal from '../components/ProfileUpdateModal';
 const LabIntelLanding = () => {
   const navigate = useNavigate();
   const { user: supabaseUser, signOut: supabaseSignOut } = useAuth();
-  const authStoreUser = useAuthStore((s) => s.user);
-  const clearAuth = useAuthStore((s) => s.clearAuth);
+  const staffUser = useAuthStore((s) => s.user);
+  const clearStaffAuth = useAuthStore((s) => s.clearAuth);
+  const patientUser = usePatientAuthStore((s) => s.user);
+  const clearPatientAuth = usePatientAuthStore((s) => s.clearAuth);
+
+  // Prioritize patient session for the landing page experience
+  const authStoreUser = patientUser || staffUser;
 
   const [activeFeature, setActiveFeature] = useState(0);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -129,19 +134,50 @@ const LabIntelLanding = () => {
     const reader = new FileReader();
     reader.onloadend = async () => {
       try {
-        const base64data = reader.result;
+        let base64data = reader.result;
         
+        // Compress image if it's not a PDF
+        if (!file.type.includes('pdf')) {
+          const img = new Image();
+          img.src = base64data;
+          await new Promise(resolve => img.onload = resolve);
+          
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          // Max dimensions for AI vision (e.g., 1600px)
+          const MAX_SIZE = 1600;
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height *= MAX_SIZE / width;
+              width = MAX_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width *= MAX_SIZE / height;
+              height = MAX_SIZE;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          // Convert to JPEG with 0.8 quality
+          base64data = canvas.toDataURL('image/jpeg', 0.8);
+        }
+
         const res = await apiClient.post('/ocr/analyze-report-public', {
           image: base64data,
-          mimeType: file.type
+          mimeType: file.type.includes('pdf') ? 'application/pdf' : 'image/jpeg'
         });
         
         setReportData(res.data);
-        // Note: we don't set isUploading to false here because 
-        // the scanning animation useEffect handles the timing.
       } catch (err) {
         console.error("OCR Analysis Error:", err);
-        alert(err.response?.data?.details || 'Failed to analyze report. Please try again.');
+        alert(err.response?.data?.details || 'Failed to analyze report. Please try an image/photo instead of PDF.');
         setIsUploading(false);
       }
     };
@@ -212,7 +248,7 @@ const LabIntelLanding = () => {
       id: authStoreUser.id,
       name: authStoreUser.full_name || authStoreUser.email?.split('@')[0] || authStoreUser.phone || 'User',
       email: authStoreUser.email || authStoreUser.phone || '',
-      role: authStoreUser.role || 'patient',
+      role: authStoreUser.role || (patientUser ? 'patient' : 'staff'),
       avatar: (authStoreUser.full_name || authStoreUser.email || 'U').charAt(0).toUpperCase(),
     };
   } else if (supabaseUser) {
@@ -220,7 +256,8 @@ const LabIntelLanding = () => {
   }
 
   const handleLogout = async () => {
-    clearAuth();
+    clearStaffAuth();
+    clearPatientAuth();
     if (supabaseUser) {
       await supabaseSignOut();
     }
@@ -372,7 +409,7 @@ const LabIntelLanding = () => {
                       </div>
                       <div className="hidden md:flex flex-col items-start">
                         <span className="max-w-[140px] truncate text-sm font-bold text-gray-800">{user.name}</span>
-                        <span className="text-[10px] font-medium uppercase tracking-wide text-gray-400">Patient</span>
+                        <span className="text-[10px] font-medium uppercase tracking-wide text-gray-400">{user.role}</span>
                       </div>
                       <ChevronDown size={16} className={`text-gray-400 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
                     </button>
